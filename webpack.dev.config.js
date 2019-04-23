@@ -6,13 +6,18 @@ const { spawn } = require('child_process')
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
 const defaultInclude = path.resolve(__dirname, 'src')
 
+
 module.exports = {
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'postcss-loader' }],
-        include: defaultInclude
+        use: [{ loader: 'style-loader' }, { loader: 'css-loader', options: {
+          importLoaders: 1,
+        } }, { loader: 'postcss-loader' }],
+        include: [defaultInclude,
+                  path.resolve(__dirname, '/../../node_modules/ol/ol.css' )
+        ]
       },
       {
         test: /\.jsx?$/,

@@ -10,6 +10,7 @@ module.exports = {
       ]
     },
     'postcss-import': {},
+
     'postcss-pxtorem': {
       rootValue: 16,
       unitPrecision: 5,
@@ -19,6 +20,7 @@ module.exports = {
       mediaQuery: false,
       minPixelValue: 0
     },
-    'postcss-nested': {}
+    'postcss-nested': {},
+   
   }
 }

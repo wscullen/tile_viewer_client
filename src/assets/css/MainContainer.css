@@ -1,0 +1,27 @@
+@import 'ol/ol.css';
+
+.container {
+  min-height: 100%;
+  text-align: center;
+  background: lightcoral;
+  border: 5px solid red;
+}
+
+.container h2 {
+  font-size: 5rem;
+}
+
+.container a {
+  font-size: 1.4rem;
+}
+
+h1 {
+  display: block;
+  margin: 0;
+}
+
+#map {
+  height: 600px;
+  width: 600px;
+  background: red;
+}
