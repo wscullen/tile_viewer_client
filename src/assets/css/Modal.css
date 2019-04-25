@@ -1,0 +1,32 @@
+
+.close-button {
+	float: right;
+	display: block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:20px;
+	padding:0px;
+
+	position:absolute;
+    top:10px;
+    right: 10px;
+
+    text-decoration:none;
+	outline: none;
+	background: none;
+	border: none;
+}
+
+.close-button:hover {
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);	
+}
+
+.close-button:active {
+	position: absolute;;
+	top:11px;
+}
+
+.fa-close-window {
+	color: black;
+}

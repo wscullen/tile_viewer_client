@@ -43,8 +43,16 @@
     "postpackage": "electron-packager ./ --out=./builds"
   },
   "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@fortawesome/fontawesome-svg-core": "^1.2.17",
+    "@fortawesome/free-brands-svg-icons": "^5.8.1",
+    "@fortawesome/free-solid-svg-icons": "^5.8.1",
+    "@fortawesome/react-fontawesome": "^0.1.4",
+    "formik": "^1.5.2",
+    "moment": "^2.24.0",
     "ol": "^5.3.2",
     "react": "^16.8.6",
+    "react-dates": "^20.1.0",
     "react-dom": "^16.8.6"
   },
   "devDependencies": {

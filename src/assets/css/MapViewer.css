@@ -1,0 +1,19 @@
+.mapViewer {
+
+    border: 1px dashed grey;
+    flex-grow: 3;
+    min-height: 70%;
+    display: flex;
+
+
+}
+
+#map {
+    background: lightcoral;
+    height: auto;
+    min-height: 100%;
+    width: 100%;
+    z-index: 0;
+
+}
+

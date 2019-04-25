@@ -1,0 +1,8 @@
+.centerContainer {
+    border: 1px dashed red;
+    flex-grow: 2;
+    
+    display: flex;
+    flex-direction: column;
+}
+  

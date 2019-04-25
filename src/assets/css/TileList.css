@@ -1,0 +1,6 @@
+.tileList {
+    border: 1px dashed grey;
+    /* margin: 2px; */
+    flex-grow: 1;
+    min-width: 20%;
+}
