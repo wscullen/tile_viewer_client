@@ -14,6 +14,13 @@ function AreaOfInterestList(props) {
                 <FontAwesomeIcon icon="plus"/>
             </button>
         </div>
+        <ul>
+          {props.areasOfInterest.map((ele) => {
+            return (
+              <li className="aoiListItem" key={ele.name} name={ele.name} onClick={() => props.activateAOI(ele.name)}>{ele.name}</li>
+            )
+          })}
+        </ul>
       </div>
     );
   }

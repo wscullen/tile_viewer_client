@@ -1,7 +1,37 @@
 .timelineViewer {
-    border: 1px dashed grey;
+    border-top: 1px solid lightgrey;
     /* margin: 2px; */
     flex-grow: 1;
     min-height: 30%;
 
+}
+
+
+
+.timelineViewer .controls .button {
+
+	background:linear-gradient(to bottom, #c7c9c8 5%, #a3a3a3 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+	border:1px solid #858585;
+	display:inline-block;
+	cursor:pointer;
+	color:#000;
+	font-family:Arial;
+	font-size:15px;
+	padding:5px 10px;
+    text-decoration:none;
+    outline: none;
+    margin: 4px;
+}
+.timelineViewer .controls .button:hover {
+	
+	background:linear-gradient(to bottom, #9ea898 5%, #888b89 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+}
+.timelineViewer .controls .button:active {
+	position: relative;
+	top: 1px;
 }

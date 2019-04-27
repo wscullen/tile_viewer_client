@@ -1,5 +1,5 @@
 .areaOfInterestList {
-    border: 1px dashed grey;
+    border-right: 1px solid lightgrey;
     /* margin: 2px; */
     flex-grow: 1;
     min-width: 20%;
@@ -56,6 +56,21 @@
 	background-color:#5cbf2a;
 }
 .myButton:active {
-	position:relative;
-	top:1px;
+	position: relative;
+	top: 1px;
+}
+
+.areaOfInterestList ul {
+	list-style: none;
+	padding-left: 0px;
+}
+
+.areaOfInterestList li {
+	background: #eee;
+}
+
+.aoiListItem {
+	padding: 4px 8px;
+	/* border-bottom: 1px coral solid; */
+	margin-bottom: 2px;
 }

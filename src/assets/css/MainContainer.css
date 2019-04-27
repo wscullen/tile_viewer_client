@@ -3,7 +3,7 @@
 .mainContainer {
   height: 100%;
   width: 100%;
-  border: 1px dashed blue;
+  border: 1px solid lightgrey;
   display: flex;
   flex-direction: row;
 

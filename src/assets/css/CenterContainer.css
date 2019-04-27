@@ -1,5 +1,5 @@
 .centerContainer {
-    border: 1px dashed red;
+    border: 1px solid lightgrey;
     flex-grow: 2;
     
     display: flex;

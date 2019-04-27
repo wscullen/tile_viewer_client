@@ -1,7 +1,7 @@
 'use strict'
 
 // Import parts of electron to use
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain} = require('electron')
 const path = require('path')
 const url = require('url')
 
@@ -16,6 +16,7 @@ if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) |
   dev = true
 }
 
+
 // Temporary fix broken high-dpi scale factor on Windows (125% scaling)
 // info: https://github.com/electron/electron/issues/9691
 if (process.platform === 'win32') {
@@ -24,6 +25,51 @@ if (process.platform === 'win32') {
 }
 
 function createWindow() {
+
+  var menu = Menu.buildFromTemplate([
+    {
+        label: 'File',
+        submenu: [
+            {label:'Exit'}
+        ],
+    }, {
+        label: 'Dev',
+        submenu: [
+          {
+            label: 'Clear Local Storage',
+            click: (menuItem, currentWindow) => {
+              console.log(menuItem)
+              currentWindow.webContents.send('menu-item', {
+                menuItem,
+                currentWindow
+              })
+            }
+          },
+          {
+            label: 'Reload',
+            click: (menuItem, currentWindow) => {
+              console.log(menuItem)
+              currentWindow.webContents.reload()
+            }
+          },
+          {
+            label: 'Hard Reload',
+            click: (menuItem, currentWindow) => {
+              console.log(menuItem)
+              currentWindow.webContents.reloadIgnoringCache();
+            }
+          },
+          {
+            label: 'Toggle Dev Tools',
+            click: (menuItem, currentWindow) => {
+              console.log(menuItem)
+              currentWindow.toggleDevTools()
+            }
+          }
+        ]
+    }
+  ])
+  Menu.setApplicationMenu(menu); 
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1024,

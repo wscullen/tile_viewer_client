@@ -9,14 +9,17 @@ import omit from 'lodash/omit';
 
 import { Formik, FormikProps, Form, Field } from 'formik';
 
-
 import { DateRangePicker } from 'react-dates';
 import { DateRangePickerPhrases } from 'react-dates';
 import { DateRangePickerShape } from 'react-dates';
 import { START_DATE, END_DATE, HORIZONTAL_ORIENTATION, ANCHOR_LEFT } from 'react-dates/constants';
 import { isInclusivelyAfterDay } from 'react-dates';
 
+import { SyncLoader } from 'react-spinners';
+
 import Modal from './Modal'
+
+const path = require('path')
 
 const propTypes = {
   // example props for the demo
@@ -121,7 +124,10 @@ class AddAreaOfInterestModal extends React.Component {
       endDate: props.initialEndDate,
       platform: "s2_sr",
       files: [],
-      submitting: false,
+      loading: false,
+      showResult: false,
+      areaCreated: false,
+      name: '',
     };
 
     this.onDatesChange = this.onDatesChange.bind(this);
@@ -130,12 +136,13 @@ class AddAreaOfInterestModal extends React.Component {
     this.filesSelected = this.filesSelected.bind(this);
     this.platformSelected = this.platformSelected.bind(this);
     this.submitAreaOfInterest = this.submitAreaOfInterest.bind(this);
+    this.modalCleanup = this.modalCleanup.bind(this);
 
+
+    this.nameUpdated = this.nameUpdated.bind(this);
 
     this.fileInput = React.createRef();
     this.form = React.createRef();
-
-
   }
 
   onDatesChange({ startDate, endDate }) {
@@ -150,20 +157,25 @@ class AddAreaOfInterestModal extends React.Component {
     this.setState({ focusedInput });
   }
 
-  platformSelected(value) {
-    console.log(value)
+  platformSelected(event) {
+    console.log(event)
   }
 
-  filesSelected(value) {
-    console.log(value)
+  filesSelected(event) {
+    console.log(event)
     this.setState({
       files: Array.from(this.fileInput.current.files)
     });
   }
 
+  nameUpdated(event) {
+    console.log(event);
+    this.setState({
+      name: event.target.value
+    })
+  }
+
   showSelectedFiles() {
-    
-    
     return (
       <ul className="fileList">
         {this.state.files.map((ele, index) => {
@@ -188,7 +200,9 @@ class AddAreaOfInterestModal extends React.Component {
     headers.append("X-CSRFToken", this.state.csrf_token);
     // Used for loading status indicators, disable submit button
     this.setState({
-      submitting: true
+      loading: true,
+      showResult: true,
+      message: 'Request is being processed by the server (this can take a while)...'
     })
 
     fetch('http://localhost:8000/submit_aoi/', {
@@ -200,18 +214,67 @@ class AddAreaOfInterestModal extends React.Component {
     .then(response => {
       console.log('Success:', JSON.stringify(response))
 
-      this.form.reset();
+      const data = response['data']
+      console.log(this.state.files)
+
+      const aoi = {
+        name: this.state.name,
+        startDate: this.state.startDate,
+        endDate: this.state.endDate,
+        shapefile: this.state.files.filter((ele) => path.extname(ele.name) === '.shp'),
+        wkt_footprint: data['wkt_footprint'],
+           mgrs_list: data['mgrs_list'],
+           wrs_list: data['wrs_list'],
+           raw_tile_list: data['tile_results']
+      }
+      this.props.addAreaOfInterest(aoi);
+      console.log(aoi)
+
+      this.form.current.reset();
+
       this.setState({
-        startDate: props.initialStartDate,
-        endDate: props.initialEndDate,
+        name: '',
+        startDate: this.props.initialStartDate,
+        endDate: this.props.initialEndDate,
         platform: "s2_sr",
-        submitting: false,
+        loading: false,
+        areaCreated: true,
+        message: "Area created successfully!",
+        files: []
       })
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+      console.error('Error:', error)
+      this.setState({
+        startDate: this.props.initialStartDate,
+        endDate: this.props.initialEndDate,
+        platform: "s2_sr",
+        loading: false,
+        areaCreated: false,
+        message: "Something went wrong, unable to create area!",
+      })
+    });
         //done submitting, set submitting to false
   }
 
+  displayLoadingMessage() {
+     if (this.state.message !== "") {
+       return (
+         <h5>{this.state.message}</h5>
+       )
+     }
+  }
+  
+  modalCleanup() {
+    if (this.state.areaCreated === true)
+      this.setState({
+        showResult: false,
+        message: ''
+      })
+
+    this.props.hideModal()
+  }
+  
   handleSubmit(event) {
     event.preventDefault();
     //process form submission here
@@ -267,15 +330,23 @@ class AddAreaOfInterestModal extends React.Component {
       'initialEndDate',
       'stateDateWrapper',
       'hideModal',
-      'show'
+      'show',
+      'addAreaOfInterest',
     ]);
 
+    const showHideClassName = this.state.showResult ? "loadingIndicators display-inline" : "loadingIndicators display-none";
+
     return (
-      <Modal show={this.props.show} handleClose={this.props.hideModal}>
+      <Modal show={this.props.show} handleClose={this.modalCleanup}>
           <h2>Area of Interest Contraints</h2>
           <br />
-          <h4>Date Range</h4>
-        <DateRangePicker
+        
+      <form onSubmit={this.handleSubmit} ref={this.form}>
+      <label htmlFor="aoi_name">Name</label>
+      <br />
+      <input id="aoi_name" className="aoi_name" type="text" name="aoi_name" value={this.state.name} onChange={this.nameUpdated}/>
+      <h4>Date Range</h4>
+      <DateRangePicker
           {...props}
           onDatesChange={this.onDatesChange}
           onFocusChange={this.onFocusChange}
@@ -285,7 +356,6 @@ class AddAreaOfInterestModal extends React.Component {
           startDateId={START_DATE}
           endDateId={END_DATE}
         />
-          <form onSubmit={this.handleSubmit} ref={this.form}>
       {/* {% csrf_token %} */}
       <br />
       <h4>Select Shapefile (and associated files) for AOI Extent</h4>
@@ -293,15 +363,25 @@ class AddAreaOfInterestModal extends React.Component {
       <input type="file" name="shapefiles" ref={this.fileInput} multiple onChange={this.filesSelected} />
       {this.showSelectedFiles()}
      
-      <br />
+     
       <label htmlFor="platform-select">Platform</label>
       <br />
       <select id="platform-select" value={this.state.platform} onChange={this.platformSelected} >
           <option value="l8_sr" disabled>Landsat-8 (SR)</option>
           <option value="s2_sr">Sentinel-2 (SR)</option>
       </select>
-      <button className="createButton" type="submit" disabled={this.state.submitting}>Create Area of Interest</button>
+      <button className="createButton" type="submit" disabled={this.state.loading}>Create Area of Interest</button>
     </form>
+    <div className={showHideClassName}>
+        <SyncLoader
+            sizeUnit={"px"}
+            margin={"2px"}
+            size={15}
+            color={'lightgrey'}
+            loading={this.state.loading}/>
+        <br />
+        {this.displayLoadingMessage()}
+      </div>
 
       </Modal>
     );

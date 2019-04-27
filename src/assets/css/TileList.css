@@ -1,6 +1,41 @@
 .tileList {
-    border: 1px dashed grey;
+    border-left: 1px solid lightgrey;
     /* margin: 2px; */
     flex-grow: 1;
     min-width: 20%;
+    overflow-y: scroll;
+}
+
+.tileList ul {
+	list-style: none;
+	padding-left: 0px;
+}
+
+.tileList li {
+    background: #eee;
+    font-size: 12px;
+}
+
+.activeSelection {
+    border: 2px cyan solid;
+}
+
+.tileListItem {
+	padding: 4px 8px;
+	/* border-bottom: 1px coral solid; */
+	margin-bottom: 2px;
+}
+
+
+.tileList > .header {
+    padding: 4px;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    background: #eee;
+    border-bottom: 1px #bbb solid;
+
 }
