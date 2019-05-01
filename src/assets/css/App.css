@@ -1,7 +1,7 @@
 /* Main CSS file */
 
 @import '_example/_example.css';
-@import url('https://fonts.googleapis.com/css?family=Heebo:700|Source+Sans+Pro:600');
+@import url('https://fonts.googleapis.com/css?family=Heebo:700|Source+Sans+Pro:300,400,400i,600,700');
 
 * {
     box-sizing: border-box;

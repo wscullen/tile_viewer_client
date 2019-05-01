@@ -5,9 +5,9 @@ import React, { Component } from 'react'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import { faCheckSquare, faCoffee, faPlus, faWindowClose, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faCheckSquare, faCoffee, faPlus, faWindowClose, faArrowRight, faArrowLeft, faTimes, faTimesCircle} from '@fortawesome/free-solid-svg-icons'
 
-library.add(fab, faCheckSquare, faCoffee, faPlus, faWindowClose, faArrowRight, faArrowLeft )
+library.add(fab, faCheckSquare, faCoffee, faPlus, faWindowClose, faArrowRight, faArrowLeft, faTimes, faTimesCircle )
 
 import MainContainer from './MainContainer'
 

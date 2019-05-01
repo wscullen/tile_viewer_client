@@ -140,12 +140,19 @@ export default class MainContainer extends Component {
     console.log(dateList)
     let currentDate = dateList[0]
 
+    let allSelectedTiles = {}
+
+    for (let datestring of dateList) {
+      allSelectedTiles[datestring] = []
+    } 
+
     this.setState({
       activeAOI: aoi_name,
       currentTiles: sortedTiles.datesObject[currentDate],
       dateList,
       allTiles: sortedTiles.datesObject,
       currentDate: currentDate,
+      allSelectedTiles
     })
   }
 
@@ -154,18 +161,28 @@ export default class MainContainer extends Component {
   }
 
   handleTileSelect = (tiles, selectObject) => {
+    
     console.log('this tile was selected')
     console.log(tiles)
-    let selectedTiles = this.state.allSelectedTiles
-    for (let tile of tiles) {
-      selectedTiles.push(tile)
+
+    // find the relevant tile info first (to find the date)
+    let allSelectedTiles = this.state.allSelectedTiles
+    let allTiles = this.state.allTiles
+    let currentDate = this.state.currentDate
+    for (let t of tiles) {
+      let relevantTile = allTiles[currentDate].find((ele) => ele.name == t)
+      console.log(relevantTile)
+      
+      let previouslySelectedTiles = allSelectedTiles[currentDate].map((tile) => tile.name)
+      console.log(previouslySelectedTiles)
+      console.log(relevantTile.name)
+      if (!previouslySelectedTiles.includes(relevantTile.name))
+        allSelectedTiles[currentDate].push(relevantTile)
+    
     }
 
-    let uniqueSelectedTiles = [...new Set(selectedTiles)]
-
-    console.log(uniqueSelectedTiles)
     this.setState({
-      allSelectedTiles: uniqueSelectedTiles,
+      allSelectedTiles,
       currentlySelectedTiles: tiles,
       selectObject
     })
@@ -173,6 +190,23 @@ export default class MainContainer extends Component {
 
   removeDuplicates = (array) => {
 
+  }
+
+  handleTileClickedInList = (event, tile) => {
+
+    let selectedTiles = this.state.currentlySelectedTiles
+
+    console.log('tile clicked in list')
+    console.log(tile)
+    console.log(event.shiftKey)
+    if (event.shiftKey)
+      this.setState({
+        currentlySelectedTiles: [...selectedTiles, tile]
+      })
+    else
+      this.setState({
+        currentlySelectedTiles: [tile]
+      })
   }
 
   sortTilesByDate = (tiles) => {
@@ -252,10 +286,10 @@ export default class MainContainer extends Component {
           <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} />
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
           <div className="centerContainer">
-            <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
+            <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentlySelectedTiles={this.state.currentlySelectedTiles} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles}/>
+          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList}/>
         </div>
       );
     }

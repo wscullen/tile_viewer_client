@@ -1,8 +1,9 @@
 .areaOfInterestList {
     border-right: 1px solid lightgrey;
     /* margin: 2px; */
-    flex-grow: 1;
-    min-width: 20%;
+    flex-shrink: 1;
+	min-width: 20%;
+	max-width: 30%;
 
 }
 
@@ -15,7 +16,8 @@
     align-items: center;
 
     background: #eee;
-    border-bottom: 1px #bbb solid;
+	border-bottom: 1px #bbb solid;
+	font-weight: 300;
 
 }
 
@@ -72,5 +74,6 @@
 .aoiListItem {
 	padding: 4px 8px;
 	/* border-bottom: 1px coral solid; */
-	margin-bottom: 2px;
+	border-bottom: 2px #fff solid;
+	font-weight: 600;
 }

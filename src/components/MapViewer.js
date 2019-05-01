@@ -95,6 +95,10 @@ export default class MapViewer extends Component {
             }
           );
 
+          this.setState({
+            mapSelect: selectSingleClick
+          })
+
           map.addInteraction(selectSingleClick);
 
           selectSingleClick.on('select', (e) => {
@@ -175,6 +179,26 @@ export default class MapViewer extends Component {
         // this.setState({
         //     featuresLayer
         // })
+       
+        // Programmatically set selected features NOT WORKING TODO: fix this
+
+        // let selectInteraction = this.state.mapSelect
+        
+        // let layersToSelect = []
+        // if (prevProps.currentlySelectedTiles !== this.props.currentlySelectedTiles) {
+        //   this.state.map.getLayers().forEach((ele) => {
+        //     console.log(ele);
+        //     console.log(ele.get('name'));
+        //     if (ele.get('name') && ele.get('name').startsWith('tileLayer'))
+        //       layersToSelect.push(ele);
+        //   })
+
+        //   layersToSelect.map((ele) => {
+        //     console.log(ele)
+        //     selectInteraction.getFeatures().push(ele.features[0])
+        //   })
+        // }
+
 
         let aoi_style = new Style({
           stroke: new Stroke({

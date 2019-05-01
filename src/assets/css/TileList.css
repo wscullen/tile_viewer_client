@@ -2,7 +2,7 @@
     border-left: 1px solid lightgrey;
     /* margin: 2px; */
     flex-grow: 1;
-    min-width: 20%;
+    min-width: 30%;
     overflow-y: scroll;
 }
 
@@ -11,20 +11,20 @@
 	padding-left: 0px;
 }
 
-.tileList li {
-    background: #eee;
-    font-size: 12px;
-}
 
-.activeSelection {
-    border: 2px cyan solid;
-}
 
 .tileListItem {
-	padding: 4px 8px;
+	padding: 8px 5px;
 	/* border-bottom: 1px coral solid; */
-	margin-bottom: 2px;
+    border: 2px #eee solid;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+	font-weight: 400;
+	background: #eee;
+
+    
 }
+
 
 
 .tileList > .header {
@@ -38,4 +38,86 @@
     background: #eee;
     border-bottom: 1px #bbb solid;
 
+}
+
+
+
+.myButton {
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));
+	background:-moz-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+	background:-webkit-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+	background:-o-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+	background:-ms-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+	background:linear-gradient(to bottom, #44c767 5%, #5cbf2a 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+	background-color:#44c767;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+	border:1px solid #18ab29;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+	font-size: 15px;
+	padding:5px 10px;
+    text-decoration:none;
+    outline: none;
+}
+.myButton:hover {
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
+	background:-moz-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+	background:-webkit-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+	background:-o-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+	background:-ms-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+	background:linear-gradient(to bottom, #5cbf2a 5%, #44c767 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+	background-color:#5cbf2a;
+}
+.myButton:active {
+	position: relative;
+	top: 1px;
+}
+
+.dateSection  {
+	padding: 1px 4px;
+	font-weight: 700;
+	font-size: 14px;
+	background: #fff;
+}
+
+.tileListItemCompact {
+	display: flex;
+	flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tileActionButton {
+	cursor: pointer;
+	color: #000;
+	
+	text-decoration:none;
+	outline: none;
+	background: none;
+	border: none;
+}
+
+.tileActionButton:hover {
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);	
+}
+
+.tileActionButton:active {
+	position: relative;
+	top: 1px;
+}
+
+.altBackground {
+	background: #dededf;
+	border: 2px #dededf solid;
+}
+
+.activeSelection {
+    border: 2px cyan solid;
 }
