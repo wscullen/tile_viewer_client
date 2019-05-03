@@ -1,6 +1,6 @@
 'use strict'
 
-"C:\Users\cullens\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi"
+// "C:\Users\cullens\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi"
 
 // Import parts of electron to use
 const { app, BrowserWindow, Menu, ipcMain} = require('electron')

@@ -1,7 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const BabiliPlugin = require('babili-webpack-plugin')
+const MinifyPlugin = require("babel-minify-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
@@ -38,7 +38,9 @@ module.exports = {
   },
   target: 'electron-renderer',
   plugins: [
-    new HtmlWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: "Tile Viewer"
+    }),
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional
@@ -48,12 +50,12 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
-    new BabiliPlugin()
+    new MinifyPlugin()
   ],
   stats: {
     colors: true,
-    children: false,
-    chunks: false,
-    modules: false
+    children: true,
+    chunks: true,
+    modules: true
   }
 }

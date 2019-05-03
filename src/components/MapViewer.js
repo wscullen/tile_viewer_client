@@ -10,11 +10,12 @@ import ImageLayer from 'ol/layer/Image';
 import {OSM, Vector as VectorSource} from 'ol/source';
 import {fromLonLat} from 'ol/proj';
 import Static from 'ol/source/ImageStatic';
-import Select from 'ol/interaction/Select';
+import {DragBox, Select} from 'ol/interaction';
 
 
 import {Fill, Stroke, Style, Text} from 'ol/style';
 
+import imgNotFound from '../assets/img/notfound.png'
 
 const middleCanada = [-97.02, 55.72];
 const middleCanadaWebMercatorProj = fromLonLat(middleCanada);
@@ -123,6 +124,24 @@ export default class MapViewer extends Component {
 
           });
 
+        // TODO: Need to refactor how the vector layer is created (create 1 vector layer with many features
+        //       instead of many vector layers each with 1 feature) before this can be implemented properly
+        // // a DragBox interaction used to select features by drawing boxes
+        // var dragBox = new DragBox({
+        //   condition: platformModifierKeyOnly
+        // });
+
+        // map.addInteraction(dragBox);
+
+        // dragBox.on('boxend', function() {
+        //   // features that intersect the box are added to the collection of
+        //   // selected features
+        //   var extent = dragBox.getGeometry().getExtent();
+        //   vectorSource.forEachFeatureIntersectingExtent(extent, function(feature) {
+        //     selectedFeatures.push(feature);
+        //   });
+        // });
+
         map.on('click', this.handleMapClick.bind(this));
 
         // save map and layer references to local state
@@ -161,8 +180,20 @@ export default class MapViewer extends Component {
             let img = new Image();
             img.crossOrigin = "Anonymous";
 
-            img.onload = () => resolve({img, tile});
-            img.onerror = reject;
+            img.onload = (() => {
+
+              console.log('is img onload callback ever run??!')
+              console.log(img)
+              resolve({img, tile})
+            
+            }
+            );
+
+            img.onerror = () => {
+              tile.lowres_preview_url= imgNotFound
+              resolve({img, tile});
+            }
+
             img.src = tile.lowres_preview_url;
         });
     }
@@ -182,22 +213,38 @@ export default class MapViewer extends Component {
        
         // Programmatically set selected features NOT WORKING TODO: fix this
 
-        // let selectInteraction = this.state.mapSelect
+        let selectInteraction = this.state.mapSelect
         
-        // let layersToSelect = []
-        // if (prevProps.currentlySelectedTiles !== this.props.currentlySelectedTiles) {
-        //   this.state.map.getLayers().forEach((ele) => {
-        //     console.log(ele);
-        //     console.log(ele.get('name'));
-        //     if (ele.get('name') && ele.get('name').startsWith('tileLayer'))
-        //       layersToSelect.push(ele);
-        //   })
+        let layersToSelect = []
+        
+        if (prevProps.currentlySelectedTiles !== this.props.currentlySelectedTiles) {
+          
+          this.state.map.getLayers().forEach((ele) => {
+            console.log(ele);
+            console.log(ele.get('name'));
+            console.log(this.props.currentlySelectedTiles)
+            
+            if (ele.get('name') && ele.get('name').startsWith('tileLayer') && this.props.currentlySelectedTiles.includes(ele.get('name').split("__")[1])) {
+              console.log(ele)
+              let source = ele.getSource();
+              console.log(source)
 
-        //   layersToSelect.map((ele) => {
-        //     console.log(ele)
-        //     selectInteraction.getFeatures().push(ele.features[0])
-        //   })
-        // }
+              let features = source.getFeatures();
+              console.log(features)
+              layersToSelect.push(...features);
+              console.log('features to be seelcted added programmatically')
+            }
+          
+          });
+
+          selectInteraction.getFeatures().clear()
+
+          layersToSelect.map((ele) => {
+            console.log(ele)
+            console.log('going over the features to select programmatically')
+              selectInteraction.getFeatures().push(ele)
+          })
+        }
 
 
         let aoi_style = new Style({
@@ -371,7 +418,10 @@ export default class MapViewer extends Component {
               feature,
             }
 
-            promiseArray.push(this.getMeta(tile))
+            promiseArray.push(this.getMeta(tile).catch((err) => {
+              console.log('this image had an err, handling it first before sending back to overall catch func')
+              console.log(err)
+            }))
 
 
          
@@ -382,11 +432,26 @@ export default class MapViewer extends Component {
 
         Promise.all(promiseArray).then((values) => {
             for (let val of values) {
+                console.log('DOES THIS RUN?!')
                 let img = val.img
                 let tile = val.tile
                 let feature = tileDict[tile.name]['feature']
                 console.log(img);
+                
+                console.log(tile)
+                let opacity = 0.90
+
+                console.log(tile.lowres_preview_url)
                 console.log(img.width, img.height);
+                
+                if (tile.lowres_preview_url === imgNotFound) {
+                  img = {
+                    width: 221,
+                    height: 210
+                  }
+                  opacity = 0.55
+                }
+
                 let imageExtent = feature.getGeometry().getExtent()
                   console.log(imageExtent);
     
@@ -398,9 +463,8 @@ export default class MapViewer extends Component {
                         projection: 'EPSG:' + tile.proj,
                         imageExtent: imageExtent
                     }),
-                    opacity: 0.90,
+                    opacity,
                     name: "lowres__" + tile.name
-    
                 })
                 console.log('trying to add the image layer');
                 tileDict[tile.name]['raster'] = s2image_layer
@@ -412,6 +476,8 @@ export default class MapViewer extends Component {
               // Add all vector layers
               for (let val of Object.values(tileDict))
                 map.addLayer(val.vector)
+        }).catch((errors) => {
+          console.log('handle errors in catch function')
         });
         
       }

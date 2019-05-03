@@ -1,6 +1,7 @@
 import 'react-dates/initialize';
 
 import '../assets/css/App.css'
+
 import React, { Component } from 'react'
 
 import { library } from '@fortawesome/fontawesome-svg-core'

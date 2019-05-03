@@ -199,7 +199,8 @@ export default class MainContainer extends Component {
     console.log('tile clicked in list')
     console.log(tile)
     console.log(event.shiftKey)
-    if (event.shiftKey)
+    console.log(event.ctrlKey)
+    if (event.ctrlKey)
       this.setState({
         currentlySelectedTiles: [...selectedTiles, tile]
       })
@@ -207,6 +208,38 @@ export default class MainContainer extends Component {
       this.setState({
         currentlySelectedTiles: [tile]
       })
+  }
+
+  removeTileFromSelected = (tileRemoved) => {
+    console.log('remove tile was clicked')
+    console.log(tileRemoved)
+    let allSelectedTiles = this.state.allSelectedTiles
+
+    console.log(allSelectedTiles)
+    // get the tile date
+    let dateString = tileRemoved.date.format("YYYYMMDD")
+
+    console.log(dateString)
+
+    allSelectedTiles[dateString] = allSelectedTiles[dateString].filter((ele) => {
+      return ele.name !== tileRemoved.name
+    })
+
+    console.log(allSelectedTiles)
+
+    let currentlySelectedTiles = this.state.currentlySelectedTiles
+    console.log(currentlySelectedTiles)
+
+    currentlySelectedTiles = currentlySelectedTiles.filter((ele) => {
+      return ele !== tileRemoved.name
+    })
+
+    console.log(currentlySelectedTiles)
+
+    this.setState({
+      allSelectedTiles,
+      currentlySelectedTiles
+    })
   }
 
   sortTilesByDate = (tiles) => {
@@ -289,7 +322,7 @@ export default class MainContainer extends Component {
             <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentlySelectedTiles={this.state.currentlySelectedTiles} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList}/>
+          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected}/>
         </div>
       );
     }

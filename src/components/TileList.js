@@ -13,7 +13,8 @@ function TileListItemCompact(props) {
       <div className='tileListItemName'>{props.tile.name}</div>
       <div className='tileListItemActions'>
       <button className='tileActionButton' onClick={(event) => {
-        console.log('trying to remove tile')
+        console.log('trying to remove tile, inside tile list')
+        props.removeTile(props.tile)
         event.stopPropagation()
       }}>
         
@@ -55,7 +56,7 @@ function TileList(props) {
 
                 counter++;
 
-                let tileEle = (<li className={clsName} key={tile.name} name={tile.name} onClick={(event) => props.tileClicked(event, tile.name)}><TileListItemCompact tile={tile} /></li>)
+                let tileEle = (<li className={clsName} key={tile.name} name={tile.name} onClick={(event) => props.tileClicked(event, tile.name)}><TileListItemCompact tile={tile} removeTile={props.removeTile}/></li>)
                 listElements.push(tileEle)
               }
              
