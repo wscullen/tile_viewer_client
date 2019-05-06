@@ -156,6 +156,34 @@ export default class MainContainer extends Component {
     })
   }
 
+  handleSubmitAllJobs = () => {
+    console.log('submitting all jobs for selected tiles')
+
+  //   POST request to job_manager API
+  //   {
+  //     "url": "http://localhost:8989/jobs/8a61655d-7c3f-488d-b615-45c1fac96bd8/",
+  //     "id": "8a61655d-7c3f-488d-b615-45c1fac96bd8",
+  //     "submitted": "2019-05-06T23:17:54.016613Z",
+  //     "label": "S2Download L1C_T12UWV_A015525_20180612T181639",
+  //     "command": "not used",
+  //     "job_type": "S2Download",
+  //     "parameters": {
+  //         "options": {
+  //             "tile": "L1C_T12UWV_A015525_20180612T181639",
+  //             "ac": true,
+  //             "ac_res": 10
+  //         }
+  //     },
+  //     "priority": "3",
+  //     "owner": "backup"
+  // }
+  //   requires label, command, job_type, parameters, priority, MUST be authenticated
+
+    
+
+
+  }
+
   getAoiObject = (aoi_name) => {
     return this.state.aoi_list.find((ele) => ele.name === aoi_name)
   }
@@ -322,7 +350,7 @@ export default class MainContainer extends Component {
             <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentlySelectedTiles={this.state.currentlySelectedTiles} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected}/>
+          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs}/>
         </div>
       );
     }

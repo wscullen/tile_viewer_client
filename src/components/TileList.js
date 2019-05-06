@@ -32,7 +32,7 @@ function TileList(props) {
       <div className="tileList">
         <div className="header">
             <h3 className="sectionLabel">Tile List</h3>
-            <button className="addAreaButton myButton" onClick={() => console.log('Submitting jobs')}>
+            <button className="addAreaButton myButton" onClick={() => props.submitAllJobs()}>
                 Start All
             </button>
         </div>
