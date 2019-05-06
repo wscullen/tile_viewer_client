@@ -30,13 +30,6 @@ if (process.platform === 'win32') {
 
 function createWindow() {
 
-  // Devtools for react (redux)
-
-  BrowserWindow.addDevToolsExtension(
-    path.join(os.homedir(), "AppData\\Local\\Google\\Chrome\\User Data\\Default\\Extensions\\fmkadmapgofadopljbjfkapdkoienihi\\3.6.0_0")
-  )
-
-
   var menu = Menu.buildFromTemplate([
     {
         label: 'File',
@@ -80,7 +73,7 @@ function createWindow() {
         ]
     }
   ])
-  Menu.setApplicationMenu(menu); 
+  Menu.setApplicationMenu(menu);
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1024,
