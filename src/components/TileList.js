@@ -18,7 +18,7 @@ function TileListItemCompact(props) {
 
   if (props.tile.job_status === 'submitted') {
     jobProgressIcon = ['fas', 'hourglass-start']
-    jobProgressClass = 'tileActionIndicator '
+    jobProgressClass = 'tileActionIndicator grey'
   } else if (props.tile.job_status === 'assigned') {
     jobProgressIcon = ['fas', 'hourglass-half']
     jobProgressClass = 'tileActionIndicator '
@@ -29,7 +29,7 @@ function TileListItemCompact(props) {
 
   if (props.tile.job_result === 'success')
     jobProgressClass += 'jobSuccess'
-  else if (props.tile.job_result === 'failed')
+  else if (props.tile.job_result === 'failed' && props.tile.job_status === 'completed')
     jobProgressClass += 'jobFailed'
 
   let downloadButtonClass = 'tileActionButton '

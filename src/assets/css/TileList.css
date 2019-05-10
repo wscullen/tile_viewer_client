@@ -143,5 +143,20 @@
 
 
 .disabledIcon {
-	color: rgba(125, 125, 125, 20);
+	color: rgba(200, 200, 200, 20);
+}
+
+.grey {
+	color:  rgba(100, 100, 100, 100);
+}
+
+.jobSuccess {
+	color: lightgreen;
+}
+.jobFailed {
+	color: red;
+}
+
+.removeAction {
+	color: red;
 }

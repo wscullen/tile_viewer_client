@@ -162,7 +162,7 @@ export default class MainContainer extends Component {
     })
   }
 
-  getCSRFToken = (callback, api) => {
+  getCSRFToken = (callback, api, arg_list) => {
     let headers = new Headers();
 
     if (api === 'job_manager')
@@ -183,88 +183,75 @@ export default class MainContainer extends Component {
         
         this.setState(csrf_obj);
 
-        setTimeout(() => callback(), 200)
+        setTimeout(() => callback(...arg_list), 200)
       })
       .catch((err) =>
         console.log('something blew up')
       );
   }
 
-  checkJobStatus = (job_id) => {
+  checkJobStatus = (job_id, tile_name, date) => {
+    let jobStatusVerbose = {
+      'C': 'completed',
+      'A': 'assigned',
+      'S': 'submitted'
+    }
+
+    console.log('Checking job status-----------------------------------------------------------')
+    console.log(job_id, tile_name, date)
+    let tiles = this.state.allSelectedTiles
+    
     if (this.state.job_csrf_token === null) {
       
-      getCSRFToken(checkJobStatus, 'job_manager')
+      getCSRFToken(checkJobStatus, 'job_manager', [job_id, tile_name, date])
 
     } else {
       
-      Object.keys(tiles).map((ele) => {
-        console.log(ele)
-        console.log(tiles[ele])
-        if (tiles[ele].length > 0) {
-  
-          tiles[ele].map((tile) => {
-            // if (tile.hasOwnProperty('job_id'))
-            console.log(tile)
-            const jobReqBody = {
-              label: "S2Download " + tile.name,
-              command: "not used",
-              job_type: "S2Download",
-              parameters: {
-                options: {
-                            tile: tile.name,
-                            ac: true,
-                            ac_res: 10
-                        }
-              },
-              priority: "3"
-            }
-            let headers = new Headers();
-            headers.append("X-CSRFToken", this.state.job_csrf_token);
-            headers.append("Content-Type", "application/json")
 
-            headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-          
-            fetch(`${JOB_MANAGER_SERVER_URL}/jobs/`, {
-              method: 'POST',
-              body: JSON.stringify(jobReqBody),
-              headers: headers,
-            })
-            .then(response => response.json())
-            .then(response => {
-              console.log('Success:', JSON.stringify(response))
+      let currentTile = tiles[date].find((ele) => ele.name == tile_name)
+
+      console.log(currentTile)
+
+      console.log('INSIDE CHECK JOB STATUS!!!!!!')
+
+      let headers = new Headers();
+      headers.append("X-CSRFToken", this.state.job_csrf_token);
+      headers.append("Content-Type", "application/json")
+
+      headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
     
-              const data = response['data']
-              console.log(data)
-              console.log('wat')
-
-              // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
-              // Todo update each tile with job info (id, status, success, workerid)
-              // console.log(tile)
-              // tile['job_id'] = data["id"]
-              // tile["job_submitted"] = data["submitted"]
-              // tile['job_success'] = null
-              // tile['job_progress'] = 'submitted'
-              // console.log(tile)
-
-
-            }).catch((err) => {
-              console.log(err)
-              console.log('something went wrong when trying to submit the job')
-            })
-        
-          })
-        }
+      fetch(`${JOB_MANAGER_SERVER_URL}/jobs/${job_id}/`, {
+        method: 'GET',
+        headers: headers,
       })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        console.log(currentTile)
+        console.log(response)
+        currentTile['job_id'] = response["id"]
+    
+        currentTile['job_result'] = response['success'] ? 'success' : 'failed'
+        currentTile['job_status'] = jobStatusVerbose[response['status']]
+        currentTile['job_assigned'] = response['assigned']
+        currentTile['job_completed'] = response['completed']
+        currentTile["job_submitted"] = response["submitted"]
+        currentTile['job_result_message'] = response['result_message']
+        currentTile['times_checked'] += 1
+
+        if (currentTile['job_status'] === 'completed')
+          clearInterval(currentTile['job_check_interval'])
+
+        this.setState({
+          allSelectedTiles: tiles
+        })
+
+      }).catch((err) => {
+        console.log(err)
+        console.log('something went wrong when trying to check the job')
+      })
+
     }
-
-
-
-
-
-
-
-
-
   }
 
   handleSubmitAllJobs = () => {
@@ -364,12 +351,22 @@ export default class MainContainer extends Component {
               tile['job_completed'] = null
               tile["job_submitted"] = response["submitted"]
 
+
+              console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
+              tile['job_check_interval'] = setInterval(() => this.checkJobStatus(tile['job_id'], 
+                                                                           tile['name'],
+                                                                           ele), 1000 * 60)
+
+              tile['times_checked'] = 0
+
               console.log(tile)
 
               this.setState({
                 allSelectedTiles: tiles
               })
               
+              
+
 
             }).catch((err) => {
 
