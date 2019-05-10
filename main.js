@@ -1,7 +1,7 @@
 'use strict'
 
 // "C:\Users\cullens\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi"
-
+// /home/common/.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0
 // Import parts of electron to use
 const { app, BrowserWindow, Menu, ipcMain} = require('electron')
 const path = require('path')
@@ -107,6 +107,10 @@ function createWindow() {
 
     // Open the DevTools automatically if developing
     if (dev) {
+      console.log('wats happening')
+      BrowserWindow.addDevToolsExtension(
+        path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+      )
       mainWindow.webContents.openDevTools()
     }
   })
