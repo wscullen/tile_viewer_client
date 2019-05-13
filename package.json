@@ -40,7 +40,9 @@
     "start": "webpack-dev-server --hot --host 0.0.0.0 --config=./webpack.dev.config.js --mode development",
     "build": "webpack --config webpack.build.config.js --mode production",
     "package": "npm run build",
-    "postpackage": "electron-packager ./ --out=./builds"
+    "postpackage": "electron-packager ./ tile-viewer --out=./builds",
+    "package-win": "electron-packager ./ tile-viewer --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/icon.ico --prune=true --out=./builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Tile Viewer\"",    
+    "package-linux": "electron-packager ./ tile-viewer --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/1024x1024.png --prune=true --out=./builds"
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",

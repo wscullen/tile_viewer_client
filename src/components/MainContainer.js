@@ -572,7 +572,7 @@ export default class MainContainer extends Component {
 
       return (
         <div className="mainContainer" ref="mainContainer">
-          <SimpleStorage parent={this} blacklist={['activeAOI', 'allSelectedTiles', 'currentlySelectedTiles']}/>
+          <SimpleStorage parent={this} blacklist={['activeAOI', 'currentlySelectedTiles']}/>
           <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} />
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
           <div className="centerContainer">
