@@ -52,3 +52,6 @@ ehthumbs.db
 # Windows shortcuts #
 #####################
 *.lnk
+
+*.tgz
+out-builds/
