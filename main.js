@@ -7,6 +7,9 @@ const { app, BrowserWindow, Menu, ipcMain} = require('electron')
 const path = require('path')
 const url = require('url')
 
+const log = require('electron-log');
+const {autoUpdater} = require("electron-updater");
+
 const os = require('os')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -99,6 +102,9 @@ function createWindow() {
       slashes: true
     })
   }
+  createDefaultWindow();
+  autoUpdater.checkForUpdatesAndNotify();
+
 
   mainWindow.loadURL(indexPath)
 
@@ -123,6 +129,8 @@ function createWindow() {
     // when you should delete the corresponding element.
     mainWindow = null
   })
+
+
 }
 
 // This method will be called when Electron has finished
@@ -146,3 +154,69 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+
+let win;
+
+function sendStatusToWindow(text) {
+  log.info(text);
+  win.webContents.send('message', text);
+}
+
+function createDefaultWindow() {
+  win = new BrowserWindow();
+  win.webContents.openDevTools();
+  win.on('closed', () => {
+    win = null;
+  });
+  win.loadURL(`file://${__dirname}/version.html#${app.getVersion()}`);
+  return win;
+}
+autoUpdater.on('checking-for-update', () => {
+  sendStatusToWindow('Checking for update...');
+})
+autoUpdater.on('update-available', (info) => {
+  sendStatusToWindow('Update available.');
+})
+autoUpdater.on('update-not-available', (info) => {
+  sendStatusToWindow('Update not available.');
+})
+autoUpdater.on('error', (err) => {
+  sendStatusToWindow('Error in auto-updater. ' + err);
+})
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  sendStatusToWindow(log_message);
+})
+autoUpdater.on('update-downloaded', (info) => {
+  sendStatusToWindow('Update downloaded');
+});
+
+
+// app.on('ready', function() {
+//   // Create the Menu
+//   const menu = Menu.buildFromTemplate(template);
+//   Menu.setApplicationMenu(menu);
+
+//   createDefaultWindow();
+// });
+
+// app.on('window-all-closed', () => {
+//   app.quit();
+// });
+
+//
+// CHOOSE one of the following options for Auto updates
+//
+
+//-------------------------------------------------------------------
+// Auto updates - Option 1 - Simplest version
+//
+// This will immediately download an update, then install when the
+// app quits.
+//-------------------------------------------------------------------
+// app.on('ready', function()  {
+//   autoUpdater.checkForUpdatesAndNotify();
+// });

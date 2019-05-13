@@ -9,7 +9,7 @@ function AreaOfInterestList(props) {
     return (
       <div className="areaOfInterestList">
         <div className="header">
-            <h3 className="sectionLabel">Areas List</h3>
+            <h3 className="sectionLabel">Area List</h3>
             <button className="addAreaButton myButton" onClick={props.addAreaModal}>
                 <FontAwesomeIcon icon="plus"/>
             </button>
