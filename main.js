@@ -7,6 +7,15 @@ const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const path = require('path')
 const url = require('url')
 
+// For communication between windows or between window and electron process
+// const { ipcMain } = require('electron')
+
+// ipcMain.on('asynchronous-message', (event, arg) => {
+//   console.log(arg) // prints "ping"
+//   if (arg === 'exit')
+//     app.quit()
+//   // event.reply('asynchronous-reply', 'pong')
+// })
 
 const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
@@ -37,21 +46,18 @@ if (dev) {
   resources = path.join(__dirname, 'assets', 'icons')
   console.log(__dirname)
 } else {
-  console.log('fuuuuuuuuu')
   resources = path.join(process.resourcesPath, '..', 'assets', 'icons')
-
-  console.log(__dirname)
   console.log(resources)
 }
-
-
 
 function createWindow() {
 
   var menu = Menu.buildFromTemplate([
     {label: 'File',
         submenu: [
-            {label:'Exit'}
+            {
+              label:'Exit',
+              click: () => app.quit()}
         ],
     }, {
         label: 'Dev',
@@ -92,16 +98,12 @@ function createWindow() {
   ])
   Menu.setApplicationMenu(menu);
   
-
-  const fs = require("fs"); // Or `import fs from "fs";` with ESM
-  if (fs.existsSync(path.join(resources, '96x96.png'))) {
-      // Do something
-      console.log('fasdfasdfasdf')
-  }
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1024,
+    width: 1250,
     height: 768,
+    minWidth:1000,
+    minHeight: 700,
     show: false,
     icon: path.join(resources, '96x96.png')
   })
@@ -199,7 +201,7 @@ function createDefaultWindow() {
   }
   );
 
-  mainWindow.setMenuBarVisibility(false)
+  win.setMenuBarVisibility(false)
   // win.webContents.openDevTools();
   win.on('closed', () => {
     win = null;
