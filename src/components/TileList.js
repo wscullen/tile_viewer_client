@@ -68,7 +68,7 @@ function TileListItemCompact(props) {
       }}>
         <FontAwesomeIcon icon="info"/>
       </button>
-      <button className='tileActionButton' onClick={(event) => {
+      <button className='tileActionButton removeAction' onClick={(event) => {
         console.log('trying to remove tile, inside tile list')
         props.removeTile(props.tile)
         event.stopPropagation()

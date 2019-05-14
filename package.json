@@ -1,6 +1,6 @@
 {
   "name": "tile-viewer",
-  "version": "v0.0.1-alpha3",
+  "version": "v0.0.1-alpha",
   "description": "Allow easy selection of optical satellite imagery, integration with batch downloader and atmospheric correction.",
   "license": "MIT",
   "private": false,
@@ -24,6 +24,7 @@
       "output": "out-builds",
       "buildResources": "assets"
     },
+    "extraFiles": ["assets/icons/*"],
     "mac": {
       "category": "your.app.category.type"
     }
@@ -53,7 +54,7 @@
     "package": "npm run build",
     "postpackage": "electron-packager ./ tile-viewer --out=./builds",
     "package-win": "electron-packager ./ tile-viewer --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/icon.ico --prune=true --out=./builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Tile Viewer\"",
-    "package-linux": "electron-packager ./ tile-viewer --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/1024x1024.png --prune=true --out=./builds",
+    "package-linux": "electron-packager ./ tile-viewer --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/96x96.png --prune=true --out=./builds",
     "pack": "electron-builder --dir",
     "dist-builder": "electron-builder",
     "dist-publish": "electron-builder --p onTagOrDraft",

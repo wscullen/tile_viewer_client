@@ -3,9 +3,10 @@
 // "C:\Users\cullens\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi"
 // /home/common/.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0
 // Import parts of electron to use
-const { app, BrowserWindow, Menu, ipcMain} = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const path = require('path')
 const url = require('url')
+
 
 const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
@@ -31,11 +32,24 @@ if (process.platform === 'win32') {
   app.commandLine.appendSwitch('force-device-scale-factor', '1')
 }
 
+let resources
+if (dev) {
+  resources = path.join(__dirname, 'assets', 'icons')
+  console.log(__dirname)
+} else {
+  console.log('fuuuuuuuuu')
+  resources = path.join(process.resourcesPath, '..', 'assets', 'icons')
+
+  console.log(__dirname)
+  console.log(resources)
+}
+
+
+
 function createWindow() {
 
   var menu = Menu.buildFromTemplate([
-    {
-        label: 'File',
+    {label: 'File',
         submenu: [
             {label:'Exit'}
         ],
@@ -77,14 +91,26 @@ function createWindow() {
     }
   ])
   Menu.setApplicationMenu(menu);
+  
+
+  const fs = require("fs"); // Or `import fs from "fs";` with ESM
+  if (fs.existsSync(path.join(resources, '96x96.png'))) {
+      // Do something
+      console.log('fasdfasdfasdf')
+  }
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
     show: false,
-    icon: path.join(__dirname, 'assets/icons/png/64x64.png')
+    icon: path.join(resources, '96x96.png')
   })
-
+  
+  if (dev) {
+    BrowserWindow.addDevToolsExtension(
+      path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+    )
+  }
   // and load the index.html of the app.
   let indexPath
 
@@ -99,27 +125,28 @@ function createWindow() {
     indexPath = url.format({
       protocol: 'file:',
       pathname: path.join(__dirname, 'dist', 'index.html'),
-      slashes: true
+      slashes: true,
     })
   }
-  createDefaultWindow();
-  autoUpdater.checkForUpdatesAndNotify();
 
+  createDefaultWindow();
+
+  autoUpdater.checkForUpdatesAndNotify();
 
   mainWindow.loadURL(indexPath)
 
   // Don't show until we are ready and loaded
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
-
+    
     // Open the DevTools automatically if developing
     if (dev) {
       console.log('wats happening')
-      BrowserWindow.addDevToolsExtension(
-        path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
-      )
+    
       mainWindow.webContents.openDevTools()
     }
+    mainWindow.show()
+
+
   })
 
   // Emitted when the window is closed.
@@ -164,8 +191,16 @@ function sendStatusToWindow(text) {
 }
 
 function createDefaultWindow() {
-  win = new BrowserWindow();
-  win.webContents.openDevTools();
+  win = new BrowserWindow({
+    icon: path.join(resources, '96x96.png'),
+    width: 400,
+    height: 200,
+    resizable: false
+  }
+  );
+
+  mainWindow.setMenuBarVisibility(false)
+  // win.webContents.openDevTools();
   win.on('closed', () => {
     win = null;
   });
