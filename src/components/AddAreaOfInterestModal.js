@@ -37,7 +37,8 @@ const propTypes = {
     'focusedInput',
     'onFocusChange',
     'startDateId',
-    'endDateId'
+    'endDateId',
+    'settings'
   ]),
 };
 
@@ -205,7 +206,7 @@ class AddAreaOfInterestModal extends React.Component {
       message: 'Request is being processed by the server (this can take a while)...'
     })
 
-    fetch('http://localhost:8000/submit_aoi/', {
+    fetch(`${this.props.settings.s2d2_url}/submit_aoi/`, {
       method: 'POST',
       body: formData,
       headers: headers,
@@ -294,7 +295,7 @@ class AddAreaOfInterestModal extends React.Component {
     let headers = new Headers();
 
     if (this.state.csrf_token === null) {
-      fetch('http://localhost:8000/generate_csrf/', {
+      fetch(`${this.props.settings.s2d2_url}/generate_csrf/`, {
       method: 'GET',
       mode: 'cors',
       cache: 'default',
@@ -332,13 +333,14 @@ class AddAreaOfInterestModal extends React.Component {
       'hideModal',
       'show',
       'addAreaOfInterest',
+      'settings',
     ]);
 
     const showHideClassName = this.state.showResult ? "loadingIndicators display-inline" : "loadingIndicators display-none";
 
     return (
       <Modal show={this.props.show} handleClose={this.modalCleanup}>
-          <h2>Area of Interest Contraints</h2>
+          <h2>Area of Interest Constraints</h2>
           <br />
         
       <form onSubmit={this.handleSubmit} ref={this.form}>

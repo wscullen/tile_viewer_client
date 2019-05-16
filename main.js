@@ -55,9 +55,18 @@ function createWindow() {
   var menu = Menu.buildFromTemplate([
     {label: 'File',
         submenu: [
-            {
-              label:'Exit',
-              click: () => app.quit()}
+              {
+                label:'Settings',
+                click: (menuItem, currentWindow) => {
+                  currentWindow.webContents.send('menu-item', {
+                    menuItem,
+                    currentWindow
+                  })
+                }
+              }, {
+                label:'Exit',
+                click: () => app.quit()
+              },
         ],
     }, {
         label: 'Dev',

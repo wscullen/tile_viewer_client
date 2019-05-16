@@ -49,12 +49,50 @@ library.add(fab,
             faCircle,
             farCircle)
 
+
+import { MemoryRouter as Router, Switch } from 'react-router-dom';
+import { Route } from 'react-router-dom';
+
+
 import MainContainer from './MainContainer'
+import Settings from './Settings'
+
+const defaultSettings = {
+  job_url: 'http://hal678772.agr.gc.ca:9090',
+  s2d2_url: 'http://hal678772.agr.gc.ca:8000'
+}
+
+
+const renderHomeRoute = () => {
+  if (window.location.pathname.includes('index.html')) {
+    console.log('index.html found')
+     return true;
+  } else return false;
+};
 
 class App extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      settings: defaultSettings
+    }
+  }
+  
+  updateSettings = (updatedSettings) => {
+    console.log('updating settings in App.js')
+    this.setState({
+      settings: updatedSettings
+    })
+  }
+
   render() {
     return (
-      <MainContainer />
+      <Router>
+      <Switch>
+        <Route exact path="/" render={(props) => <MainContainer {...props} settings={this.state.settings}/>} />
+        <Route exact path="/settings" render={(props) => <Settings {...props} settings={this.state.settings} updateSettings={this.updateSettings}/>} />
+      </Switch>
+      </Router>
     )
   }
 }

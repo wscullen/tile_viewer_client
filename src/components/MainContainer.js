@@ -17,6 +17,9 @@ import base64 from 'base-64'
 
 import {ipcRenderer} from 'electron'
 
+import { Route, Link } from 'react-router-dom';
+
+
 const defaultState = {
     show: false ,
     aoi_list: [],
@@ -46,10 +49,22 @@ export default class MainContainer extends Component {
         console.log('clearing local storage')
         this.resetState()
       }
-    });
 
-    this.state = defaultState
+      if (arg.menuItem.label === 'Settings') {
+        console.log('trying to go to settings')
+        const { history } = this.props;
+
+        history.push('/settings')
+      }
+    });
+    
+    console.log(this.props.settings)
+    this.state = {
+      ...defaultState
+      }
+    console.log(`default state is ${this.state}`)
   }
+
 
   resetState = () => {
     this.setState(defaultState)
@@ -146,6 +161,7 @@ export default class MainContainer extends Component {
     console.log(dateList)
     let currentDate = dateList[0]
 
+    // TODO: need to handle restoring the selected tile list better
     let allSelectedTiles = {}
 
     for (let datestring of dateList) {
@@ -166,9 +182,8 @@ export default class MainContainer extends Component {
     let headers = new Headers();
 
     if (api === 'job_manager')
-      server_url = JOB_MANAGER_SERVER_URL
 
-      fetch(`${server_url}/generate_csrf/`, {
+      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
@@ -220,7 +235,7 @@ export default class MainContainer extends Component {
 
       headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
     
-      fetch(`${JOB_MANAGER_SERVER_URL}/jobs/${job_id}/`, {
+      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
         method: 'GET',
         headers: headers,
       })
@@ -285,7 +300,7 @@ export default class MainContainer extends Component {
     if (this.state.job_csrf_token === null) {
       let headers = new Headers();
 
-      fetch(`${JOB_MANAGER_SERVER_URL}/generate_csrf/`, {
+      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
@@ -333,7 +348,7 @@ export default class MainContainer extends Component {
 
             headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
           
-            fetch(`${JOB_MANAGER_SERVER_URL}/jobs/`, {
+            fetch(`${this.props.settings.job_url}/jobs/`, {
               method: 'POST',
               body: JSON.stringify(jobReqBody),
               headers: headers,
@@ -550,6 +565,47 @@ export default class MainContainer extends Component {
   }
 
     componentDidMount() {
+      const activeAOIString = localStorage.getItem('active_aoi')
+      const allSelectedTilesString = localStorage.getItem('all_selected_tiles')
+      const aoi_listString = localStorage.getItem('aoi_list')
+      
+      let activeAOIObj = ''
+      if (activeAOIString) {
+        activeAOIObj = JSON.parse(activeAOIString)
+      }
+
+      let allSelectedTilesObj = []
+      if (allSelectedTilesString) {
+        allSelectedTilesObj = JSON.parse(allSelectedTilesString)
+      }
+
+      let aoi_listObj = []
+      if (aoi_listString) {
+        aoi_listObj = JSON.parse(aoi_listString)
+      }
+      
+      
+      this.setState({ activeAOI: activeAOIObj, allSelectedTiles: allSelectedTilesObj, aoi_list: aoi_listObj });
+    }
+
+    componentWillUnmount() {
+      console.log(this.state)
+
+    //       activeAOI: null
+    // allSelectedTiles: []
+    // aoi_list: []
+    // currentlySelectedTiles: []
+    // job_csrf_token: null
+      const { activeAOI, allSelectedTiles, aoi_list, } = this.state;
+
+      const activeAOIJSON = JSON.stringify(activeAOI)
+      const allSelectedTilesJSON = JSON.stringify(allSelectedTiles)
+      const aoi_listJSON = JSON.stringify(aoi_list)
+
+      localStorage.setItem('active_aoi', activeAOIJSON)
+      localStorage.setItem('all_selected_tiles', allSelectedTilesJSON)
+      localStorage.setItem('aoi_list', aoi_listJSON)
+
       
     }
 
@@ -558,7 +614,7 @@ export default class MainContainer extends Component {
     }
 
     render () {
-
+      console.log('hope the job manager updates11111111111111111111111111111111111111111111111')
       let wkt_footprint = null;
       // get AOI wkt from the currently active AOI
       console.log(this.state)
@@ -572,14 +628,14 @@ export default class MainContainer extends Component {
 
       return (
         <div className="mainContainer" ref="mainContainer">
-          <SimpleStorage parent={this} blacklist={['activeAOI', 'currentlySelectedTiles']}/>
-          <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} />
+          {/* <SimpleStorage parent={this} blacklist={[]}/> */}
+          <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings}/>
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
           <div className="centerContainer">
             <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentlySelectedTiles={this.state.currentlySelectedTiles} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs}/>
+          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
         </div>
       );
     }

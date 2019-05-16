@@ -249,8 +249,8 @@ export default class MapViewer extends Component {
 
         let aoi_style = new Style({
           stroke: new Stroke({
-            color: '#0f0',
-            width: 1
+            color: '#e11',
+            width: 2
           }),
           fill: new Fill({
             color: 'rgba(0,0,0,0)'
@@ -332,7 +332,7 @@ export default class MapViewer extends Component {
       getStyle(feature, feature_type) {
         var highlightStyle = new Style({
           stroke: new Stroke({
-            color: '#f00',
+            color: '#aaa',
             width: 1
           }),
           fill: new Fill({

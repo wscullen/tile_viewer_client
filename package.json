@@ -24,7 +24,9 @@
       "output": "out-builds",
       "buildResources": "assets"
     },
-    "extraFiles": ["assets/icons/*"],
+    "extraFiles": [
+      "assets/icons/*"
+    ],
     "mac": {
       "category": "your.app.category.type"
     }
@@ -77,6 +79,7 @@
     "react": "^16.8.6",
     "react-dates": "^20.1.0",
     "react-dom": "^16.8.6",
+    "react-router-dom": "^5.0.0",
     "react-simple-storage": "^1.4.1",
     "react-spinners": "^0.5.4",
     "yarn": "^1.15.2"

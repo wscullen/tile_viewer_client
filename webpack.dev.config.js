@@ -53,6 +53,7 @@ module.exports = {
       chunks: false,
       children: false
     },
+    historyApiFallback: true,
     before() {
       spawn(
         'electron',
