@@ -119,14 +119,16 @@ function createWindow() {
 
   if (dev) {
     console.log(os.homedir())
-    BrowserWindow.addDevToolsExtension(
-      // Windows Dev Machine at home fmkadmapgofadopljbjfkapdkoienihi
-      // C:\Users\sc\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi\3.6.0_0
-      path.join(os.homedir(), "AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0")
-
+    let devToolsPath;
+    if (process.platform === 'win32') {
+      devToolsPath = path.join(os.homedir(), "AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0")
+    } else if (process.platform === 'linux') {
       // Ubuntu dev machine
-      // path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
-
+      devToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+    }
+    console.log(devToolsPath)
+    BrowserWindow.addDevToolsExtension(
+      devToolsPath
     )
   }
   // and load the index.html of the app.

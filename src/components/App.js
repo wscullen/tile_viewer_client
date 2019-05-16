@@ -89,7 +89,7 @@ class App extends React.Component {
     return (
       <Router>
       <Switch>
-        <Route exact path="/" render={(props) => <MainContainer {...props} settings={this.state.settings}/>} />
+        <Route exact path="/" render={(props) => <MainContainer {...props} settings={this.state.settings} updateSettings={this.updateSettings}/>} />
         <Route exact path="/settings" render={(props) => <Settings {...props} settings={this.state.settings} updateSettings={this.updateSettings}/>} />
       </Switch>
       </Router>

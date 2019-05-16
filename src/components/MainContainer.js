@@ -45,7 +45,7 @@ export default class MainContainer extends Component {
       console.log(event)
       console.log(arg)
       if (arg.menuItem.label === 'Clear Local Storage') {
-        clearStorage()
+        localStorage.clear()
         console.log('clearing local storage')
         this.resetState()
       }
@@ -65,6 +65,98 @@ export default class MainContainer extends Component {
     console.log(`default state is ${this.state}`)
   }
 
+  componentDidMount() {
+    console.log('======================> Inside component did mount')
+    
+    this.loadFromLocalStorage()
+
+    if (this.state.activeAOI !== null) {
+      this.activateAOI(this.state.activeAOI)
+    }
+    
+    // Required for events outside the react lifecycle like refresh and quit
+    window.addEventListener('beforeunload', this.cleanUpBeforeClose);
+  }
+
+
+  componentWillUnmount() {
+    console.log('=================> Inside component will unmount')
+
+    this.saveToLocalStorage()
+
+    window.removeEventListener('beforeunload', this.cleanUpBeforeClose)
+  }
+
+  cleanUpBeforeClose = () => {
+    this.saveToLocalStorage()
+    localStorage.removeItem('initial_load')
+  }
+
+  saveToLocalStorage = () => {
+    console.log(this.state)
+
+    const { activeAOI, allSelectedTiles, aoi_list, } = this.state;
+
+    const activeAOIJSON = JSON.stringify(activeAOI)
+    const allSelectedTilesJSON = JSON.stringify(allSelectedTiles)
+    const aoi_listJSON = JSON.stringify(aoi_list)
+
+    const settings = JSON.stringify(this.props.settings)
+
+    localStorage.setItem('active_aoi', activeAOIJSON)
+    localStorage.setItem('all_selected_tiles', allSelectedTilesJSON)
+    localStorage.setItem('aoi_list', aoi_listJSON)
+
+    // Important Settings (to be sent up to the parent component)
+    localStorage.setItem('settings', settings)
+  }
+
+  loadFromLocalStorage = () => {
+
+    const activeAOIString = localStorage.getItem('active_aoi')
+    const allSelectedTilesString = localStorage.getItem('all_selected_tiles')
+    const aoi_listString = localStorage.getItem('aoi_list')
+
+    const settingsString = localStorage.getItem('settings')
+    
+    let activeAOIObj = ''
+    if (activeAOIString) {
+      activeAOIObj = JSON.parse(activeAOIString)
+    }
+
+    let allSelectedTilesObj = []
+    if (allSelectedTilesString) {
+      allSelectedTilesObj = JSON.parse(allSelectedTilesString)
+    }
+
+    let aoi_listObj = []
+    if (aoi_listString) {
+      aoi_listObj = JSON.parse(aoi_listString)
+    }
+
+    console.log(this.props.history)
+    
+    if (localStorage.getItem('initial_load') === null) {
+      let settingsObj;
+      if (settingsString) {
+        settingsObj = JSON.parse(settingsString)
+      }
+      console.log(settingsObj)
+      console.log('initial load of main container')
+      
+      this.props.updateSettings(settingsObj)
+      localStorage.setItem('initial_load', '')
+    } else {
+      console.log('not inital load')
+    }
+    
+    this.setState({ activeAOI: activeAOIObj, allSelectedTiles: allSelectedTilesObj, aoi_list: aoi_listObj });
+    console.log(this.state)
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    
+  }
 
   resetState = () => {
     this.setState(defaultState)
@@ -79,7 +171,7 @@ export default class MainContainer extends Component {
   };
 
   clearLocalStorage = () => {
-    clearStorage()
+    localStorage.clear()
   }
 
   incrementDate = () => {
@@ -564,61 +656,12 @@ export default class MainContainer extends Component {
     }
   }
 
-    componentDidMount() {
-      const activeAOIString = localStorage.getItem('active_aoi')
-      const allSelectedTilesString = localStorage.getItem('all_selected_tiles')
-      const aoi_listString = localStorage.getItem('aoi_list')
-      
-      let activeAOIObj = ''
-      if (activeAOIString) {
-        activeAOIObj = JSON.parse(activeAOIString)
-      }
-
-      let allSelectedTilesObj = []
-      if (allSelectedTilesString) {
-        allSelectedTilesObj = JSON.parse(allSelectedTilesString)
-      }
-
-      let aoi_listObj = []
-      if (aoi_listString) {
-        aoi_listObj = JSON.parse(aoi_listString)
-      }
-      
-      
-      this.setState({ activeAOI: activeAOIObj, allSelectedTiles: allSelectedTilesObj, aoi_list: aoi_listObj });
-    }
-
-    componentWillUnmount() {
-      console.log(this.state)
-
-    //       activeAOI: null
-    // allSelectedTiles: []
-    // aoi_list: []
-    // currentlySelectedTiles: []
-    // job_csrf_token: null
-      const { activeAOI, allSelectedTiles, aoi_list, } = this.state;
-
-      const activeAOIJSON = JSON.stringify(activeAOI)
-      const allSelectedTilesJSON = JSON.stringify(allSelectedTiles)
-      const aoi_listJSON = JSON.stringify(aoi_list)
-
-      localStorage.setItem('active_aoi', activeAOIJSON)
-      localStorage.setItem('all_selected_tiles', allSelectedTilesJSON)
-      localStorage.setItem('aoi_list', aoi_listJSON)
-
-      
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-      
-    }
+  
 
     render () {
       console.log('hope the job manager updates11111111111111111111111111111111111111111111111')
       let wkt_footprint = null;
       // get AOI wkt from the currently active AOI
-      console.log(this.state)
-      console.log('simple storage still saving shit')
       
       if (this.state.activeAOI) {
         const aoi_object = this.getAoiObject(this.state.activeAOI)
@@ -628,7 +671,6 @@ export default class MainContainer extends Component {
 
       return (
         <div className="mainContainer" ref="mainContainer">
-          {/* <SimpleStorage parent={this} blacklist={[]}/> */}
           <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings}/>
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
           <div className="centerContainer">
