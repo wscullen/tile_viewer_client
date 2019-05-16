@@ -106,7 +106,7 @@ function createWindow() {
     }
   ])
   Menu.setApplicationMenu(menu);
-  
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1250,
@@ -116,10 +116,17 @@ function createWindow() {
     show: false,
     icon: path.join(resources, '96x96.png')
   })
-  
+
   if (dev) {
+    console.log(os.homedir())
     BrowserWindow.addDevToolsExtension(
-      path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+      // Windows Dev Machine at home fmkadmapgofadopljbjfkapdkoienihi
+      // C:\Users\sc\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi\3.6.0_0
+      path.join(os.homedir(), "AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0")
+
+      // Ubuntu dev machine
+      // path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+
     )
   }
   // and load the index.html of the app.
@@ -148,11 +155,11 @@ function createWindow() {
 
   // Don't show until we are ready and loaded
   mainWindow.once('ready-to-show', () => {
-    
+
     // Open the DevTools automatically if developing
     if (dev) {
       console.log('wats happening')
-    
+
       mainWindow.webContents.openDevTools()
     }
     mainWindow.show()
