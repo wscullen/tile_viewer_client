@@ -8,6 +8,7 @@ import AreaOfInterestList from './AreaOfInterestList';
 import TimelineViewer from './TimelineViewer';
 import TileList from './TileList';
 import AddAreaOfInterestModal from './AddAreaOfInterestModal';
+import FilteringTools from './FilteringTools';
 
 import SimpleStorage, {clearStorage} from "react-simple-storage";
 
@@ -74,6 +75,7 @@ export default class MainContainer extends Component {
     
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose);
+
   }
 
 
@@ -407,6 +409,40 @@ export default class MainContainer extends Component {
     }
   }
 
+  selectAllVisibleTiles = () => {
+    let currentTiles = this.state.allTiles[this.state.currentDate]
+
+    console.log(currentTiles)
+
+    let tilesToSelect = currentTiles.filter((tile) => tile.visible).map((tile) => tile.name)
+
+    console.log(tilesToSelect)
+
+    // find the relevant tile info first (to find the date)
+    let allSelectedTiles = this.state.allSelectedTiles
+    
+    let currentDate = this.state.currentDate
+
+    for (let t of tilesToSelect) {
+      
+      let relevantTile = currentTiles.find((ele) => ele.name == t)
+      console.log(relevantTile)
+      
+      let previouslySelectedTiles = allSelectedTiles[currentDate].map((tile) => tile.name)
+      console.log(previouslySelectedTiles)
+      console.log(relevantTile.name)
+      
+      if (!previouslySelectedTiles.includes(relevantTile.name))
+        allSelectedTiles[currentDate].push(relevantTile)
+    
+    }
+
+    this.setState({
+      allSelectedTiles,
+      currentlySelectedTiles: tilesToSelect
+    })
+  }
+
   handleSubmitAllJobs = () => {
     console.log('submitting all jobs for selected tiles')
 
@@ -634,7 +670,8 @@ export default class MainContainer extends Component {
           lowres_preview_url: raw_tile.preview_url,
           proj,
           date: mid_date,
-          cloud: raw_tile['cloud_percent']
+          cloud: raw_tile['cloud_percent'],
+          visible: true
         }
 
         formatted_tiles.push(tile)
@@ -687,6 +724,7 @@ export default class MainContainer extends Component {
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
           <div className="centerContainer">
             <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentlySelectedTiles={this.state.currentlySelectedTiles} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
+            <FilteringTools selectAll={this.selectAllVisibleTiles} />
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
           <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
