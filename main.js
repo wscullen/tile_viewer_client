@@ -21,7 +21,7 @@ const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
 
 const os = require('os')
-
+const fs = require("fs");
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
@@ -127,9 +127,13 @@ function createWindow() {
       devToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
     }
     console.log(devToolsPath)
-    BrowserWindow.addDevToolsExtension(
-      devToolsPath
-    )
+
+    if (fs.existsSync(devToolsPath)) {
+      BrowserWindow.addDevToolsExtension(
+        devToolsPath
+      )
+    }
+   
   }
   // and load the index.html of the app.
   let indexPath
