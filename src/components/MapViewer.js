@@ -315,9 +315,7 @@ export default class MapViewer extends Component {
             this.state.map.addLayer(vector)
            
             this.state.map.getView().fit(extent, {duration: 1500})
-            setTimeout(() => {
-              this.state.map.getView().setZoom(6.5)
-            }, 1500);
+            
           }
         }
 
@@ -358,10 +356,6 @@ export default class MapViewer extends Component {
         let map = this.state.map;
 
         console.log('this is where we would iterate over tiles for the current active date')
-
-       
-
-
 
         let layersToRemove = [];
 
@@ -423,12 +417,8 @@ export default class MapViewer extends Component {
               console.log(err)
             }))
 
-
-         
           })(tile);
-        
         }
-
 
         Promise.all(promiseArray).then((values) => {
             for (let val of values) {

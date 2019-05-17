@@ -18,15 +18,17 @@ import base64 from 'base-64'
 import {ipcRenderer} from 'electron'
 
 import { Route, Link } from 'react-router-dom';
+import { getS3LikeProviderBaseUrl } from 'builder-util-runtime';
 
 
 const defaultState = {
     show: false ,
     aoi_list: [],
     activeAOI: null,
-    allSelectedTiles: [],
+    allSelectedTiles: {},
     currentlySelectedTiles: [],
     job_csrf_token: null,
+    currentDate: null
 }
 
 // const JOB_MANAGER_SERVER_URL = 'http://zeus684440.agr.gc.ca:8080'
@@ -69,10 +71,6 @@ export default class MainContainer extends Component {
     console.log('======================> Inside component did mount')
     
     this.loadFromLocalStorage()
-
-    if (this.state.activeAOI !== null) {
-      this.activateAOI(this.state.activeAOI)
-    }
     
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose);
@@ -97,15 +95,28 @@ export default class MainContainer extends Component {
 
     const { activeAOI, allSelectedTiles, aoi_list, } = this.state;
 
-    const activeAOIJSON = JSON.stringify(activeAOI)
+    if (this.state.activeAOI) {
+      // Save the selcted tiles for later
+      const aoi_index = this.getAoiObject(activeAOI)
+      let currentAOI = aoi_list[aoi_index]
+      currentAOI['selectedTiles'] = this.state.allSelectedTiles
+      aoi_list[aoi_index] = currentAOI
+    }
+
+
     const allSelectedTilesJSON = JSON.stringify(allSelectedTiles)
     const aoi_listJSON = JSON.stringify(aoi_list)
 
     const settings = JSON.stringify(this.props.settings)
 
-    localStorage.setItem('active_aoi', activeAOIJSON)
     localStorage.setItem('all_selected_tiles', allSelectedTilesJSON)
     localStorage.setItem('aoi_list', aoi_listJSON)
+
+    if (activeAOI !== null)
+      localStorage.setItem('active_aoi', this.state.activeAOI)
+
+    if (this.state.currentDate !== null)
+      localStorage.setItem('currentDate', this.state.currentDate)
 
     // Important Settings (to be sent up to the parent component)
     localStorage.setItem('settings', settings)
@@ -117,28 +128,26 @@ export default class MainContainer extends Component {
     const allSelectedTilesString = localStorage.getItem('all_selected_tiles')
     const aoi_listString = localStorage.getItem('aoi_list')
 
+    const currentDate = localStorage.getItem('currentDate')
+
     const settingsString = localStorage.getItem('settings')
     
-    let activeAOIObj = ''
-    if (activeAOIString) {
-      activeAOIObj = JSON.parse(activeAOIString)
-    }
 
     let allSelectedTilesObj = []
-    if (allSelectedTilesString) {
+    if (allSelectedTilesString !== null) {
       allSelectedTilesObj = JSON.parse(allSelectedTilesString)
     }
 
     let aoi_listObj = []
-    if (aoi_listString) {
+    if (aoi_listString !== null) {
       aoi_listObj = JSON.parse(aoi_listString)
     }
 
     console.log(this.props.history)
     
-    if (localStorage.getItem('initial_load') === null) {
+    if (localStorage.getItem('initial_load') === '') {
       let settingsObj;
-      if (settingsString) {
+      if (settingsString !== null) {
         settingsObj = JSON.parse(settingsString)
       }
       console.log(settingsObj)
@@ -149,9 +158,19 @@ export default class MainContainer extends Component {
     } else {
       console.log('not inital load')
     }
+
+    setTimeout(() => {
+      if (activeAOIString !== null) {
+        console.log('activating area of interest!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        this.activateAOI(this.state.activeAOI)
+      }
+    }, 500)
     
-    this.setState({ activeAOI: activeAOIObj, allSelectedTiles: allSelectedTilesObj, aoi_list: aoi_listObj });
-    console.log(this.state)
+    this.setState({ 
+                activeAOI: activeAOIString, 
+                allSelectedTiles: allSelectedTilesObj, 
+                aoi_list: aoi_listObj,
+                currentDate });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -159,7 +178,7 @@ export default class MainContainer extends Component {
   }
 
   resetState = () => {
-    this.setState(defaultState)
+    this.setState({...defaultState})
   }
 
   showModal = () => {
@@ -179,7 +198,6 @@ export default class MainContainer extends Component {
     let dateList = this.state.dateList
     let indexOfCurrentDate = dateList.indexOf(this.state.currentDate)
     console.log(dateList)
-
   
     if (indexOfCurrentDate !== (dateList.length - 1)) {
       let newIndex = indexOfCurrentDate + 1;
@@ -188,7 +206,6 @@ export default class MainContainer extends Component {
       if (this.state.selectObject){
         this.state.selectObject.getFeatures().clear()
       }
-
 
       this.setState({
         currentDate: newDate,
@@ -238,35 +255,64 @@ export default class MainContainer extends Component {
     console.log('YOU CLICKED AN AREA OF INTEREST')
     console.log(aoi_name)
     
-    const activeAOI = this.getAoiObject(aoi_name)
+    const newIndex = this.getAoiObject(aoi_name)
+    const prevIndex = this.getAoiObject(this.state.activeAOI)
     
     console.log(activeAOI)
+    let aoi_list = this.state.aoi_list
+    const activeAOI = aoi_list[newIndex]
+    console.log(activeAOI)
+    console.log(newIndex)
+    let currentlySelectedTiles = this.state.currentlySelectedTiles
+    // save existing selected tiles
+    if (prevIndex !== -1) {
+      let prevActiveAOI = aoi_list[prevIndex]
+      
+      prevActiveAOI['allSelectedTiles'] = this.state.allSelectedTiles
+      prevActiveAOI['currentDate'] = this.state.currentDate
+      currentlySelectedTiles = []
+      aoi_list[prevIndex] = prevActiveAOI
+      
+      this.setState({
+        aoi_list
+      })
+    }
 
     console.log('Sorting tiles by date...')
     let sortedTiles = this.sortTilesByDate(activeAOI.raw_tile_list)
-
     console.log(sortedTiles)
 
     // Since the AOI is newly activated, lets put the current date to the first date.
-
     let dateList = Object.keys(sortedTiles.datesObject)
     console.log(dateList)
-    let currentDate = dateList[0]
+    let currentDate
+    if (activeAOI['currentDate'] === undefined) {
+      currentDate = dateList[0]
+    } else {
+      currentDate = activeAOI['currentDate']
+    }
 
-    // TODO: need to handle restoring the selected tile list better
+    // Initialize empty allSelectedTiles List
+    let hasAllSelectedTiles = activeAOI.hasOwnProperty('allSelectedTiles')
+    
     let allSelectedTiles = {}
-
-    for (let datestring of dateList) {
-      allSelectedTiles[datestring] = []
-    } 
+    
+    if (!hasAllSelectedTiles) {
+      for (let datekey of dateList) {
+        allSelectedTiles[datekey] = []
+      }
+    } else {
+      allSelectedTiles = activeAOI['allSelectedTiles']
+    }
 
     this.setState({
       activeAOI: aoi_name,
       currentTiles: sortedTiles.datesObject[currentDate],
       dateList,
       allTiles: sortedTiles.datesObject,
-      currentDate: currentDate,
-      allSelectedTiles
+      allSelectedTiles,
+      currentlySelectedTiles,
+      currentDate
     })
   }
 
@@ -471,12 +517,7 @@ export default class MainContainer extends Component {
               this.setState({
                 allSelectedTiles: tiles
               })
-              
-              
-
-
             }).catch((err) => {
-
               console.log(err)
               console.log('something went wrong when trying to submit the job')
             })
@@ -485,43 +526,11 @@ export default class MainContainer extends Component {
         }
       })
     }
-
-  // const oneTile = {
-  //   "label": "S2"
-  // }
-
-  // fetch(`{JOB_MANAGER_SERVER_URL}/jobs/`, {
-  //   method: 'POST',
-  //   body: formData,
-  //   headers: headers,
-  // })
-  // .then(response => response.json())
-  // .then(response => {
-  //   console.log('Success:', JSON.stringify(response))
-
-  //   const data = response['data']
-  //   console.log(this.state.files)
-
-  //   const aoi = {
-  //     name: this.state.name,
-  //     startDate: this.state.startDate,
-  //     endDate: this.state.endDate,
-  //     shapefile: this.state.files.filter((ele) => path.extname(ele.name) === '.shp'),
-  //     wkt_footprint: data['wkt_footprint'],
-  //        mgrs_list: data['mgrs_list'],
-  //        wrs_list: data['wrs_list'],
-  //        raw_tile_list: data['tile_results']
-  //   }
-  //   this.props.addAreaOfInterest(aoi);
-  //   console.log(aoi)
-
-  //   this.form.current.reset();
-
-
   }
 
   getAoiObject = (aoi_name) => {
-    return this.state.aoi_list.find((ele) => ele.name === aoi_name)
+    // returning index instead of the object itself
+    return this.state.aoi_list.map((aoi) => aoi.name).indexOf(aoi_name)
   }
 
   handleTileSelect = (tiles, selectObject) => {
@@ -581,7 +590,7 @@ export default class MainContainer extends Component {
 
     console.log(allSelectedTiles)
     // get the tile date
-    let dateString = tileRemoved.date.format("YYYYMMDD")
+    let dateString = moment(tileRemoved.date).format("YYYYMMDD")
 
     console.log(dateString)
 
@@ -610,7 +619,7 @@ export default class MainContainer extends Component {
     if (tiles) {
       let formatted_tiles = [];
       for (let raw_tile of tiles) {
-
+      
         let proj = raw_tile.detailed_metadata.find((ele) => ele.fieldName === 'EPSG Code').value
         let start_date = moment(raw_tile.acquisition_start)
         let end_date = moment(raw_tile.acquisition_end)
@@ -624,7 +633,8 @@ export default class MainContainer extends Component {
           wkt: raw_tile.footprint,
           lowres_preview_url: raw_tile.preview_url,
           proj,
-          date: mid_date
+          date: mid_date,
+          cloud: raw_tile['cloud_percent']
         }
 
         formatted_tiles.push(tile)
@@ -662,11 +672,13 @@ export default class MainContainer extends Component {
       console.log('hope the job manager updates11111111111111111111111111111111111111111111111')
       let wkt_footprint = null;
       // get AOI wkt from the currently active AOI
-      
-      if (this.state.activeAOI) {
-        const aoi_object = this.getAoiObject(this.state.activeAOI)
-        console.log(aoi_object)
-        wkt_footprint = aoi_object.wkt_footprint
+      console.log(this.state)
+      console.log(this.state.activeAOI)
+
+      if (this.state.activeAOI !== null) {
+        const aoi_index = this.getAoiObject(this.state.activeAOI)
+        console.log(aoi_index)
+        wkt_footprint = this.state.aoi_list[aoi_index].wkt_footprint
       }
 
       return (

@@ -2,7 +2,7 @@
     border-left: 1px solid lightgrey;
     /* margin: 2px; */
     flex-grow: 1;
-    min-width: 30%;
+    min-width: 380px;
     overflow-y: scroll;
 }
 
