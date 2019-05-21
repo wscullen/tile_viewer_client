@@ -4,9 +4,21 @@
     align-items: center;
     justify-content: space-between;
     padding: 5px;
+    height: 100px;
 }
 
 .controlGroup {
     display: flex;
     align-items: center;
+}
+
+.controlGroup2 {
+    display: flex;
+    align-items: center;
+    min-width: 40%;
+}
+
+
+#cloudiness {
+    min-width: 50%;
 }
