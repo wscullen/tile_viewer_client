@@ -1,18 +1,14 @@
 .mapViewer {
-
     flex-grow: 3;
-    min-height: 60%;
+    height: 100%;
+    width: 100%;
     display: flex;
-
-
 }
 
 #map {
     background: lightcoral;
-    height: auto;
-    min-height: 100%;
-    width: 100%;
     z-index: 0;
-
+    height: 100%;
+    width: 100%;
 }
 

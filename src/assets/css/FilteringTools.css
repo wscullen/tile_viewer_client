@@ -1,10 +1,14 @@
 .filteringTools {
     display: flex;
 
+    flex-shrink: 1;
+
+    min-height: 75px;
+
     align-items: center;
     justify-content: space-between;
     padding: 5px;
-    height: 100px;
+    
 }
 
 .controlGroup {

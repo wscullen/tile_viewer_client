@@ -60,6 +60,7 @@ export default class MainContainer extends Component {
   constructor(props) {
     super(props)
     console.log('maincontainer constructor running')
+
     // read_file = function('name.json'){
     //     return fs.readFileSync(file, 'utf8');
     // }
@@ -109,6 +110,7 @@ export default class MainContainer extends Component {
       ...defaultState
       }
     console.log(`default state is ${this.state}`)
+    console.log(this.state)
   }
 
   componentDidMount() {
@@ -137,8 +139,10 @@ export default class MainContainer extends Component {
   }
 
   saveToLocalStorage = () => {
-    console.log('SAVING TO LOCAL STORAGE')
+    console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
     console.log(this.state)
+
+    console.log(this.props)
 
     const { activeAOI, allSelectedTiles, aoi_list, currentDate } = this.state;
 
@@ -167,11 +171,16 @@ export default class MainContainer extends Component {
 
     if (currentDate !== null)
       localStorage.setItem('current_date', currentDate)
+    
+    console.log('current settings!!!!!!!!!!!!!!!S')
+    console.log(this.props.settings)
+    
+    localStorage.setItem('settings', JSON.stringify(this.props.settings))
 
-    localStorage.setItem('settings', this.props.settings)
     const jsonData = {
       aoi_list
     }
+
     fs.writeFileSync(path.join(execPath, 'localstorage.json'), JSON.stringify(jsonData));
 
 
@@ -196,15 +205,14 @@ export default class MainContainer extends Component {
 
 
   loadFromLocalStorage = () => {
-    console.log('LOADING FROM LOCAL STORAGE')
+    console.log('<<<<<<<<-------------------------------------- LOADING FROM LOCAL STORAGE');
 
-    const activeAOI = localStorage.getItem('active_aoi') === null ? null : localStorage.getItem('active_aoi')
-    
-    
+    const activeAOI = localStorage.getItem('active_aoi') === null ? null : localStorage.getItem('active_aoi');
 
-    const currentDate = localStorage.getItem('current_date') === null  ? null : localStorage.getItem('current_date')
+    const currentDate = localStorage.getItem('current_date') === null  ? null : localStorage.getItem('current_date');
 
-    const settings = localStorage.getItem('settings') === null ? {} : localStorage.getItem('settings')
+    const settingsString = localStorage.getItem('settings')
+
     let dataString = undefined
     let data = undefined
 
@@ -213,7 +221,7 @@ export default class MainContainer extends Component {
       dataString =  fs.readFileSync(path.join(execPath, 'localstorage.json'), 'utf8');
       data = JSON.parse(dataString)
     }
-    
+    console.log(data)
      if (data === undefined)
         data = {
           aoi_list: []
@@ -221,7 +229,7 @@ export default class MainContainer extends Component {
 
     let aoi_list = data.aoi_list
     let allSelectedTiles = {}
-    if (activeAOI !== undefined && aoi_list.length !== 0) {
+    if (activeAOI !== null && aoi_list.length !== 0) {
       allSelectedTiles = aoi_list.find((aoi) => aoi.name === activeAOI)['selectedTiles']
     }
 
@@ -246,15 +254,15 @@ export default class MainContainer extends Component {
     // }
 
     // console.log(this.props.history)
-    
-    if (localStorage.getItem('initial_load') === null) {
-      console.log('initial boot, not setting state from local storage...')
-      localStorage.setItem('initial_load', '')
+    console.log('--------------------------->>>>>> SETTINGS')
+    let initial_load = localStorage.getItem('initial_load')
+
+    if (settingsString !== null && initial_load === null) {
+      const settings = JSON.parse(settingsString)
       this.props.updateSettings(settings)
 
-
-    } 
-
+      localStorage.setItem('initial_load', '')
+    }
 
       console.log(activeAOI)
       console.log(allSelectedTiles)
@@ -277,7 +285,10 @@ export default class MainContainer extends Component {
   }
 
   resetState = () => {
+    console.log('resetting state to defaults')
+
     this.setState({...defaultState})
+    this.props.resetSettings()
   }
 
   showModal = () => {
@@ -345,6 +356,8 @@ export default class MainContainer extends Component {
 
     this.setState({
       aoi_list: [...this.state.aoi_list, area]
+    }, () => {
+      this.saveToLocalStorage()
     })
   }
 

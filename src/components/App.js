@@ -80,8 +80,16 @@ class App extends React.Component {
   
   updateSettings = (updatedSettings) => {
     console.log('updating settings in App.js')
+    
     this.setState({
       settings: updatedSettings
+    })
+  }
+
+  resetSettings = () => {
+    console.log('resetting settings to defaults')
+    this.setState({
+      settings: defaultSettings
     })
   }
 
@@ -89,7 +97,7 @@ class App extends React.Component {
     return (
       <Router>
       <Switch>
-        <Route exact path="/" render={(props) => <MainContainer {...props} settings={this.state.settings} updateSettings={this.updateSettings}/>} />
+        <Route exact path="/" render={(props) => <MainContainer {...props} settings={this.state.settings} updateSettings={this.updateSettings} resetSettings={this.resetSettings}/>} />
         <Route exact path="/settings" render={(props) => <Settings {...props} settings={this.state.settings} updateSettings={this.updateSettings}/>} />
       </Switch>
       </Router>
