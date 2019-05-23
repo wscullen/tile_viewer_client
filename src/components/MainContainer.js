@@ -18,9 +18,27 @@ import base64 from 'base-64'
 
 import {ipcRenderer} from 'electron'
 
+const fs = require('fs')
 import { Route, Link } from 'react-router-dom';
 import { getS3LikeProviderBaseUrl } from 'builder-util-runtime';
+import { exec } from 'builder-util';
 
+// import Store from 'electron-store'
+
+// import Datastore from 'nedb';
+
+// const store = new Store();
+
+// const db = new Datastore({ filename: 'dbfile', autoload: true});
+
+const { remote } = require ('electron');
+const path = require ('path');
+
+let execPath;
+
+execPath = path.join(process.resourcesPath, '..')
+
+console.log(execPath)
 
 const defaultState = {
     show: false ,
@@ -42,6 +60,30 @@ export default class MainContainer extends Component {
   constructor(props) {
     super(props)
     console.log('maincontainer constructor running')
+    // read_file = function('name.json'){
+    //     return fs.readFileSync(file, 'utf8');
+    // }
+
+    // write_file = function('name.json', output){
+        
+    // }
+    // const testJsObj = {
+    //   'name': 'test'
+    // }
+    // fs.writeFileSync('test.json', JSON.stringify(testJsObj));
+
+    // localStorage.clear()
+    //     store.clear()
+    //     console.log('clearing local storage')
+    //     this.resetState()
+    //     db.insert({name: 'butt', butt: 'butt'}, (err, newDoc) => {
+    //         console.log('inserted into database')
+    //         // store.set('all_selected_tiles_key', newDoc._id)
+    //       })
+    // localStorage.clear()
+    //     store.clear()
+    //     console.log('clearing local storage')
+    //     this.resetState()
 
     // clear react simple storage (for debuggin and testing purposes)
     ipcRenderer.on('menu-item', (event, arg) => {
@@ -49,6 +91,7 @@ export default class MainContainer extends Component {
       console.log(arg)
       if (arg.menuItem.label === 'Clear Local Storage') {
         localStorage.clear()
+        // store.clear()
         console.log('clearing local storage')
         this.resetState()
       }
@@ -89,90 +132,144 @@ export default class MainContainer extends Component {
 
   cleanUpBeforeClose = () => {
     this.saveToLocalStorage()
+    
     localStorage.removeItem('initial_load')
   }
 
   saveToLocalStorage = () => {
+    console.log('SAVING TO LOCAL STORAGE')
     console.log(this.state)
 
-    const { activeAOI, allSelectedTiles, aoi_list, } = this.state;
+    const { activeAOI, allSelectedTiles, aoi_list, currentDate } = this.state;
 
     if (this.state.activeAOI) {
       // Save the selcted tiles for later
       const aoi_index = this.getAoiObject(activeAOI)
       let currentAOI = aoi_list[aoi_index]
-      currentAOI['selectedTiles'] = this.state.allSelectedTiles
+      currentAOI['selectedTiles'] = allSelectedTiles
       aoi_list[aoi_index] = currentAOI
     }
 
+    // store.set('all_selected_tiles', allSelectedTiles)
+    // // db.insert(allSelectedTiles, (err, newDoc) => {
+    // //   console.log('inserted into database')
+    // //   // store.set('all_selected_tiles_key', newDoc._id)
+    // // })
+    // store.set('aoi_list', aoi_list)
+    // // db.insert(aoi_list, (err, newDoc) => {
+    // //   console.log('inserted into database')
+    // //   // store.set('aoi_list_key', newDoc._id)
+    // // })
 
-    const allSelectedTilesJSON = JSON.stringify(allSelectedTiles)
-    const aoi_listJSON = JSON.stringify(aoi_list)
+    if (activeAOI !== null) {
+      localStorage.setItem('active_aoi', activeAOI)
+    }
 
-    const settings = JSON.stringify(this.props.settings)
+    if (currentDate !== null)
+      localStorage.setItem('current_date', currentDate)
 
-    localStorage.setItem('all_selected_tiles', allSelectedTilesJSON)
-    localStorage.setItem('aoi_list', aoi_listJSON)
+    localStorage.setItem('settings', this.props.settings)
+    const jsonData = {
+      aoi_list
+    }
+    fs.writeFileSync(path.join(execPath, 'localstorage.json'), JSON.stringify(jsonData));
 
-    if (activeAOI !== null)
-      localStorage.setItem('active_aoi', this.state.activeAOI)
 
-    if (this.state.currentDate !== null)
-      localStorage.setItem('currentDate', this.state.currentDate)
+    // const allSelectedTilesJSON = JSON.stringify(allSelectedTiles)
+    // const aoi_listJSON = JSON.stringify(aoi_list)
 
-    // Important Settings (to be sent up to the parent component)
-    localStorage.setItem('settings', settings)
+    // const settings = JSON.stringify(this.props.settings)
+
+    // localStorage.setItem('all_selected_tiles', allSelectedTilesJSON)
+    // localStorage.setItem('aoi_list', aoi_listJSON)
+
+    // if (activeAOI !== null)
+    //   localStorage.setItem('active_aoi', this.state.activeAOI)
+
+    // if (this.state.currentDate !== null)
+    //   localStorage.setItem('currentDate', this.state.currentDate)
+
+    // // Important Settings (to be sent up to the parent component)
+    // localStorage.setItem('settings', settings)
   }
 
+
+
   loadFromLocalStorage = () => {
+    console.log('LOADING FROM LOCAL STORAGE')
 
-    const activeAOIString = localStorage.getItem('active_aoi')
-    const allSelectedTilesString = localStorage.getItem('all_selected_tiles')
-    const aoi_listString = localStorage.getItem('aoi_list')
-
-    const currentDate = localStorage.getItem('currentDate')
-
-    const settingsString = localStorage.getItem('settings')
+    const activeAOI = localStorage.getItem('active_aoi') === null ? null : localStorage.getItem('active_aoi')
+    
     
 
-    let allSelectedTilesObj = []
-    if (allSelectedTilesString !== null) {
-      allSelectedTilesObj = JSON.parse(allSelectedTilesString)
-    }
+    const currentDate = localStorage.getItem('current_date') === null  ? null : localStorage.getItem('current_date')
 
-    let aoi_listObj = []
-    if (aoi_listString !== null) {
-      aoi_listObj = JSON.parse(aoi_listString)
-    }
+    const settings = localStorage.getItem('settings') === null ? {} : localStorage.getItem('settings')
+    let dataString = undefined
+    let data = undefined
 
-    console.log(this.props.history)
+    if (fs.existsSync(path.join(execPath, 'localstorage.json'))) {
+      console.log('reading from file')
+      dataString =  fs.readFileSync(path.join(execPath, 'localstorage.json'), 'utf8');
+      data = JSON.parse(dataString)
+    }
     
-    if (localStorage.getItem('initial_load') === '') {
-      let settingsObj;
-      if (settingsString !== null) {
-        settingsObj = JSON.parse(settingsString)
-      }
-      console.log(settingsObj)
-      console.log('initial load of main container')
-      
-      this.props.updateSettings(settingsObj)
+     if (data === undefined)
+        data = {
+          aoi_list: []
+        }
+
+    let aoi_list = data.aoi_list
+    let allSelectedTiles = {}
+    if (activeAOI !== undefined && aoi_list.length !== 0) {
+      allSelectedTiles = aoi_list.find((aoi) => aoi.name === activeAOI)['selectedTiles']
+    }
+
+
+    // const activeAOIString = localStorage.getItem('active_aoi')
+    // const allSelectedTilesString = localStorage.getItem('all_selected_tiles')
+    // const aoi_listString = localStorage.getItem('aoi_list')
+
+    // const currentDate = localStorage.getItem('currentDate')
+
+    // const settingsString = localStorage.getItem('settings')
+    
+
+    // let allSelectedTilesObj = []
+    // if (allSelectedTilesString !== null) {
+    //   allSelectedTilesObj = JSON.parse(allSelectedTilesString)
+    // }
+
+    // let aoi_listObj = []
+    // if (aoi_listString !== null) {
+    //   aoi_listObj = JSON.parse(aoi_listString)
+    // }
+
+    // console.log(this.props.history)
+    
+    if (localStorage.getItem('initial_load') === null) {
+      console.log('initial boot, not setting state from local storage...')
       localStorage.setItem('initial_load', '')
-    } else {
-      console.log('not inital load')
-    }
+      this.props.updateSettings(settings)
 
-    setTimeout(() => {
-      if (activeAOIString !== null) {
-        console.log('activating area of interest!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        this.activateAOI(this.state.activeAOI)
-      }
-    }, 500)
-    
-    this.setState({ 
-                activeAOI: activeAOIString, 
-                allSelectedTiles: allSelectedTilesObj, 
-                aoi_list: aoi_listObj,
-                currentDate });
+
+    } 
+
+
+      console.log(activeAOI)
+      console.log(allSelectedTiles)
+      console.log(currentDate)
+      
+      this.setState({ 
+        activeAOI: activeAOI, 
+        currentDate,
+      aoi_list,
+      allSelectedTiles }, () => {
+        if (this.state.activeAOI !== null) {
+          this.activateAOI(this.state.activeAOI)
+        }
+      });
+
   }
 
   componentDidUpdate(prevProps, prevState) {
