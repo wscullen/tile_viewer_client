@@ -679,18 +679,23 @@ export default class MainContainer extends Component {
     return this.state.aoi_list.map((aoi) => aoi.name).indexOf(aoi_name)
   }
 
-  handleTileSelect = (tiles, selectObject) => {
+  handleTileSelect = (tiles) => {
     
     console.log('this tile was selected')
     console.log(tiles)
 
+ 
     // find the relevant tile info first (to find the date)
     let allSelectedTiles = this.state.allSelectedTiles
     let allTiles = this.state.allTiles
     let currentDate = this.state.currentDate
+
+    let tileNameList = []
+
     for (let t of tiles) {
-      let relevantTile = allTiles[currentDate].find((ele) => ele.name == t)
+      let relevantTile = allTiles[currentDate].find((ele) => ele.geojson.id == t)
       console.log(relevantTile)
+      tileNameList.push(relevantTile.name)
       
       let previouslySelectedTiles = allSelectedTiles[currentDate].map((tile) => tile.name)
       console.log(previouslySelectedTiles)
@@ -702,9 +707,9 @@ export default class MainContainer extends Component {
 
     this.setState({
       allSelectedTiles,
-      currentlySelectedTiles: tiles,
-      selectObject
+      currentlySelectedTiles: tileNameList
     })
+    
   }
 
   removeDuplicates = (array) => {
@@ -781,7 +786,8 @@ export default class MainContainer extends Component {
           proj,
           date: mid_date,
           cloud: raw_tile['cloud_percent'],
-          visible: true
+          visible: true,
+          geojson: raw_tile['geojson']
         }
 
         formatted_tiles.push(tile)
@@ -833,7 +839,7 @@ export default class MainContainer extends Component {
           <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings}/>
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
           <div className="centerContainer">
-            <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentlySelectedTiles={this.state.currentlySelectedTiles} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI}/>
+            <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate}/>
             <FilteringTools selectAll={this.selectAllVisibleTiles} />
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>

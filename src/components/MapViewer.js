@@ -36,7 +36,8 @@ export default class MapViewer extends Component {
       tiles: props.tiles,
       currentDate: props.dateBeingViewed,
       currentAOIName: props.AOIName,
-      currentInstance: this
+      currentInstance: this,
+      featuresHovered: []
     };
    
   }
@@ -83,25 +84,7 @@ export default class MapViewer extends Component {
       //   })
       // });
 
-      var highlightStyle = new Style({
-        stroke: new Stroke({
-          color: '#f00',
-          width: 1
-        }),
-        fill: new Fill({
-          color: 'rgba(255,0,0,0.1)'
-        }),
-        text: new Text({
-          font: '12px Calibri,sans-serif',
-          fill: new Fill({
-            color: '#000'
-          }),
-          stroke: new Stroke({
-            color: '#f00',
-            width: 3
-          })
-        })
-      });
+     
 
         var raster = new TileLayer({
             source: new OSM()
@@ -111,11 +94,10 @@ export default class MapViewer extends Component {
           var featureOverlay = new VectorLayer({
             source: new VectorSource(),
             map: map,
-            style: function(feature) {
-              highlightStyle.getText().setText(feature.get('name'));
-              return highlightStyle;
-            }
+            style: this.getStyle(undefined, 'highlight')
           });
+
+          featureOverlay.setZIndex(99999)
           var map = new Map({
             layers: [raster, featureOverlay],
             target: 'map',
@@ -216,35 +198,22 @@ export default class MapViewer extends Component {
 
       displayFeatureInfo (pixel) {
         const map = this.state.map
-        let highlight = this.state.highlight
 
         let featureOverlay = this.state.featureOverlay
-        var feature = map.forEachFeatureAtPixel(pixel, (feature) => {
-          return feature;
+        featureOverlay.getSource().clear()
+
+        map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+          console.log(layer)
+          if (layer.get('name') === 'tileLayer') {
+            featureOverlay.getSource().addFeature(feature)
+            let name = feature.getId() + ': ' + feature.get('name');
+            console.log(name)
+          }
         });
 
-        var info = document.getElementById('info');
-        if (feature) {
-          let name = feature.getId() + ': ' + feature.get('name');
-        } else {
-          let name = '&nbsp;';
-        }
-
-        console.log(name)
-
-        if (feature !== highlight) {
-          if (highlight) {
-            featureOverlay.getSource().removeFeature(highlight);
-          }
-          if (feature) {
-            featureOverlay.getSource().addFeature(feature);
-          }
-          
-          this.setState({
-            highlight: feature,
-            featureOverlay
-          })
-        }
+        this.setState({
+          featuresHovered: featureOverlay.getSource().getFeatures().map((feat) => feat.getId())
+        });
       }
 
       async getMeta(tile) {
@@ -273,36 +242,49 @@ export default class MapViewer extends Component {
       // pass new features from props into the OpenLayers layer object
       componentDidUpdate(prevProps, prevState) {
         // Programmatically set selected features NOT WORKING TODO: fix this
+        console.log(prevState)
+        console.log(this.state)
         
-        if (prevProps === this.props)
+        console.log('inside component will update')
+
+        if (prevProps === this.props) {
+          console.log('========================== prev props the same as new props')
+        
+          console.log(prevProps)
+          console.log(this.props)
           return
-        
-        let layersToSelect = []
-        
-        if (prevProps.currentlySelectedTiles !== this.props.currentlySelectedTiles) {
-          
-          this.state.map.getLayers().forEach((ele) => {
-            console.log(ele);
-            console.log(ele.get('name'));
-            console.log(this.props.currentlySelectedTiles)
-            
-            if (ele.get('name') && ele.get('name').startsWith('tileLayer') && this.props.currentlySelectedTiles.includes(ele.get('name').split("__")[1])) {
-              console.log(ele)
-              let source = ele.getSource();
-              console.log(source)
-
-              let features = source.getFeatures();
-              console.log(features)
-              layersToSelect.push(...features);
-              console.log('features to be seelcted added programmatically')
-            }
-          });
-
-          layersToSelect.map((ele) => {
-            console.log(ele)
-            console.log('going over the features to select programmatically')
-          })
         }
+
+        console.log('=========================== props have changed')
+        console.log(prevProps)
+        console.log(this.props)
+
+        // let layersToSelect = []
+        
+        // if (prevProps.currentlySelectedTiles !== this.props.currentlySelectedTiles) {
+          
+        //   this.state.map.getLayers().forEach((ele) => {
+        //     console.log(ele);
+        //     console.log(ele.get('name'));
+        //     console.log(this.props.currentlySelectedTiles)
+            
+        //     if (ele.get('name') && ele.get('name').startsWith('tileLayer') && this.props.currentlySelectedTiles.includes(ele.get('name').split("__")[1])) {
+        //       console.log(ele)
+        //       let source = ele.getSource();
+        //       console.log(source)
+
+        //       let features = source.getFeatures();
+        //       console.log(features)
+        //       layersToSelect.push(...features);
+        //       console.log('features to be seelcted added programmatically')
+        //     }
+        //   });
+
+        //   layersToSelect.map((ele) => {
+        //     console.log(ele)
+        //     console.log('going over the features to select programmatically')
+        //   })
+        // }
 
         let aoi_style = new Style({
           stroke: new Stroke({
@@ -313,6 +295,7 @@ export default class MapViewer extends Component {
             color: 'rgba(0,0,0,0)'
           }),
         });
+
         console.log('inside component will update')
         console.log(prevProps.activeAOI)
         console.log(this.props.activeAOI)
@@ -335,6 +318,7 @@ export default class MapViewer extends Component {
           console.log(this.props.activeAOI)
           
           if (this.props.currentAoiWkt) {
+            console.log('Trying to add AOI footprint ')
             var format = new WKT();
             var feature = format.readFeature(this.props.currentAoiWkt, {
               dataProjection: 'EPSG:4326',
@@ -343,9 +327,12 @@ export default class MapViewer extends Component {
             
             // TODO: In the future, try to update the existing layer source, instead of removing it
             if (aoiFootprintLayer) {
-              aoiFootprintLayer.clear()
-              aoiFootprintLayer.addFeature(feature)
+              console.log('aoi footprint layer exists, updating')
+              aoiFootprintLayer.getSource().clear()
+              aoiFootprintLayer.getSource().addFeature(feature)
             } else {
+              console.log('aoi footprint does not exist, create')
+              
               aoiFootprintLayer = new VectorLayer({
                 source: new VectorSource({
                   features: [feature]
@@ -353,6 +340,8 @@ export default class MapViewer extends Component {
                 name: 'currentAoiFootprint',
                 style: aoi_style
               });
+
+              map.addLayer(aoiFootprintLayer)
             }
 
             let extent = feature.getGeometry().getExtent()
@@ -364,61 +353,68 @@ export default class MapViewer extends Component {
           }
         }
 
-        if (this.props.tiles) {
+        if (prevProps.currentDate !== this.props.currentDate || prevProps.activeAOI !== this.props.activeAOI) {
           console.log('updating map....')
           this.updateMap()
         }
       }
 
       getStyle(feature, feature_type) {
-        var highlightStyle = new Style({
-          stroke: new Stroke({
-            color: '#aaa',
-            width: 1
-          }),
-          fill: new Fill({
-            color: 'rgba(0,0,0,0)'
-          }),
-          text: new Text({
-            font: '11px Source Sans Pro, sans-serif',
-            fill: new Fill({
-              color: '#000'
-            }),
+        
+        let style;
+
+        if (feature_type === 'tile') {
+          style = new Style({
             stroke: new Stroke({
-              color: '#fff',
+              color: '#aaa',
+              width: 1
+            }),
+            fill: new Fill({
+              color: 'rgba(0,0,0,0)'
+            }),
+            text: new Text({
+              font: '11px Source Sans Pro, sans-serif',
+              fill: new Fill({
+                color: '#000'
+              }),
+              stroke: new Stroke({
+                color: '#fff',
+                width: 2
+              }),
+              text: feature.get('tile_name')
+            })
+          });
+        } else if (feature_type === 'highlight') {
+          style = new Style({
+            stroke: new Stroke({
+              color: '#f88',
               width: 2
             }),
-            text: feature.get('tile_name')
-          })
-        });
+            fill: new Fill({
+              color: 'rgba(255,0,0,0)'
+            }),
+            text: new Text({
+              font: '11px Source Sans Pro, sans-serif',
+              fill: new Fill({
+                color: '#000'
+              }),
+              stroke: new Stroke({
+                color: '#fff',
+                width: 2
+              })
+            })
+          });
+        }
 
-        return highlightStyle
+        return style
       }
       
       updateMap() {
         let map = this.state.map;
 
-        console.log('this is where we would iterate over tiles for the current active date')
+        console.log('this is where we would iterate over tiles for the current active date')        
 
-        let layersToRemove = [];
-
-        map.getLayers().forEach((ele) => {
-          console.log(ele);
-          console.log(ele.get('name'));
-          if (ele.get('name') && ele.get('name').startsWith('tileLayer'))
-            layersToRemove.push(ele);
-        })
-
-        map.getLayers().forEach((ele) => {
-          console.log(ele);
-          console.log(ele.get('name'));
-          if (ele.get('name') && ele.get('name').startsWith('lowres'))
-            layersToRemove.push(ele);
-        })
-
-
-        layersToRemove.map((ele) => map.removeLayer(ele))
-        
+        let features = []
         let tileDict = {};
         let promiseArray = [];
 
@@ -431,36 +427,59 @@ export default class MapViewer extends Component {
           // name: "L1C_T11UNS_A015368_20180601T184245"
           // proj: "32611"
           // wkt: "POLYGON ((-117.00028 50.46380, -115.45356 50.4
-          
+
           (tile => {
-            var format = new WKT();
-            var feature = format.readFeature(tile.wkt, {
+            let format = new GeoJSON();
+            
+            let feature = format.readFeature(tile.geojson, {
               dataProjection: 'EPSG:4326',
               featureProjection: 'EPSG:3857'
             });
-
-            var vector = new VectorLayer({
-              source: new VectorSource({
-                features: [feature]
-              }),
-              name: 'tileLayer__' + tile.name,
-              tile_name: tile.name,
-              
-            });
-
-            vector.setStyle(this.getStyle(vector, 'tile'))
             
-            tileDict[tile.name] = {
-              vector,
-              feature,
-            }
+            tileDict[tile.name] = tile
+            tileDict[tile.name]['feature'] = feature
+            // feature.setStyle(this.getStyle(feature, 'tile'))
+            features.push(feature)
+            console.log(feature)
+            console.log('hello!')
 
             promiseArray.push(this.getMeta(tile).catch((err) => {
               console.log('this image had an err, handling it first before sending back to overall catch func')
               console.log(err)
             }))
-
+            
           })(tile);
+        }
+
+        let tileLayer
+
+        map.getLayers().forEach((layer) => {
+          if (layer.get('name') === 'tileLayer')
+            tileLayer = layer
+        })
+        console.log(features)
+        console.log(tileLayer)
+        // TODO: In the future, try to update the existing layer source, instead of removing it
+        if (tileLayer) {
+          console.log('tile layer exists, clearing and adding features')
+          tileLayer.getSource().clear()
+          tileLayer.getSource().addFeatures(features)
+        } else {
+          console.log('tileLayer does not exist, create')
+          console.log(features)
+          if (features.length !== 0) {
+            tileLayer = new VectorLayer({
+              source: new VectorSource({
+                features: features
+              }),
+              name: 'tileLayer',
+              style: this.getStyle(features[0], 'tile')
+            });
+
+            tileLayer.setZIndex(100)
+            map.addLayer(tileLayer)
+          }
+         
         }
 
         Promise.all(promiseArray).then((values) => {
@@ -503,13 +522,33 @@ export default class MapViewer extends Component {
                 tileDict[tile.name]['raster'] = s2image_layer
               }
 
-                      // Add all raster layers
-              // for (let val of Object.values(tileDict))
-              //   map.addLayer(val.raster)
-              // Add all vector layers
-              for (let val of Object.values(tileDict))
-                map.addLayer(val.vector)
+              console.log('need to remove existing image layers')
+              let layersToRemove = []
+              map.getLayers().forEach((layer) => {
+                console.log(layer)
+                let name = layer.get('name')
+                
+                if (name) {
+                  if (name.search('lowres') !== -1) {
+                    console.log('have existing image to remove')
+                    layersToRemove.push(layer)
+                  }
+                }
+              });
+              
+              layersToRemove.forEach((layer) => {
+                map.removeLayer(layer)
+              })
+
+              // Add all raster layers
+              console.log('tileDict')
+              console.log(tileDict)
+              for (let val of Object.values(tileDict)) {
+                console.log('adding raster to map')
+                map.addLayer(val.raster)
+              }
         }).catch((errors) => {
+          console.log(errors)
           console.log('handle errors in catch function')
         });
         
@@ -521,6 +560,8 @@ export default class MapViewer extends Component {
 
         console.log(event)
         console.log('Mapped was clicked')
+
+        this.props.tileSelected(this.state.featuresHovered)
 
         // // create WKT writer
         // var wktWriter = new WKT();
