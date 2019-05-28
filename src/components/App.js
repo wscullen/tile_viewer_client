@@ -6,14 +6,14 @@ import React, { Component } from 'react'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import { faCheckSquare, 
-         faCoffee, 
-         faPlus, 
-         faWindowClose, 
-         faArrowRight, 
-         faArrowLeft, 
-         faTimes, 
-         faTimesCircle, 
+import { faCheckSquare,
+         faCoffee,
+         faPlus,
+         faWindowClose,
+         faArrowRight,
+         faArrowLeft,
+         faTimes,
+         faTimesCircle,
          faHammer,
          faInfo,
          faRedoAlt,
@@ -28,14 +28,14 @@ import { faCheckSquare,
 import {faHourglass as farHourglass,
         faCircle as farCircle} from '@fortawesome/free-regular-svg-icons'
 
-library.add(fab, 
-            faCheckSquare, 
-            faCoffee, 
-            faPlus, 
-            faWindowClose, 
-            faArrowRight, 
-            faArrowLeft, 
-            faTimes, 
+library.add(fab,
+            faCheckSquare,
+            faCoffee,
+            faPlus,
+            faWindowClose,
+            faArrowRight,
+            faArrowLeft,
+            faTimes,
             faTimesCircle,
             faInfo,
             faRedoAlt,
@@ -73,14 +73,20 @@ const renderHomeRoute = () => {
 class App extends React.Component {
   constructor(props) {
     super(props)
+    // Check for saved settigns
+    let savedSettings = localStorage.getItem('settings')
+    console.log(savedSettings)
+
     this.state = {
-      settings: defaultSettings
+      settings: savedSettings === null ? defaultSettings : JSON.parse(savedSettings)
     }
   }
-  
+
   updateSettings = (updatedSettings) => {
     console.log('updating settings in App.js')
-    
+
+    localStorage.setItem('settings', JSON.stringify(updatedSettings))
+
     this.setState({
       settings: updatedSettings
     })

@@ -28,7 +28,7 @@ const propTypes = {
   stateDateWrapper: PropTypes.func,
   initialStartDate: momentPropTypes.momentObj,
   initialEndDate: momentPropTypes.momentObj,
- 
+
 
   ...omit(DateRangePickerShape, [
     'startDate',
@@ -131,22 +131,11 @@ class AddAreaOfInterestModal extends React.Component {
       name: '',
     };
 
-    this.onDatesChange = this.onDatesChange.bind(this);
-    this.onFocusChange = this.onFocusChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.filesSelected = this.filesSelected.bind(this);
-    this.platformSelected = this.platformSelected.bind(this);
-    this.submitAreaOfInterest = this.submitAreaOfInterest.bind(this);
-    this.modalCleanup = this.modalCleanup.bind(this);
-
-
-    this.nameUpdated = this.nameUpdated.bind(this);
-
     this.fileInput = React.createRef();
     this.form = React.createRef();
   }
 
-  onDatesChange({ startDate, endDate }) {
+  onDatesChange = ({ startDate, endDate }) => {
     const { stateDateWrapper } = this.props;
     this.setState({
       startDate: startDate && stateDateWrapper(startDate),
@@ -154,29 +143,29 @@ class AddAreaOfInterestModal extends React.Component {
     });
   }
 
-  onFocusChange(focusedInput) {
+  onFocusChange = (focusedInput) => {
     this.setState({ focusedInput });
   }
 
-  platformSelected(event) {
+  platformSelected = (event) => {
     console.log(event)
   }
 
-  filesSelected(event) {
+  filesSelected = (event) => {
     console.log(event)
     this.setState({
       files: Array.from(this.fileInput.current.files)
     });
   }
 
-  nameUpdated(event) {
+  nameUpdated = (event) => {
     console.log(event);
     this.setState({
       name: event.target.value
     })
   }
 
-  showSelectedFiles() {
+  showSelectedFiles = () => {
     return (
       <ul className="fileList">
         {this.state.files.map((ele, index) => {
@@ -186,7 +175,7 @@ class AddAreaOfInterestModal extends React.Component {
     )
   }
 
-  submitAreaOfInterest() {
+  submitAreaOfInterest = () => {
     let formData = new FormData();
 
     formData.append('platform', this.state.platform);
@@ -258,15 +247,15 @@ class AddAreaOfInterestModal extends React.Component {
         //done submitting, set submitting to false
   }
 
-  displayLoadingMessage() {
+  displayLoadingMessage = () => {
      if (this.state.message !== "") {
        return (
          <h5>{this.state.message}</h5>
        )
      }
   }
-  
-  modalCleanup() {
+
+  modalCleanup = () => {
     if (this.state.areaCreated === true)
       this.setState({
         showResult: false,
@@ -275,8 +264,8 @@ class AddAreaOfInterestModal extends React.Component {
 
     this.props.hideModal()
   }
-  
-  handleSubmit(event) {
+
+  handleSubmit = (event) => {
     event.preventDefault();
     //process form submission here
     console.log(event)
@@ -284,7 +273,7 @@ class AddAreaOfInterestModal extends React.Component {
       // `Selected file - ${
       //   this.fileInput.current.files[0].name
       // }`
-    
+
     console.log(this.state.platform)
     console.log(this.state.startDate)
     console.log(this.state.endDate)
@@ -315,7 +304,7 @@ class AddAreaOfInterestModal extends React.Component {
       this.submitAreaOfInterest()
 
     }
-  
+
   }
 
   render() {
@@ -342,7 +331,7 @@ class AddAreaOfInterestModal extends React.Component {
       <Modal show={this.props.show} handleClose={this.modalCleanup}>
           <h2>Area of Interest Constraints</h2>
           <br />
-        
+
       <form onSubmit={this.handleSubmit} ref={this.form}>
       <label htmlFor="aoi_name">Name</label>
       <br />
@@ -361,11 +350,11 @@ class AddAreaOfInterestModal extends React.Component {
       {/* {% csrf_token %} */}
       <br />
       <h4>Select Shapefile (and associated files) for AOI Extent</h4>
- 
+
       <input type="file" name="shapefiles" ref={this.fileInput} multiple onChange={this.filesSelected} />
       {this.showSelectedFiles()}
-     
-     
+
+
       <label htmlFor="platform-select">Platform</label>
       <br />
       <select id="platform-select" value={this.state.platform} onChange={this.platformSelected} >
