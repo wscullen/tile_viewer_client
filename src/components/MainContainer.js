@@ -43,7 +43,7 @@ const defaultState = {
     show: false ,
     aoi_list: [],
     activeAOI: null,
-    allSelectedTiles: {},
+    selectedTiles: {},
     currentlySelectedTiles: [],
     job_csrf_token: null,
     currentDate: null,
@@ -115,7 +115,7 @@ export default class MainContainer extends Component {
   saveToLocalStorage = () => {
     console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
     console.log(this.state.aoi_list)
-    let { activeAOI, allSelectedTiles, aoi_list, currentDate, tileDict } = this.state;
+    let { activeAOI, selectedTiles, aoi_list, currentDate, tileDict } = this.state;
     console.log('aoi_list')
     console.log(aoi_list)
 
@@ -134,21 +134,8 @@ export default class MainContainer extends Component {
       let currentAOI = aoi_list[aoi_index]
       console.log('activeAOI is:')
       console.log(currentAOI)
-      let simplifiedAllSelectedTiles = {}
-      for (let dateArray in allSelectedTiles) {
-        let idArray = allSelectedTiles[dateArray].map((tile) => {
-          tile.id
-        })
-        simplifiedAllSelectedTiles[dateArray] = idArray
-      }
-
-      console.log(simplifiedAllSelectedTiles)
-
-      currentAOI['allSelectedTiles'] = simplifiedAllSelectedTiles
       console.log(currentAOI)
 
-      console.log('allSelectedTiles')
-      console.log(allSelectedTiles)
       console.log('aoi_list before')
       console.log(currentAoiList)
       currentAoiList[aoi_index] = currentAOI
@@ -210,14 +197,14 @@ export default class MainContainer extends Component {
     let tileDict = data.tileDict
     console.log(aoi_list)
 
-    let allSelectedTiles = {}
-
     if (aoi_list.length === 0) {
       currentDate = null
       activeAOI = null
     }
 
     console.log(activeAOI)
+
+    let selectedTiles = {}
 
     if (activeAOI !== null) {
       let currentAOI;
@@ -230,12 +217,30 @@ export default class MainContainer extends Component {
         }
       })
       console.log(currentAOI)
+
+      let tiles = currentAOI.tiles
+      console.log('build selected tiles object for tile list component')
+      console.log(tiles)
+
+      for (let d of Object.keys(tiles)) {
+        console.log(d)
+        console.log(tiles[d])
+        selectedTiles[d] = []
+        tiles[d].map((id) => {  
+          console.log(tileDict[id])
+          if (tileDict[id].selected) {
+            console.log('selected tile found')
+            selectedTiles[d].push({...tileDict[id]})
+          }
+        })
+      }
+
+      console.log(selectedTiles)
     }
-    console.log(allSelectedTiles)
     console.log('--------------------------->>>>>> SETTINGS')
 
     console.log(activeAOI)
-    console.log(allSelectedTiles)
+    console.log(selectedTiles)
     console.log(currentDate)
 
     this.setState({
@@ -243,6 +248,7 @@ export default class MainContainer extends Component {
       currentDate,
       aoi_list,
       currentTiles: [],
+      selectedTiles,
       allTiles: {},
       tileDict
     },
@@ -367,6 +373,26 @@ export default class MainContainer extends Component {
     let datesObjectWithIds = {}
     for (let d of dateList) {
       datesObjectWithIds[d] = sortedTiles.datesObject[d].map((ele) => ele.geojson.id)
+
+      for (let t of sortedTiles.datesObject[d]) {
+        console.log('===================================================')
+        console.log(t)
+        let idTemp = t.geojson.id
+        t.geojson.properties.lowres_preview_url = t.lowres_preview_url
+        console.log(t)
+        tileDictTemp[idTemp] = {...t.geojson}
+        tileDictTemp[idTemp]['id'] = idTemp
+        tileDictTemp[idTemp]['selected'] = false
+        tileDictTemp[idTemp]['visible'] = true
+  
+        console.log(t.date)
+        tileDictTemp[idTemp]['date'] = t.date
+  
+        console.log(tileDictTemp[idTemp])
+        console.log('TILE ADDING AREA')
+        console.log(tileDictTemp[idTemp])
+      }
+    
     }
 
     let areaSimple = {...area}
@@ -376,19 +402,7 @@ export default class MainContainer extends Component {
     areaSimple['tiles'] = datesObjectWithIds
     console.log(areaSimple)
 
-    for (let t of tiles) {
-      console.log(t)
-      let idTemp = t.geojson.id
-      t.geojson.properties.lowres_preview_url = t.preview_url
-      console.log(t)
-      tileDictTemp[idTemp] = {...t.geojson}
-      tileDictTemp[idTemp]['id'] = idTemp
-      tileDictTemp[idTemp]['selected'] = false
-      tileDictTemp[idTemp]['visible'] = true
-
-      console.log('TILE ADDING AREA')
-      console.log(tileDictTemp[idTemp])
-    }
+    
     console.log(datesObjectWithIds)
 
     console.log('aoi dict temp')
@@ -732,7 +746,9 @@ export default class MainContainer extends Component {
     let currentDate = this.state.currentDate
     let currentTiles = [...this.state.allTiles[currentDate]]
     let allTiles = {...this.state.allTiles}
-
+    let selectedTiles = {...this.state.selectedTiles}
+    console.log('selectedTiles')
+    console.log(selectedTiles)
     let tileDict = {...this.state.tileDict}
 
     for (let t of tiles) {
@@ -747,18 +763,28 @@ export default class MainContainer extends Component {
       })
 
       relevantTile.selected = !relevantTile.selected
+      
+      if (relevantTile.selected)
+        selectedTiles[currentDate].push(relevantTile)
+      else
+        selectedTiles[currentDate] = selectedTiles[currentDate].filter( (ele) => {
+          return ele.id !== relevantTile.id
+        })
     }
+
 
     console.log(currentTiles)
 
     console.log('updated the tile dict')
 
     allTiles[currentDate] = currentTiles
+    
 
     this.setState({
       tileDict,
       allTiles,
-      currentTiles
+      currentTiles,
+      selectedTiles
     })
   }
 
@@ -768,42 +794,45 @@ export default class MainContainer extends Component {
 
   handleTileClickedInList = (event, tile) => {
 
-    let selectedTiles = this.state.currentlySelectedTiles
-
+    // if a tile is clicked in the list
+    // currentDate should be changed to this tiles date
+    // cyan blue highlight overlay should be added to indicate the most recently clicked tiles
     console.log('tile clicked in list')
-    console.log(tile)
-    console.log(event.shiftKey)
-    console.log(event.ctrlKey)
-    if (event.ctrlKey)
-      this.setState({
-        currentlySelectedTiles: [...selectedTiles, tile]
-      })
-    else
-      this.setState({
-        currentlySelectedTiles: [tile]
-      })
+
+    // let selectedTiles = this.state.currentlySelectedTiles
+
+    // console.log('tile clicked in list')
+    // console.log(tile)
+    // console.log(event.shiftKey)
+    // console.log(event.ctrlKey)
+    // if (event.ctrlKey)
+    //   this.setState({
+    //     currentlySelectedTiles: [...selectedTiles, tile]
+    //   })
+    // else
+    //   this.setState({
+    //     currentlySelectedTiles: [tile]
+    //   })
   }
 
   removeTileFromSelected = (tileRemoved) => {
     console.log('remove tile was clicked')
-    let allTiles = this.state.allTiles
-
+    let allTiles = {...this.state.allTiles}
 
     console.log(tileRemoved)
-    let allSelectedTiles = this.state.allSelectedTiles
+    let selectedTiles = {...this.state.selectedTiles}
 
-    console.log(allSelectedTiles)
     // get the tile date
     let dateString = moment(tileRemoved.date).format("YYYYMMDD")
 
     console.log(dateString)
 
-    allSelectedTiles[dateString] = allSelectedTiles[dateString].filter((ele) => {
-      return ele.name !== tileRemoved.name
+    selectedTiles[dateString] = selectedTiles[dateString].filter((ele) => {
+      return ele.id !== tileRemoved.id
     })
 
     allTiles[dateString].map((tile) => {
-      if (tile.name === tileRemoved.name) {
+      if (tile.id === tileRemoved.id) {
         tile.selected = false
       }
       return tile
@@ -811,21 +840,20 @@ export default class MainContainer extends Component {
 
     const currentTiles = allTiles[dateString]
 
-    console.log(allSelectedTiles)
-
     let currentlySelectedTiles = this.state.currentlySelectedTiles
     console.log(currentlySelectedTiles)
 
     currentlySelectedTiles = currentlySelectedTiles.filter((ele) => {
-      return ele !== tileRemoved.name
+      return ele !== tileRemoved.id
     })
 
     console.log(currentlySelectedTiles)
 
     this.setState({
-      allSelectedTiles,
+      selectedTiles,
+      currentTiles,
       currentlySelectedTiles,
-      currentTiles
+      allTiles
     })
   }
 
@@ -909,7 +937,7 @@ export default class MainContainer extends Component {
             <FilteringTools selectAll={this.selectAllVisibleTiles} />
             <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.allSelectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
+          <TileList selectedTiles={this.state.selectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
         </div>
       );
     }

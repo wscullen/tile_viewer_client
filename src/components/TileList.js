@@ -37,12 +37,13 @@ function TileListItemCompact(props) {
     downloadButtonClass += 'disabledIcon'
 
   let retryButtonClass = 'tileActionButton '
+  
   if (props.tile.job_result !== 'failed')
       retryButtonClass += 'disabledIcon'
 
   return (
     <div className='tileListItemCompact'>
-      <div className='tileListItemName'>{props.tile.name}</div>
+      <div className='tileListItemName'>{props.tile.properties.name}</div>
       <div className='tileListItemActions'>
       <button className={retryButtonClass} onClick={(event) => {
         console.log('re submit a job')
@@ -111,7 +112,7 @@ function TileList(props) {
 
                 counter++;
 
-                let tileEle = (<li className={clsName} key={tile.name} name={tile.name} onClick={(event) => props.tileClicked(event, tile.name)}><TileListItemCompact tile={tile} removeTile={props.removeTile}/></li>)
+                let tileEle = (<li className={clsName} key={tile.properties.name} name={tile.properties.name} onClick={(event) => props.tileClicked(event, tile.properties.name)}><TileListItemCompact tile={tile} removeTile={props.removeTile}/></li>)
                 listElements.push(tileEle)
               }
              
