@@ -119,33 +119,25 @@ export default class MainContainer extends Component {
     console.log('aoi_list')
     console.log(aoi_list)
 
-    let currentAoiList = []
-    aoi_list.map((ele) => {
-      console.log(ele)
-      currentAoiList.push(Object.assign(ele))
-    })
+    let currentAOIList = [...aoi_list]
 
     if (activeAOI !== null) {
       // Save the selcted tiles for later
       console.log(activeAOI)
 
       const aoi_index = this.getAoiIndex(activeAOI)
-      console.log(aoi_list[aoi_index])
-      let currentAOI = aoi_list[aoi_index]
+      
+      let currentAOIObj = {...currentAOIList[aoi_index]}
+
+      currentAOIObj['selectedTiles'] = {}
+
+      for (let d of Object.keys(selectedTiles)) {
+        currentAOIObj['selectedTiles'][d] = selectedTiles[d].map((tile) => tile.id)
+      }
+
       console.log('activeAOI is:')
-      console.log(currentAOI)
-      console.log(currentAOI)
-
-      console.log('aoi_list before')
-      console.log(currentAoiList)
-      currentAoiList[aoi_index] = currentAOI
-      console.log(currentAoiList)
-
-      console.log('currentAOIList')
-      console.log(currentAOI)
-
       localStorage.setItem('active_aoi', activeAOI)
-
+      currentAOIList[aoi_index] = currentAOIObj
     }
 
     if (currentDate !== null)
@@ -156,13 +148,14 @@ export default class MainContainer extends Component {
 
     localStorage.setItem('settings', JSON.stringify(this.props.settings))
     console.log('stringified settings successfully')
-    console.log(currentAoiList)
+    console.log(currentAOIList)
     const jsonData = {
-      aoi_list: currentAoiList,
+      aoi_list: currentAOIList,
       tileDict: tileDict
     }
     console.log(jsonData)
-    console.log(inspect(currentAoiList,  { showHidden: true, depth: null }))
+    // Used to try and detect circular references
+    // console.log(inspect(currentAoiList,  { showHidden: true, depth: null }))
 
     fs.writeFileSync(path.join(execPath, 'localstorage.json'), JSON.stringify(jsonData));
     console.log('stringified AOI list successfully')
@@ -201,10 +194,10 @@ export default class MainContainer extends Component {
       currentDate = null
       activeAOI = null
     }
-
+    console.log('previously active AOI')
     console.log(activeAOI)
 
-    let selectedTiles = {}
+    let populatedSelectedTiles = {}
 
     if (activeAOI !== null) {
       let currentAOI;
@@ -222,25 +215,25 @@ export default class MainContainer extends Component {
       console.log('build selected tiles object for tile list component')
       console.log(tiles)
 
-      for (let d of Object.keys(tiles)) {
+      let selectedTiles = currentAOI.selectedTiles
+      console.log(selectedTiles)
+
+      for (let d of Object.keys(selectedTiles)) {
         console.log(d)
-        console.log(tiles[d])
-        selectedTiles[d] = []
-        tiles[d].map((id) => {  
-          console.log(tileDict[id])
-          if (tileDict[id].selected) {
-            console.log('selected tile found')
-            selectedTiles[d].push({...tileDict[id]})
-          }
+        console.log(selectedTiles[d])
+        
+        populatedSelectedTiles[d] = []
+        
+        selectedTiles[d].map((id) => {  
+          populatedSelectedTiles[d].push({...tileDict[id]})
         })
       }
-
-      console.log(selectedTiles)
     }
     console.log('--------------------------->>>>>> SETTINGS')
 
     console.log(activeAOI)
-    console.log(selectedTiles)
+    console.log('populatedSelectedTiles')
+    console.log(populatedSelectedTiles)
     console.log(currentDate)
 
     this.setState({
@@ -248,7 +241,7 @@ export default class MainContainer extends Component {
       currentDate,
       aoi_list,
       currentTiles: [],
-      selectedTiles,
+      selectedTiles: populatedSelectedTiles,
       allTiles: {},
       tileDict
     },
@@ -352,18 +345,8 @@ export default class MainContainer extends Component {
 
   addAreaOfInterest = (area) => {
 
-    let tileDict = this.state.tileDict
-    let aoiListTemp = []
-
-    this.state.aoi_list.map((ele) => {
-      aoiListTemp.push({...ele})
-    })
-
-    let tileDictTemp = {}
-
-    Object.keys(this.state.tileDict).map((id) => {
-      tileDictTemp[id] = {...this.state.tileDict[id]}
-    })
+    let aoiListTemp = [...this.state.aoi_list]
+    let tileDictTemp = {...this.state.tileDict}
 
     const tiles = [...area.raw_tile_list]
 
@@ -371,9 +354,10 @@ export default class MainContainer extends Component {
     let dateList = Object.keys(sortedTiles.datesObject)
 
     let datesObjectWithIds = {}
+    let selectedInit = {}
     for (let d of dateList) {
       datesObjectWithIds[d] = sortedTiles.datesObject[d].map((ele) => ele.geojson.id)
-
+      selectedInit[d] = []
       for (let t of sortedTiles.datesObject[d]) {
         console.log('===================================================')
         console.log(t)
@@ -384,15 +368,8 @@ export default class MainContainer extends Component {
         tileDictTemp[idTemp]['id'] = idTemp
         tileDictTemp[idTemp]['selected'] = false
         tileDictTemp[idTemp]['visible'] = true
-  
-        console.log(t.date)
         tileDictTemp[idTemp]['date'] = t.date
-  
-        console.log(tileDictTemp[idTemp])
-        console.log('TILE ADDING AREA')
-        console.log(tileDictTemp[idTemp])
       }
-    
     }
 
     let areaSimple = {...area}
@@ -400,13 +377,8 @@ export default class MainContainer extends Component {
     delete areaSimple['raw_tile_list']
 
     areaSimple['tiles'] = datesObjectWithIds
-    console.log(areaSimple)
-
-    
-    console.log(datesObjectWithIds)
-
-    console.log('aoi dict temp')
-    console.log(tileDictTemp)
+    areaSimple['selectedTiles'] = selectedInit
+    console.log(selectedInit)
 
     aoiListTemp.push(areaSimple)
 
@@ -426,50 +398,62 @@ export default class MainContainer extends Component {
     // When an AOI is clicked in the list, it is made active and passed to the map viewer
     console.log('YOU CLICKED AN AREA OF INTEREST')
     console.log(aoi_name)
-
     const newIndex = this.getAoiIndex(aoi_name)
+
     const prevIndex = this.getAoiIndex(this.state.activeAOI)
-    console.log(newIndex)
-    console.log(prevIndex)
+    
+    let aoi_list = [...this.state.aoi_list]
+    let activeAOI = {...aoi_list[newIndex]}
+    let previousAOI = {...aoi_list[prevIndex]}
+    const tileDict = {...this.state.tileDict}
 
-    console.log(activeAOI)
-    let aoi_list = this.state.aoi_list
-    console.log(aoi_list)
-    const activeAOI = {...aoi_list[newIndex]}
-    console.log('ACTIVE AOI =--------------------')
-    console.log(activeAOI)
-    console.log(newIndex)
+    let selectedTiles = {}
+    
+    for (let d of Object.keys(this.state.selectedTiles)) {
+      selectedTiles[d] = this.state.selectedTiles[d].map((ele) => ele.id)
+    }
 
-    console.log('Sorting tiles by date...')
+    previousAOI['selectedTiles'] = selectedTiles
+
+    aoi_list[prevIndex] = previousAOI
+    
     // Since the AOI is newly activated, lets put the current date to the first date.
-
-    let allTiles = {}
-    let dateList = Object.keys(activeAOI['tiles'])
-    console.log(dateList)
-
+    let newAllTiles = {}
+    let newSelectedTiles = {}
+    const dateList = Object.keys(activeAOI.tiles)
     let currentDate
+
     if (activeAOI['currentDate'] === undefined) {
       currentDate = dateList[0]
     } else {
       currentDate = activeAOI['currentDate']
     }
 
-    for (let d of dateList) {
-      allTiles[d] = []
-      for (let id of activeAOI['tiles'][d]) {
-        allTiles[d].push( {...this.state.tileDict[id]})
-      }
+    if (prevIndex === newIndex) {
+      activeAOI = previousAOI
     }
 
-    console.log('AOI LIST IN ACTIVATE AOI FUNCTION=============================')
-    console.log(aoi_list)
-    console.log('ALL TILES LIST REBUILT')
-    console.log(allTiles)
+    // populate the selected tile list from the aoi entry
+    const activeSelectedTiles = activeAOI['selectedTiles']
+    const activeAllTiles = activeAOI['tiles']
 
+    for (let d of Object.keys(activeSelectedTiles)) {
+      newSelectedTiles[d] = activeSelectedTiles[d].map((id) => {
+        return {...tileDict[id]}
+      })
+    }
+
+    for (let d of Object.keys(activeAllTiles)) {
+      newAllTiles[d] = activeAllTiles[d].map((id) => {
+        return {...tileDict[id]}
+      })
+    }
+    
     this.setState({
       activeAOI: aoi_name,
-      currentTiles: allTiles[currentDate],
-      allTiles: allTiles,
+      currentTiles: newAllTiles[currentDate],
+      allTiles: newAllTiles,
+      selectedTiles: newSelectedTiles,
       dateList,
       currentDate,
       aoi_list,
@@ -480,7 +464,6 @@ export default class MainContainer extends Component {
     let headers = new Headers();
 
     if (api === 'job_manager')
-
       fetch(`${this.props.settings.job_url}/generate_csrf/`, {
         method: 'GET',
         mode: 'cors',
@@ -627,7 +610,7 @@ export default class MainContainer extends Component {
 
   // "Authorization": `Basic ${base64.encode(`${login}:${password}`)}`
 
-    const tiles = this.state.allSelectedTiles
+    const tiles = this.state.selectedTiles
 
     if (this.state.job_csrf_token === null) {
       let headers = new Headers();
@@ -723,18 +706,9 @@ export default class MainContainer extends Component {
 
   getAoiIndex = (aoi_name) => {
     // returning index instead of the object itself
-
-    console.log('trying to find aoi index')
-    console.log(aoi_name)
     console.log(this.state.aoi_list)
-
-
     let name_list = this.state.aoi_list.map((ele) => ele['name'])
-
     let index = name_list.indexOf(aoi_name)
-
-
-
     return index
   }
 
@@ -747,8 +721,10 @@ export default class MainContainer extends Component {
     let currentTiles = [...this.state.allTiles[currentDate]]
     let allTiles = {...this.state.allTiles}
     let selectedTiles = {...this.state.selectedTiles}
+    
     console.log('selectedTiles')
     console.log(selectedTiles)
+    
     let tileDict = {...this.state.tileDict}
 
     for (let t of tiles) {
@@ -772,14 +748,8 @@ export default class MainContainer extends Component {
         })
     }
 
-
-    console.log(currentTiles)
-
-    console.log('updated the tile dict')
-
     allTiles[currentDate] = currentTiles
     
-
     this.setState({
       tileDict,
       allTiles,
