@@ -73,6 +73,10 @@
 .aoiListItem {
 	padding: 4px 8px;
 	/* border-bottom: 1px coral solid; */
-	border-bottom: 2px #fff solid;
+	border: 2px #eee solid;
 	font-weight: 600;
+}
+
+.activeAOI {
+	border: 2px cyan solid;
 }

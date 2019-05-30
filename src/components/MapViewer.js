@@ -62,28 +62,6 @@ export default class MapViewer extends Component {
         })
       });
 
-      // var vectorLayer = new VectorLayer({
-      //   source: new VectorSource({
-      //     url: 'data/geojson/countries.geojson',
-      //     format: new GeoJSON()
-      //   }),
-      //   style: function(feature) {
-      //     style.getText().setText(feature.get('name'));
-      //     return style;
-      //   }
-      // });
-
-      // var map = new Map({
-      //   layers: [vectorLayer],
-      //   target: 'map',
-      //   view: new View({
-      //     center: [0, 0],
-      //     zoom: 1
-      //   })
-      // });
-
-
-
         var raster = new TileLayer({
             source: new OSM()
           });
@@ -97,8 +75,16 @@ export default class MapViewer extends Component {
 
           featureOverlay.setZIndex(99999)
 
+
+          let selectedInListOverlay = new VectorLayer({
+            source: new VectorSource(),
+            map: map
+          });
+
+          selectedInListOverlay.setZIndex(88888)
+
           var map = new Map({
-            layers: [raster, featureOverlay],
+            layers: [raster, featureOverlay, selectedInListOverlay],
             target: 'map',
             view: new View({
               center: middleCanadaWebMercatorProj,
@@ -198,7 +184,8 @@ export default class MapViewer extends Component {
         this.setState({
           map: map,
           activeAOI: this.props.activeAOI,
-          featureOverlay
+          featureOverlay,
+          selectedInListOverlay
         //   featuresLayer: featuresLayer
         });
 
@@ -377,6 +364,9 @@ export default class MapViewer extends Component {
         console.log(prevProps)
         console.log(this.props)
 
+        if (prevProps.tilesSelectedInList !== this.props.tilesSelectedInList)
+          this.updateSelectedOverlay()
+
         if (prevProps.tiles.length === 0 && this.props.tiles.length !== 0)
           this.updateMap()
 
@@ -385,6 +375,49 @@ export default class MapViewer extends Component {
           this.updateMap()
           this.updateAllStyle()
         }
+      }
+
+      updateSelectedOverlay = () => {
+        console.log('updating list selection overlay')
+        let selectedLayer = this.state.selectedInListOverlay
+        console.log(selectedLayer.getSource())
+        let featuresToRemove = []
+        // Iterate over features in selectedTilesInListLayer, if there are any NOT in selectedTilesInList, remove them
+        selectedLayer.getSource().forEachFeature((feature) => {
+          console.log(feature)
+          if (!this.props.tilesSelectedInList.includes(feature.getId())) {
+            console.log(feature)
+            featuresToRemove.push(feature)
+          }
+        })
+
+        console.log('removing')
+        for (let feat of featuresToRemove) {
+          selectedLayer.getSource().removeFeature(feat)
+        }
+
+        // Iterate over current tiles
+        // if current tile is in selectedTilesInList,
+        // create a new feature and add it to the layer
+        for (let tile of this.props.tiles) {
+          if(this.props.tilesSelectedInList.includes(tile.id)) {
+            let format = new GeoJSON();
+            
+            let feature = format.readFeature(tile, {
+              dataProjection: 'EPSG:4326',
+              featureProjection: 'EPSG:3857'
+            });
+
+            feature.setStyle(this.getStyle(feature, 'selected-in-list'))
+            console.log('adding overlay feature to layer')
+            selectedLayer.getSource().addFeature(feature)
+          }
+        }
+
+        this.setState({
+          selectedInListOverlay: selectedLayer
+        })
+        
       }
 
       getStyle(feature, feature_type) {
@@ -400,6 +433,28 @@ export default class MapViewer extends Component {
             }),
             fill: new Fill({
               color: 'rgba(0,0,0,0)'
+            }),
+            text: new Text({
+              font: '11px Source Sans Pro, sans-serif',
+              fill: new Fill({
+                color: '#000'
+              }),
+              stroke: new Stroke({
+                color: '#fff',
+                width: 2
+              }),
+              text: feature.get('name')
+            })
+          });
+        } else if (feature_type === 'selected-in-list') {
+          console.log('SELECTED STYLE')
+          style = new Style({
+            stroke: new Stroke({
+              color: '#0ff',
+              width: 3
+            }),
+            fill: new Fill({
+              color: 'rgba(0,255,0,0)'
             }),
             text: new Text({
               font: '11px Source Sans Pro, sans-serif',
@@ -431,7 +486,8 @@ export default class MapViewer extends Component {
               stroke: new Stroke({
                 color: '#fff',
                 width: 2
-              })
+              }),
+              text: feature.get('name')
             })
           });
         } else if (feature_type === 'highlight') {

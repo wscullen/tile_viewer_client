@@ -27,8 +27,6 @@
     
 }
 
-
-
 .tileList > .header {
     padding: 4px;
     
@@ -41,8 +39,6 @@
     border-bottom: 1px #bbb solid;
 
 }
-
-
 
 .myButton {
 	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));

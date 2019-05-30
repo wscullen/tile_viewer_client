@@ -6,7 +6,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 
 function AreaOfInterestList(props) {
-    return (
+    
+  
+  
+  
+  
+  return (
       <div className="areaOfInterestList">
         <div className="header">
             <h3 className="sectionLabel">Area List</h3>
@@ -16,8 +21,12 @@ function AreaOfInterestList(props) {
         </div>
         <ul>
           {props.areasOfInterest.map((ele) => {
+            let aoiClassName = 'aoiListItem'
+            if (ele.name === props.activeAOI)
+              aoiClassName += ' activeAOI'
+
             return (
-              <li className="aoiListItem" key={ele.name} name={ele.name} onClick={() => props.activateAOI(ele.name)}>{ele.name}</li>
+              <li className={aoiClassName} key={ele.name} name={ele.name} onClick={() => props.activateAOI(ele.name)}>{ele.name}</li>
             )
           })}
         </ul>

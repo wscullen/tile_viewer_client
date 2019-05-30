@@ -83,7 +83,7 @@ function TileListItemCompact(props) {
 
 
 function TileList(props) {
-    console.log(props.currentlySelectedTiles)
+    console.log(props.selectedTilesInList)
     return (
       <div className="tileList">
         <div className="header">
@@ -104,7 +104,7 @@ function TileList(props) {
               for (let tile of props.selectedTiles[d]) {
                 let clsName = "tileListItem"
 
-                if (props.currentlySelectedTiles.includes(tile.name)) {
+                if (props.selectedTilesInList.includes(tile.id)) {
                   clsName = "tileListItem activeSelection"
                 }
                 if (counter % 2 === 0)
@@ -112,7 +112,7 @@ function TileList(props) {
 
                 counter++;
 
-                let tileEle = (<li className={clsName} key={tile.properties.name} name={tile.properties.name} onClick={(event) => props.tileClicked(event, tile.properties.name)}><TileListItemCompact tile={tile} removeTile={props.removeTile}/></li>)
+                let tileEle = (<li className={clsName} key={tile.properties.name} name={tile.properties.name} onClick={(event) => props.tileClicked(event, tile.id)}><TileListItemCompact tile={tile} removeTile={props.removeTile}/></li>)
                 listElements.push(tileEle)
               }
              

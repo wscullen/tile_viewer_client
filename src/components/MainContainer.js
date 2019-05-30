@@ -43,8 +43,9 @@ const defaultState = {
     show: false ,
     aoi_list: [],
     activeAOI: null,
+    allTiles: {},
     selectedTiles: {},
-    currentlySelectedTiles: [],
+    selectedTilesInList: [],
     job_csrf_token: null,
     currentDate: null,
     tileDict: {}
@@ -94,6 +95,8 @@ export default class MainContainer extends Component {
     console.log(this.state)
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose);
+
+    window.addEventListener('keydown', this.handleKeyPress)
 
   }
 
@@ -229,12 +232,6 @@ export default class MainContainer extends Component {
         })
       }
     }
-    console.log('--------------------------->>>>>> SETTINGS')
-
-    console.log(activeAOI)
-    console.log('populatedSelectedTiles')
-    console.log(populatedSelectedTiles)
-    console.log(currentDate)
 
     this.setState({
       activeAOI,
@@ -282,6 +279,26 @@ export default class MainContainer extends Component {
   createCurrentTilesForDate = (date) => {
 
 
+  }
+
+  handleKeyPress = (event) => {
+    console.log('key pressed')
+    console.log(event.key)
+
+    if (this.state.activeAOI !== null) {
+      switch (event.key) {
+        case "ArrowRight": {
+          console.log("Right arrow pressed, incrementing date")
+          this.incrementDate()
+          break;
+        }
+        case "ArrowLeft": {
+          console.log("Left arrow pressed, decrementing date")
+          this.decrementDate()
+          break;
+        }
+      }
+    }
   }
 
   incrementDate = () => {
@@ -721,6 +738,7 @@ export default class MainContainer extends Component {
     let currentTiles = [...this.state.allTiles[currentDate]]
     let allTiles = {...this.state.allTiles}
     let selectedTiles = {...this.state.selectedTiles}
+    let selectedTilesInList = [...this.state.selectedTilesInList]
     
     console.log('selectedTiles')
     console.log(selectedTiles)
@@ -740,12 +758,16 @@ export default class MainContainer extends Component {
 
       relevantTile.selected = !relevantTile.selected
       
-      if (relevantTile.selected)
+      if (relevantTile.selected) {
         selectedTiles[currentDate].push(relevantTile)
-      else
+       
+      } else {
         selectedTiles[currentDate] = selectedTiles[currentDate].filter( (ele) => {
           return ele.id !== relevantTile.id
         })
+        if (selectedTilesInList.includes(relevantTile.id))
+          selectedTilesInList = selectedTilesInList.filter((id) => id !== relevantTile.id)
+      }
     }
 
     allTiles[currentDate] = currentTiles
@@ -754,7 +776,8 @@ export default class MainContainer extends Component {
       tileDict,
       allTiles,
       currentTiles,
-      selectedTiles
+      selectedTiles,
+      selectedTilesInList
     })
   }
 
@@ -762,27 +785,48 @@ export default class MainContainer extends Component {
 
   }
 
-  handleTileClickedInList = (event, tile) => {
-
+  handleTileClickedInList = (event, tileId) => {
     // if a tile is clicked in the list
     // currentDate should be changed to this tiles date
     // cyan blue highlight overlay should be added to indicate the most recently clicked tiles
+    const selectedTiles = [...this.state.selectedTilesInList]
+    const fullTile = {...this.state.tileDict[tileId]}
+    const currentDate = this.state.currentDate
+    const allTiles = this.state.allTiles
+    const tileDate = moment(fullTile.date).format('YYYYMMDD')
+
     console.log('tile clicked in list')
+    console.log(tileId)
+    console.log(event.shiftKey)
+    console.log(event.ctrlKey)
 
-    // let selectedTiles = this.state.currentlySelectedTiles
+    let updatedSelectedTiles
+    if (event.ctrlKey) {
+      if (selectedTiles.includes(tileId))
+        updatedSelectedTiles = selectedTiles.filter((id) => id !== tileId)
+      else
+        updatedSelectedTiles = [...selectedTiles, tileId]
+    } else {
+      if (selectedTiles.includes(tileId))
+        updatedSelectedTiles = []
+      else
+        updatedSelectedTiles = [tileId]
+    }
 
-    // console.log('tile clicked in list')
-    // console.log(tile)
-    // console.log(event.shiftKey)
-    // console.log(event.ctrlKey)
-    // if (event.ctrlKey)
-    //   this.setState({
-    //     currentlySelectedTiles: [...selectedTiles, tile]
-    //   })
-    // else
-    //   this.setState({
-    //     currentlySelectedTiles: [tile]
-    //   })
+    let newDate
+    if (currentDate !== tileDate) {
+      console.log('currentDate and tileDate is different')
+      newDate = tileDate
+      updatedSelectedTiles = [tileId]
+    } else {
+      newDate = currentDate
+    }
+
+    this.setState({
+      selectedTilesInList: updatedSelectedTiles,
+      currentDate: newDate,
+      currentTiles: [...allTiles[newDate]],
+    })
   }
 
   removeTileFromSelected = (tileRemoved) => {
@@ -825,6 +869,10 @@ export default class MainContainer extends Component {
       currentlySelectedTiles,
       allTiles
     })
+  }
+
+  onKeyDown = (event) => {
+    console.log(event.key)
   }
 
   sortTilesByDate = (tiles) => {
@@ -883,7 +931,6 @@ export default class MainContainer extends Component {
   }
 
     render () {
-      console.log('hope the job manager updates11111111111111111111111111111111111111111111111')
       let wkt_footprint = null;
       // get AOI wkt from the currently active AOI
       console.log(this.state)
@@ -901,13 +948,13 @@ export default class MainContainer extends Component {
       return (
         <div className="mainContainer" ref="mainContainer">
           <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings}/>
-          <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI}/>
+          <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI} activeAOI={this.state.activeAOI} />
           <div className="centerContainer">
-            <MapViewer tiles={this.state.currentTiles} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate}/>
+            <MapViewer tiles={this.state.currentTiles} tilesSelectedInList={this.state.selectedTilesInList} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate}/>
             <FilteringTools selectAll={this.selectAllVisibleTiles} />
-            <TimelineViewer currentDate={this.state.currentDate} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
+            <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.selectedTiles} currentlySelectedTiles={this.state.currentlySelectedTiles} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
+          <TileList selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
         </div>
       );
     }

@@ -35,3 +35,15 @@
 	position: relative;
 	top: 1px;
 }
+
+.timelineViewer .controls .button[disabled] {
+	color: #848484;
+	background:linear-gradient(to bottom, #c1c2c0 5%, #cdd4cf 100%);
+	cursor: default;
+}
+
+
+.timelineViewer .controls .button:active[disabled] {
+	position: relative;
+	top: 0px;
+}
