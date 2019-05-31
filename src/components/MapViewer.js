@@ -36,7 +36,8 @@ export default class MapViewer extends Component {
 
     this.state = {
       currentInstance: this,
-      featuresHovered: []
+      featuresHovered: [],
+      imageLayers: {}
     };
   }
 
@@ -648,16 +649,23 @@ export default class MapViewer extends Component {
                 }
                 console.log('tiles: ')
                 console.log(tiles)
+                let imageLayers = {}
                 for (let t of tiles) {
                   console.log('adding raster to map')
+                  console.log(t)
+                  if (!t.visible) {
+                    t.raster.setOpacity(0)
+                  }
                   map.addLayer(t.raster)
+                  imageLayers[t.id] = t.raster
                   let vectorFeature = t['vector_feature']
                   vectorFeature.setStyle(this.getStyle(vectorFeature, 'tile'))
                   tileLayer.getSource().addFeature(vectorFeature)
                 }
 
                 this.setState({
-                  tileLayer
+                  tileLayer, 
+                  imageLayers
                 }, () => {
                   this.updateAllStyle()
                 })
@@ -699,6 +707,16 @@ export default class MapViewer extends Component {
             console.log(this.state.tileLayer.getSource().getFeatures())
             feature = this.state.tileLayer.getSource().getFeatureById(tile.id)
           }
+          console.log(this.state)
+          if (this.state.imageLayers.hasOwnProperty(tile.id)) {
+            console.log(this.state.imageLayers)
+            if (!tile.visible) {
+              this.state.imageLayers[tile.id].setOpacity(0.0)
+            } else {
+              this.state.imageLayers[tile.id].setOpacity(0.9)
+            }
+          }
+
           console.log('FEATURE:')
           console.log(feature)
           if (feature) {

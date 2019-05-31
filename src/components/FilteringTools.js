@@ -125,7 +125,10 @@ const FilteringTools = ({ selectAll, deselectAll, updateCloudFilter }) => {
           step={1}
           domain={domain}
           rootStyle={sliderStyle}
-          onChange={(values) => console.log(values)}
+          onChange={(values) => updateCloudFilter(values)}
+          onUpdate={(values) => {
+            setTimeout(updateCloudFilter(values), 500)
+          }}
           values={[100]}
         >
           <Rail>

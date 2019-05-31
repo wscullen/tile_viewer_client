@@ -36,7 +36,6 @@ let execPath;
 execPath = path.join(process.resourcesPath, '..')
 const resourcesPath = path.join(execPath, 'localstorage.json')
 
-
 console.log(execPath)
 
 const defaultState = {
@@ -119,6 +118,7 @@ export default class MainContainer extends Component {
     console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
     console.log(this.state.aoi_list)
     let { activeAOI, selectedTiles, aoi_list, currentDate, tileDict } = this.state;
+    console.log(currentDate)
     console.log('aoi_list')
     console.log(aoi_list)
 
@@ -140,11 +140,10 @@ export default class MainContainer extends Component {
 
       console.log('activeAOI is:')
       localStorage.setItem('active_aoi', activeAOI)
+
+      currentAOIObj['currentDate'] = currentDate
       currentAOIList[aoi_index] = currentAOIObj
     }
-
-    if (currentDate !== null)
-      localStorage.setItem('current_date', currentDate)
 
     console.log('current settings!!!!!!!!!!!!!!!S')
     console.log(this.props.settings)
@@ -169,8 +168,6 @@ export default class MainContainer extends Component {
 
     let activeAOI = localStorage.getItem('active_aoi') === null ? null : localStorage.getItem('active_aoi');
 
-    let currentDate = localStorage.getItem('current_date') === null  ? null : localStorage.getItem('current_date');
-
     let dataString = undefined
     let data = undefined
 
@@ -194,7 +191,6 @@ export default class MainContainer extends Component {
     console.log(aoi_list)
 
     if (aoi_list.length === 0) {
-      currentDate = null
       activeAOI = null
     }
     console.log('previously active AOI')
@@ -235,7 +231,6 @@ export default class MainContainer extends Component {
 
     this.setState({
       activeAOI,
-      currentDate,
       aoi_list,
       currentTiles: [],
       selectedTiles: populatedSelectedTiles,
@@ -773,6 +768,7 @@ export default class MainContainer extends Component {
     allTiles[currentDate] = currentTiles
     
     this.setState({
+      currentDate,
       tileDict,
       allTiles,
       currentTiles,
@@ -875,6 +871,33 @@ export default class MainContainer extends Component {
     console.log(event.key)
   }
 
+  handleUpdateCloudFilter = (cloud) => {
+    console.log('User changed the filter % for cloud')
+    console.log(cloud)
+    let allTiles = {...this.state.allTiles}
+    let tileDict = {...this.state.tileDict}
+    console.log(allTiles)
+
+    let currentTiles = [...allTiles[this.state.currentDate]]
+
+    for (let tile of currentTiles) {
+      if (parseFloat(tile.properties.cloud_percent) > parseFloat(cloud[0])) {
+        tile.visible = false
+        tileDict[tile.id].visible = false
+      } else {
+        tile.visible = true
+        tileDict[tile.id].visible = true
+      }
+    }
+
+    this.setState({
+      allTiles,
+      tileDict,
+      currentTiles: allTiles[this.state.currentDate]
+    })
+
+  }
+
   sortTilesByDate = (tiles) => {
     if (tiles) {
       let formatted_tiles = [];
@@ -951,7 +974,7 @@ export default class MainContainer extends Component {
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI} activeAOI={this.state.activeAOI} />
           <div className="centerContainer">
             <MapViewer tiles={this.state.currentTiles} tilesSelectedInList={this.state.selectedTilesInList} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate}/>
-            <FilteringTools selectAll={this.selectAllVisibleTiles} />
+            <FilteringTools selectAll={this.selectAllVisibleTiles} updateCloudFilter={this.handleUpdateCloudFilter} />
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
           <TileList selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
