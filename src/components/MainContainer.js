@@ -47,7 +47,8 @@ const defaultState = {
     selectedTilesInList: [],
     job_csrf_token: null,
     currentDate: null,
-    tileDict: {}
+    tileDict: {},
+    cloudPercentFilter: 100
 }
 
 // const JOB_MANAGER_SERVER_URL = 'http://zeus684440.agr.gc.ca:8080'
@@ -129,10 +130,12 @@ export default class MainContainer extends Component {
       console.log(activeAOI)
 
       const aoi_index = this.getAoiIndex(activeAOI)
-      
+
       let currentAOIObj = {...currentAOIList[aoi_index]}
 
       currentAOIObj['selectedTiles'] = {}
+
+      currentAOIObj['cloudPercentFilter'] = this.state.cloudPercentFilter
 
       for (let d of Object.keys(selectedTiles)) {
         currentAOIObj['selectedTiles'][d] = selectedTiles[d].map((tile) => tile.id)
@@ -188,6 +191,7 @@ export default class MainContainer extends Component {
 
     let aoi_list = data.aoi_list
     let tileDict = data.tileDict
+    let cloudPercentFilter = 100
     console.log(aoi_list)
 
     if (aoi_list.length === 0) {
@@ -211,6 +215,8 @@ export default class MainContainer extends Component {
       console.log(currentAOI)
 
       let tiles = currentAOI.tiles
+
+      cloudPercentFilter = currentAOI.cloudPercentFilter
       console.log('build selected tiles object for tile list component')
       console.log(tiles)
 
@@ -220,10 +226,10 @@ export default class MainContainer extends Component {
       for (let d of Object.keys(selectedTiles)) {
         console.log(d)
         console.log(selectedTiles[d])
-        
+
         populatedSelectedTiles[d] = []
-        
-        selectedTiles[d].map((id) => {  
+
+        selectedTiles[d].map((id) => {
           populatedSelectedTiles[d].push({...tileDict[id]})
         })
       }
@@ -235,7 +241,8 @@ export default class MainContainer extends Component {
       currentTiles: [],
       selectedTiles: populatedSelectedTiles,
       allTiles: {},
-      tileDict
+      tileDict,
+      cloudPercentFilter
     },
     () => {
       if (activeAOI !== null)
@@ -324,6 +331,9 @@ export default class MainContainer extends Component {
         currentDate: newDate,
         currentTiles: [...allTiles[newDate]],
         aoi_list: aoi_list_copy
+      },  () => {
+        console.log(this.state.cloudPercentFilter)
+        this.handleUpdateCloudFilter(this.state.cloudPercentFilter)
       })
 
     }
@@ -351,6 +361,8 @@ export default class MainContainer extends Component {
         currentDate: newDate,
         currentTiles: [...this.state.allTiles[newDate]],
         aoi_list: aoi_list_copy
+      }, () => {
+        this.handleUpdateCloudFilter(this.state.cloudPercentFilter)
       })
     }
   }
@@ -413,14 +425,14 @@ export default class MainContainer extends Component {
     const newIndex = this.getAoiIndex(aoi_name)
 
     const prevIndex = this.getAoiIndex(this.state.activeAOI)
-    
+
     let aoi_list = [...this.state.aoi_list]
     let activeAOI = {...aoi_list[newIndex]}
     let previousAOI = {...aoi_list[prevIndex]}
     const tileDict = {...this.state.tileDict}
 
     let selectedTiles = {}
-    
+
     for (let d of Object.keys(this.state.selectedTiles)) {
       selectedTiles[d] = this.state.selectedTiles[d].map((ele) => ele.id)
     }
@@ -428,7 +440,7 @@ export default class MainContainer extends Component {
     previousAOI['selectedTiles'] = selectedTiles
 
     aoi_list[prevIndex] = previousAOI
-    
+
     // Since the AOI is newly activated, lets put the current date to the first date.
     let newAllTiles = {}
     let newSelectedTiles = {}
@@ -460,7 +472,7 @@ export default class MainContainer extends Component {
         return {...tileDict[id]}
       })
     }
-    
+
     this.setState({
       activeAOI: aoi_name,
       currentTiles: newAllTiles[currentDate],
@@ -563,11 +575,14 @@ export default class MainContainer extends Component {
   }
 
   selectAllVisibleTiles = () => {
-    let currentTiles = this.state.allTiles[this.state.currentDate]
+    let currentTiles = [...this.state.currentTiles]
+    let allTiles = {...this.state.allTiles}
+    let selectedTiles = {...this.state.selectedTiles}
+    let tileDict = {...this.state.tileDict}
 
     console.log(currentTiles)
 
-    let tilesToSelect = currentTiles.filter((tile) => tile.visible).map((tile) => tile.name)
+    let tilesToSelect = currentTiles.filter((tile) => tile.visible)
 
     console.log(tilesToSelect)
 
@@ -578,21 +593,31 @@ export default class MainContainer extends Component {
 
     for (let t of tilesToSelect) {
 
-      let relevantTile = currentTiles.find((ele) => ele.name == t)
+      let relevantTile = currentTiles.find((ele) => ele.id == t.id)
+
       console.log(relevantTile)
 
-      let previouslySelectedTiles = allSelectedTiles[currentDate].map((tile) => tile.name)
-      console.log(previouslySelectedTiles)
-      console.log(relevantTile.name)
+      let previouslySelectedTiles = selectedTiles[currentDate].map((tile) => tile.id)
 
-      if (!previouslySelectedTiles.includes(relevantTile.name))
-        allSelectedTiles[currentDate].push(relevantTile)
+      console.log(previouslySelectedTiles)
+      console.log(relevantTile.id)
+
+      relevantTile.selected = true
+
+      if (!previouslySelectedTiles.includes(relevantTile.id))
+        selectedTiles[currentDate].push(relevantTile)
+
+      tileDict[relevantTile.id].selected = true
 
     }
 
+    allTiles[currentDate] = currentTiles
+
     this.setState({
-      allSelectedTiles,
-      currentlySelectedTiles: tilesToSelect
+      selectedTiles,
+      tileDict,
+      currentTiles,
+      allTiles
     })
   }
 
@@ -734,10 +759,10 @@ export default class MainContainer extends Component {
     let allTiles = {...this.state.allTiles}
     let selectedTiles = {...this.state.selectedTiles}
     let selectedTilesInList = [...this.state.selectedTilesInList]
-    
+
     console.log('selectedTiles')
     console.log(selectedTiles)
-    
+
     let tileDict = {...this.state.tileDict}
 
     for (let t of tiles) {
@@ -752,10 +777,10 @@ export default class MainContainer extends Component {
       })
 
       relevantTile.selected = !relevantTile.selected
-      
+
       if (relevantTile.selected) {
         selectedTiles[currentDate].push(relevantTile)
-       
+
       } else {
         selectedTiles[currentDate] = selectedTiles[currentDate].filter( (ele) => {
           return ele.id !== relevantTile.id
@@ -766,7 +791,7 @@ export default class MainContainer extends Component {
     }
 
     allTiles[currentDate] = currentTiles
-    
+
     this.setState({
       currentDate,
       tileDict,
@@ -828,13 +853,14 @@ export default class MainContainer extends Component {
   removeTileFromSelected = (tileRemoved) => {
     console.log('remove tile was clicked')
     let allTiles = {...this.state.allTiles}
+    let tileDict = {...this.state.tileDict}
 
     console.log(tileRemoved)
+
     let selectedTiles = {...this.state.selectedTiles}
 
     // get the tile date
     let dateString = moment(tileRemoved.date).format("YYYYMMDD")
-
     console.log(dateString)
 
     selectedTiles[dateString] = selectedTiles[dateString].filter((ele) => {
@@ -849,8 +875,9 @@ export default class MainContainer extends Component {
     })
 
     const currentTiles = allTiles[dateString]
+    console.log(this.state.selectedTilesInList)
 
-    let currentlySelectedTiles = this.state.currentlySelectedTiles
+    let currentlySelectedTiles = [...this.state.selectedTilesInList]
     console.log(currentlySelectedTiles)
 
     currentlySelectedTiles = currentlySelectedTiles.filter((ele) => {
@@ -862,7 +889,7 @@ export default class MainContainer extends Component {
     this.setState({
       selectedTiles,
       currentTiles,
-      currentlySelectedTiles,
+      selectedTilesInList: currentlySelectedTiles,
       allTiles
     })
   }
@@ -872,8 +899,12 @@ export default class MainContainer extends Component {
   }
 
   handleUpdateCloudFilter = (cloud) => {
+    if (!this.state.activeAOI)
+      return
     console.log('User changed the filter % for cloud')
     console.log(cloud)
+
+
     let allTiles = {...this.state.allTiles}
     let tileDict = {...this.state.tileDict}
     console.log(allTiles)
@@ -893,9 +924,36 @@ export default class MainContainer extends Component {
     this.setState({
       allTiles,
       tileDict,
-      currentTiles: allTiles[this.state.currentDate]
+      currentTiles: allTiles[this.state.currentDate],
+      cloudPercentFilter: cloud
     })
+  }
 
+  deselectCurrentDate = () => {
+
+    if (!this.state.activeAOI)
+      return
+
+    let allTiles = {...this.state.allTiles}
+    let tileDict = {...this.state.tileDict}
+    let selectedTiles = {...this.state.selectedTiles}
+
+    selectedTiles[this.state.currentDate] = []
+    console.log(allTiles)
+
+    let currentTiles = [...allTiles[this.state.currentDate]]
+
+    for (let tile of currentTiles) {
+        tile.selected = false
+        tileDict[tile.id].selected = false
+    }
+
+    this.setState({
+      allTiles,
+      currentTiles: allTiles[this.state.currentDate],
+      tileDict,
+      selectedTiles
+    })
   }
 
   sortTilesByDate = (tiles) => {
@@ -968,13 +1026,15 @@ export default class MainContainer extends Component {
       const areasOfInterests = this.state.aoi_list
       console.log(areasOfInterests)
 
+      let cloudPercent = this.state.cloudPercentFilter
+
       return (
         <div className="mainContainer" ref="mainContainer">
           <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings}/>
           <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI} activeAOI={this.state.activeAOI} />
           <div className="centerContainer">
             <MapViewer tiles={this.state.currentTiles} tilesSelectedInList={this.state.selectedTilesInList} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate}/>
-            <FilteringTools selectAll={this.selectAllVisibleTiles} updateCloudFilter={this.handleUpdateCloudFilter} />
+            <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent}/>
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
           <TileList selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>

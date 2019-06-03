@@ -1,6 +1,6 @@
 import './../assets/css/FilteringTools.css';
 
-import React from 'react';
+import React, { Component } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
@@ -17,7 +17,7 @@ const sliderStyle = {
     position: 'relative',
     width: '90%'
   };
-  
+
   const railStyle = {
     position: 'absolute',
     width: '100%',
@@ -53,7 +53,7 @@ const sliderStyle = {
       {...getHandleProps(id)}
     />
   );
-  
+
  const Track = ({
     source,
     target,
@@ -106,18 +106,40 @@ const domain = [0, 100]
 const formatTicks = (d) => {
     // const feet = Math.floor(d / 12);
     // const inches = d % 12;
-  
+
     return `${d}`;
   };
-  
 
-const FilteringTools = ({ selectAll, deselectAll, updateCloudFilter }) => {
-      
-    return (
+  export default class MainContainer extends Component {
+
+    constructor(props) {
+      super(props)
+      console.log('maincontainer constructor running')
+
+      let { cloudPercentFilter } = props
+      console.log(this.props.settings)
+      this.state = {
+        cloudPercentFilter
+        }
+      console.log(`default state is ${this.state}`)
+      console.log(this.state)
+    }
+
+    componentDidMount() {
+      console.log('======================> Inside component did mount')
+
+      this.setState({
+        cloudPercentFilter: this.props.cloudPercentFilter
+      })
+
+    }
+
+    render() {
+      return (
       <div className="filteringTools">
         <div className="controlGroup">
-          <button className="selectAllButton" onClick={selectAll}>Select All</button>
-          <button className="deselectAllButton" onClick={deselectAll}>De-Select All</button>
+          <button className="selectAllButton" onClick={this.props.selectAll}>Select All Visible</button>
+          <button className="deselectAllButton" onClick={this.props.deselectAll}>De-Select All For Current Date</button>
           </div>
           <div className="controlGroup2">
           <Slider
@@ -125,11 +147,11 @@ const FilteringTools = ({ selectAll, deselectAll, updateCloudFilter }) => {
           step={1}
           domain={domain}
           rootStyle={sliderStyle}
-          onChange={(values) => updateCloudFilter(values)}
+          onChange={(values) => this.props.updateCloudFilter(values)}
           onUpdate={(values) => {
-            setTimeout(updateCloudFilter(values), 500)
+            setTimeout(this.props.updateCloudFilter(values), 500)
           }}
-          values={[100]}
+          values={[this.state.cloudPercentFilter]}
         >
           <Rail>
             {({ getRailProps }) => (
@@ -179,10 +201,10 @@ const FilteringTools = ({ selectAll, deselectAll, updateCloudFilter }) => {
             )}
           </Ticks>
           </Slider>
-            <label htmlFor="cloudiness">Filter by Cloud %</label>
+            <p className="cloudPercent">{this.props.cloudPercentFilter}</p>
+            <label htmlFor="cloudiness" className="ui-label">Filter by Cloud %</label>
           </div>
       </div>
     );
+    }
   };
-
-export default FilteringTools;
