@@ -31,12 +31,9 @@ import { inspect } from 'util' // or directly
 const { remote } = require ('electron');
 const path = require ('path');
 
-let execPath;
-
-execPath = path.join(process.resourcesPath, '..')
-const resourcesPath = path.join(execPath, 'localstorage.json')
-
-console.log(execPath)
+const resourcesPath = path.join(remote.app.getPath('userData'), 'localstorage.json')
+console.log('Resource path for saving local data')
+console.log(resourcesPath)
 
 const defaultState = {
     show: false ,
@@ -162,7 +159,7 @@ export default class MainContainer extends Component {
     // Used to try and detect circular references
     // console.log(inspect(currentAoiList,  { showHidden: true, depth: null }))
 
-    fs.writeFileSync(path.join(execPath, 'localstorage.json'), JSON.stringify(jsonData));
+    fs.writeFileSync(resourcesPath, JSON.stringify(jsonData));
     console.log('stringified AOI list successfully')
   }
 
@@ -174,9 +171,9 @@ export default class MainContainer extends Component {
     let dataString = undefined
     let data = undefined
 
-    if (fs.existsSync(path.join(execPath, 'localstorage.json'))) {
+    if (fs.existsSync(resourcesPath)) {
       console.log('reading from file')
-      dataString =  fs.readFileSync(path.join(execPath, 'localstorage.json'), 'utf8');
+      dataString =  fs.readFileSync(resourcesPath, 'utf8');
       data = JSON.parse(dataString)
     }
 
@@ -672,22 +669,21 @@ export default class MainContainer extends Component {
       );
 
     } else {
-
+      console.log('iterating over tiles to start jobs...')
       Object.keys(tiles).map((ele) => {
+        console.log('Submitting job')
         console.log(ele)
         console.log(tiles[ele])
         if (tiles[ele].length > 0) {
-
           tiles[ele].map((tile) => {
             // if (tile.hasOwnProperty('job_id'))
-            console.log(tile)
             const jobReqBody = {
-              label: "S2Download " + tile.name,
+              label: "S2Download " + tile.properties.name,
               command: "not used",
               job_type: "S2Download",
               parameters: {
                 options: {
-                            tile: tile.name,
+                            tile: tile.properties.name,
                             ac: true,
                             ac_res: 10
                         }
@@ -956,6 +952,11 @@ export default class MainContainer extends Component {
     })
   }
 
+  handleTileSettingsUpdate = (newSettings) => {
+    console.log('updated settings for the tile list are:')
+    console.log(newSettings)
+  }
+
   sortTilesByDate = (tiles) => {
     if (tiles) {
       let formatted_tiles = [];
@@ -1037,7 +1038,7 @@ export default class MainContainer extends Component {
             <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent}/>
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} settings={this.props.settings}/>
+          <TileList selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} updateTileSettings={this.handleSettingsUpdate} settings={this.props.settings}/>
         </div>
       );
     }

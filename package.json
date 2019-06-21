@@ -13,13 +13,13 @@
     "url": "https://github.com/alexdevero/electron-react-webpack-boilerplate.git/issues"
   },
   "author": {
-    "name": "Alex Devero",
-    "email": "deveroalex@gmail.com",
-    "url": "https://github.com/alexdevero"
+    "name": "Shaun Cullen",
+    "email": "shauncullen@gmail.com",
+    "url": "https://github.com/sscullen"
   },
   "build": {
     "appId": "io.cullen.tileviewer",
-    "productName": "Tile Viewer",
+    "productName": "tile-viewer",
     "directories": {
       "output": "out-builds",
       "buildResources": "assets"
@@ -29,6 +29,12 @@
     ],
     "mac": {
       "category": "your.app.category.type"
+    },
+    "appImage": {
+      "artifactName": "${productName}_${version}_${arch}.AppImage"
+    },
+    "snap": {
+      "artifactName": "${productName}_${version}_${arch}.snap"
     }
   },
   "keywords": [
@@ -82,6 +88,7 @@
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
     "react-simple-storage": "^1.4.1",
+    "react-slidedown": "^2.4.3",
     "react-spinners": "^0.5.4",
     "yarn": "^1.15.2"
   },

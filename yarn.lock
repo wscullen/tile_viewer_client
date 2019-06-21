@@ -7277,6 +7277,13 @@ react-simple-storage@^1.4.1:
   dependencies:
     store "^2.0.12"
 
+react-slidedown@^2.4.3:
+  version "2.4.3"
+  resolved "https://registry.yarnpkg.com/react-slidedown/-/react-slidedown-2.4.3.tgz#92e9c2132eae3d0ddc848df91a3cd1f09c04c12f"
+  integrity sha512-KTkdqh+G8hiMMz5mmk+/3eXfUVgbRZeL9PhfWtO1dX62gUKUdx31cfknabOkj2UAmf/lJvPmC6YKoBRgjA7/8A==
+  dependencies:
+    tslib "^1.9.0"
+
 react-spinners@^0.5.4:
   version "0.5.4"
   resolved "https://registry.yarnpkg.com/react-spinners/-/react-spinners-0.5.4.tgz#58166f8bf84cbf06dd7accad4b94a5797cfea9b9"

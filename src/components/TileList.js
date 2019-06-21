@@ -1,10 +1,13 @@
 
 import './../assets/css/TileList.css'
 
-import React from 'react';
+import React, { Component } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
+import {SlideDown} from 'react-slidedown'
+
 import moment from 'moment';
+import { renderComponent } from 'recompose';
 
 
 function TileListItemCompact(props) {
@@ -81,30 +84,58 @@ function TileListItemCompact(props) {
   );
 }
 
+const defaultState = {
+  optionsHide: true
+}
 
-function TileList(props) {
-    console.log(props.selectedTilesInList)
+export default class TileList extends Component {
+  constructor(props) {
+    super(props)
+    
+    this.state = {
+      ...defaultState
+    }
+  }
+
+  toggleTileSettings = () => {
+    console.log('Showing tile options')
+    this.setState({
+      optionsShow: !this.state.optionsHide
+    })
+  }
+
+  render() {
+    console.log(this.props.selectedTilesInList)
     return (
       <div className="tileList">
         <div className="header">
             <h3 className="sectionLabel">Tile List</h3>
-            <button className="addAreaButton myButton" onClick={() => props.submitAllJobs()}>
-                Start All
-            </button>
+            <div className="buttonSection">
+              <button className="settingsButton" onClick={this.toggleTileSettings}>
+                <FontAwesomeIcon icon="cog"/>
+              </button>
+              <button className="addAreaButton myButton" onClick={() => this.props.submitAllJobs()}>
+                  Start All
+              </button>
+            </div>
         </div>
+        <SlideDown className={'my-dropdown-slidedown'} closed={this.state.optionsShow}>
+          {/* {props.open ? props.children : null} */}
+          <p>BUTTS</p>
+        </SlideDown>
         <ul>
-          {Object.keys(props.selectedTiles).map((d) => {
+          {Object.keys(this.props.selectedTiles).map((d) => {
             let listElements = []
             
-            if (props.selectedTiles[d].length > 0) {
+            if (this.props.selectedTiles[d].length > 0) {
               
               let headerEle = (<li className="dateSection" key={d}>{moment(d).format('MMMM DD YYYY')}</li>)
               listElements.push(headerEle)
               let counter = 0
-              for (let tile of props.selectedTiles[d]) {
+              for (let tile of this.props.selectedTiles[d]) {
                 let clsName = "tileListItem"
 
-                if (props.selectedTilesInList.includes(tile.id)) {
+                if (this.props.selectedTilesInList.includes(tile.id)) {
                   clsName = "tileListItem activeSelection"
                 }
                 if (counter % 2 === 0)
@@ -125,4 +156,4 @@ function TileList(props) {
     );
   }
 
-export default TileList;
+}

@@ -1,3 +1,6 @@
+@import "react-slidedown/lib/slidedown.css";
+
+
 .tileList {
     border-left: 1px solid lightgrey;
     /* margin: 2px; */
@@ -22,9 +25,11 @@
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 14px;
 	font-weight: 400;
-	background: #eee;
+	background: #eee;   
+}
 
-    
+.buttonSection {
+	
 }
 
 .tileList > .header {
@@ -60,6 +65,7 @@
     font-weight: 600;
 	font-size: 15px;
 	padding:5px 10px;
+	margin-right:2px;
     text-decoration:none;
     outline: none;
 }
@@ -157,4 +163,46 @@
 
 .removeAction {
 	color: red;
+}
+
+.settingsButton {
+
+	background:linear-gradient(to bottom, #c7c9c8 5%, #a3a3a3 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+	border:1px solid #858585;
+	display:inline-block;
+	cursor:pointer;
+	color:#000;
+	font-family:Arial;
+	font-size:15px;
+	padding:5px 10px;
+    text-decoration:none;
+    outline: none;
+	margin-right: 3px;
+	
+}
+
+.settingsButton:hover {
+	
+	background:linear-gradient(to bottom, #9ea898 5%, #888b89 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+}
+
+.settingsButton:active {
+	position: relative;
+	top: 1px;
+}
+
+.settingsButton[disabled] {
+	color: #848484;
+	background:linear-gradient(to bottom, #c1c2c0 5%, #cdd4cf 100%);
+	cursor: default;
+}
+
+.settingsButton:active[disabled] {
+	position: relative;
+	top: 0px;
 }
