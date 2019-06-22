@@ -97,15 +97,26 @@ export default class TileList extends Component {
     }
   }
 
+  updateSettings = (settingChanged, e) => {
+    console.log(settingChanged)
+    console.log(e.target.value)
+    let updatedSettings = {}
+    if (settingChanged === 'atmosphericCorrection')    
+      updatedSettings['atmosphericCorrection'] = e.target.checked
+
+    this.props.updateSettings(updatedSettings)
+  }
+
   toggleTileSettings = () => {
     console.log('Showing tile options')
     this.setState({
-      optionsShow: !this.state.optionsHide
+      optionsHide: !this.state.optionsHide
     })
   }
 
   render() {
     console.log(this.props.selectedTilesInList)
+    console.log(this.props.settings)
     return (
       <div className="tileList">
         <div className="header">
@@ -119,9 +130,14 @@ export default class TileList extends Component {
               </button>
             </div>
         </div>
-        <SlideDown className={'my-dropdown-slidedown'} closed={this.state.optionsShow}>
+        <SlideDown className={'my-dropdown-slidedown'} closed={this.state.optionsHide}>
           {/* {props.open ? props.children : null} */}
-          <p>BUTTS</p>
+          <div className="tileOptionPanel">
+            <h4>Job Options</h4>
+
+                <input onChange={(e) => this.updateSettings('atmosphericCorrection', e)} id={this.id} type="checkbox" checked={this.props.settings.atmosphericCorrection} />
+                <label htmlFor={this.id}>Atmospheric Correction</label>
+          </div>
         </SlideDown>
         <ul>
           {Object.keys(this.props.selectedTiles).map((d) => {
@@ -143,7 +159,7 @@ export default class TileList extends Component {
 
                 counter++;
 
-                let tileEle = (<li className={clsName} key={tile.properties.name} name={tile.properties.name} onClick={(event) => props.tileClicked(event, tile.id)}><TileListItemCompact tile={tile} removeTile={props.removeTile}/></li>)
+                let tileEle = (<li className={clsName} key={tile.properties.name} name={tile.properties.name} onClick={(event) => this.props.tileClicked(event, tile.id)}><TileListItemCompact tile={tile} removeTile={this.props.removeTile}/></li>)
                 listElements.push(tileEle)
               }
              

@@ -45,7 +45,10 @@ const defaultState = {
     job_csrf_token: null,
     currentDate: null,
     tileDict: {},
-    cloudPercentFilter: 100
+    cloudPercentFilter: 100,
+    jobSettings: {
+      atmosphericCorrection: false
+    }
 }
 
 // const JOB_MANAGER_SERVER_URL = 'http://zeus684440.agr.gc.ca:8080'
@@ -94,7 +97,6 @@ export default class MainContainer extends Component {
     window.addEventListener('beforeunload', this.cleanUpBeforeClose);
 
     window.addEventListener('keydown', this.handleKeyPress)
-
   }
 
 
@@ -104,6 +106,18 @@ export default class MainContainer extends Component {
     this.saveToLocalStorage()
 
     window.removeEventListener('beforeunload', this.cleanUpBeforeClose)
+
+    const selectedTiles = this.state.selectedTiles;
+
+    Object.keys(selectedTiles).map((date) => {
+      selectedTiles[date].map((tile) => {
+        if (tile.hasOwnProperty('job_check_interval')) {
+
+          console.log('CLEARING INTERVAL')
+          clearInterval(tile['job_check_interval'])
+        }
+        })
+    })
   }
 
   cleanUpBeforeClose = () => {
@@ -122,6 +136,8 @@ export default class MainContainer extends Component {
 
     let currentAOIList = [...aoi_list]
 
+    let jobDict = {}
+
     if (activeAOI !== null) {
       // Save the selcted tiles for later
       console.log(activeAOI)
@@ -129,6 +145,37 @@ export default class MainContainer extends Component {
       const aoi_index = this.getAoiIndex(activeAOI)
 
       let currentAOIObj = {...currentAOIList[aoi_index]}
+
+      jobDict[activeAOI] = {
+        'sentinel2': {},
+        'landsat8': {}
+      }
+
+      for (let d of Object.keys(selectedTiles)) {
+        selectedTiles[d].map((tile) => {
+          // currentTile['job_id'] = response["id"]
+          // currentTile['job_result'] = response['success'] ? 'success' : 'failed'
+          // currentTile['job_status'] = jobStatusVerbose[response['status']]
+          // currentTile['job_assigned'] = response['assigned']
+          // currentTile['job_completed'] = response['completed']
+          // currentTile["job_submitted"] = response["submitted"]
+          // currentTile['job_result_message'] = response['result_message']
+          // currentTile['times_checked'] += 1
+
+          jobDict[activeAOI]['sentinel2'][tile.id] = {
+            job_id: tile['job_id'],
+            job_result: tile['job_result'],
+            job_status: tile['job_status'],
+            job_assigned: tile['job_assigned'],
+            job_completed: tile['job_completed'],
+            job_submitted: tile['job_submitted'],
+            job_result_message: tile['job_result_message'],
+            times_checked: tile['times_checked']
+          }
+        })
+      }
+
+      // Do a sensor specific check here (landsat, sentinel2)
 
       currentAOIObj['selectedTiles'] = {}
 
@@ -153,7 +200,8 @@ export default class MainContainer extends Component {
     console.log(currentAOIList)
     const jsonData = {
       aoi_list: currentAOIList,
-      tileDict: tileDict
+      tileDict: tileDict,
+      jobDict: jobDict
     }
     console.log(jsonData)
     // Used to try and detect circular references
@@ -182,12 +230,14 @@ export default class MainContainer extends Component {
      if (data === undefined) {
         data = {
           aoi_list: [],
-          tileDict: {}
+          tileDict: {},
+          jobDict: {}
         }
      }
 
     let aoi_list = data.aoi_list
     let tileDict = data.tileDict
+    let jobDict = data.jobDict
     let cloudPercentFilter = 100
     console.log(aoi_list)
 
@@ -227,10 +277,15 @@ export default class MainContainer extends Component {
         populatedSelectedTiles[d] = []
 
         selectedTiles[d].map((id) => {
-          populatedSelectedTiles[d].push({...tileDict[id]})
+          populatedSelectedTiles[d].push({
+            ...tileDict[id],
+            ...jobDict[activeAOI]['sentinel2'][id]
+          })
         })
       }
     }
+
+    console.log(jobDict)
 
     this.setState({
       activeAOI,
@@ -239,11 +294,15 @@ export default class MainContainer extends Component {
       selectedTiles: populatedSelectedTiles,
       allTiles: {},
       tileDict,
+      jobDict,
       cloudPercentFilter
     },
     () => {
-      if (activeAOI !== null)
+      if (activeAOI !== null) {
         this.activateAOI(activeAOI)
+        console.log('Trying to resume checking job_status')
+        this.resumeCheckingJobStatus()
+      }
     });
   }
 
@@ -415,6 +474,41 @@ export default class MainContainer extends Component {
     })
   }
 
+  resumeCheckingJobStatus = () => {
+    // When starting up, check the job status of all tiles with (job id and job status of S or A)
+    // Clear previous job_interval it exists
+
+    let tiles = {...this.state.selectedTiles}
+    console.log('Current Selected tiles')
+    console.log(tiles)
+    // Iterating over selected tiles
+    Object.keys(tiles).map((ele) => {
+      console.log(ele)
+      console.log(tiles[ele])
+      
+      if (tiles[ele].length > 0) {
+        console.log('found date with tiles')
+        tiles[ele].map((tile) => {
+          
+          if (tile.hasOwnProperty('job_id')) {
+            console.log('Checking tile job status')
+
+            if (tile['job_check_interval'] !== null)
+              clearInterval(tile['job_check_interval'])
+            
+              tile['job_check_interval'] = setInterval(() => this.checkJobStatus(tile['job_id'],
+                                                                           tile.properties.name,
+                                                                           ele), 1000 * 60)
+          }
+        })
+      }
+    })
+
+    this.setState({
+      selectedTiles: tiles
+    })
+  }
+
   activateAOI = (aoi_name) => {
     // When an AOI is clicked in the list, it is made active and passed to the map viewer
     console.log('YOU CLICKED AN AREA OF INTEREST')
@@ -427,6 +521,11 @@ export default class MainContainer extends Component {
     let activeAOI = {...aoi_list[newIndex]}
     let previousAOI = {...aoi_list[prevIndex]}
     const tileDict = {...this.state.tileDict}
+
+    const jobDict = {...this.state.jobDict}
+
+    console.log('JOB DICT:')
+    console.log(jobDict)
 
     let selectedTiles = {}
 
@@ -460,7 +559,10 @@ export default class MainContainer extends Component {
 
     for (let d of Object.keys(activeSelectedTiles)) {
       newSelectedTiles[d] = activeSelectedTiles[d].map((id) => {
-        return {...tileDict[id]}
+        return {
+          ...tileDict[id],
+          ...this.state.jobDict[aoi_name]['sentinel2'][id]
+        }
       })
     }
 
@@ -516,16 +618,16 @@ export default class MainContainer extends Component {
 
     console.log('Checking job status-----------------------------------------------------------')
     console.log(job_id, tile_name, date)
-    let tiles = this.state.allSelectedTiles
+    let tiles = this.state.selectedTiles
 
     if (this.state.job_csrf_token === null) {
 
-      getCSRFToken(checkJobStatus, 'job_manager', [job_id, tile_name, date])
+      this.getCSRFToken(this.checkJobStatus, 'job_manager', [job_id, tile_name, date])
 
     } else {
 
 
-      let currentTile = tiles[date].find((ele) => ele.name == tile_name)
+      let currentTile = tiles[date].find((ele) => ele.properties.name == tile_name)
 
       console.log(currentTile)
 
@@ -556,11 +658,13 @@ export default class MainContainer extends Component {
         currentTile['job_result_message'] = response['result_message']
         currentTile['times_checked'] += 1
 
-        if (currentTile['job_status'] === 'completed')
+        console.log(currentTile['job_status'])
+        if (currentTile['job_status'] === 'completed') {
+          console.log('clearing the job status check')
           clearInterval(currentTile['job_check_interval'])
-
+        }
         this.setState({
-          allSelectedTiles: tiles
+          selectedTiles: tiles
         })
 
       }).catch((err) => {
@@ -617,6 +721,8 @@ export default class MainContainer extends Component {
       allTiles
     })
   }
+
+
 
   handleSubmitAllJobs = () => {
     console.log('submitting all jobs for selected tiles')
@@ -684,7 +790,7 @@ export default class MainContainer extends Component {
               parameters: {
                 options: {
                             tile: tile.properties.name,
-                            ac: true,
+                            ac: this.state.jobSettings.atmosphericCorrection,
                             ac_res: 10
                         }
               },
@@ -716,7 +822,7 @@ export default class MainContainer extends Component {
 
               console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
               tile['job_check_interval'] = setInterval(() => this.checkJobStatus(tile['job_id'],
-                                                                           tile['name'],
+                                                                           tile.properties['name'],
                                                                            ele), 1000 * 60)
 
               tile['times_checked'] = 0
@@ -952,6 +1058,23 @@ export default class MainContainer extends Component {
     })
   }
 
+  updateJobSettings = (newSettings) => {
+    console.log(newSettings)
+    let testObject = {
+      ...this.state.jobSettings,
+      ...newSettings
+    }
+    console.log('new job settings')
+    console.log(testObject)
+
+    this.setState({
+      jobSettings: {
+        ...this.state.jobSettings,
+        ...newSettings
+      }
+    })
+  }
+
   handleTileSettingsUpdate = (newSettings) => {
     console.log('updated settings for the tile list are:')
     console.log(newSettings)
@@ -1038,7 +1161,7 @@ export default class MainContainer extends Component {
             <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent}/>
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} updateTileSettings={this.handleSettingsUpdate} settings={this.props.settings}/>
+          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} />
         </div>
       );
     }
