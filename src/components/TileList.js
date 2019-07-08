@@ -118,82 +118,87 @@ export default class TileList extends Component {
   job_verified_icon_l2a = () => {
     let jobProgressIcon = ['far', 'hourglass']
     let jobProgressClass = 'tileActionIndicator disabledIcon'
-  
-    if (this.props.sen2agriL2AJob.job_status === 'submitted') {
-      jobProgressIcon = ['fas', 'hourglass-start']
-      jobProgressClass = 'tileActionIndicator grey'
-    } else if (this.props.sen2agriL2AJob.job_status === 'assigned') {
-      jobProgressIcon = ['fas', 'hourglass-half']
-      jobProgressClass = 'tileActionIndicator '
-    } else if (this.props.sen2agriL2AJob.job_status === 'completed') {
-      jobProgressIcon = ['fas', 'hourglass-end']
-      jobProgressClass = 'tileActionIndicator '
-    }
-  
-    if (this.props.sen2agriL2AJob.job_result === 'success')
-      jobProgressClass += 'jobSuccess'
-    else if (this.props.sen2agriL2AJob.job_result === 'failed' && this.props.sen2agriL2AJob.job_status === 'completed')
-      jobProgressClass += 'jobFailed'
+    if (this.props.sen2agriL2AJob.hasOwnProperty('job_status')) {
+      if (this.props.sen2agriL2AJob.job_status === 'submitted') {
+        jobProgressIcon = ['fas', 'hourglass-start']
+        jobProgressClass = 'tileActionIndicator grey'
+      } else if (this.props.sen2agriL2AJob.job_status === 'assigned') {
+        jobProgressIcon = ['fas', 'hourglass-half']
+        jobProgressClass = 'tileActionIndicator '
+      } else if (this.props.sen2agriL2AJob.job_status === 'completed') {
+        jobProgressIcon = ['fas', 'hourglass-end']
+        jobProgressClass = 'tileActionIndicator '
+      }
     
-      return (
-    <div className={jobProgressClass}>
-    <FontAwesomeIcon icon={jobProgressIcon}/>
-    </div>
-    )
-}
+      if (this.props.sen2agriL2AJob.job_result === 'success')
+        jobProgressClass += 'jobSuccess'
+      else if (this.props.sen2agriL2AJob.job_result === 'failed' && this.props.sen2agriL2AJob.job_status === 'completed')
+        jobProgressClass += 'jobFailed'
+      
+        return (
+      <div className={jobProgressClass}>
+      <FontAwesomeIcon icon={jobProgressIcon}/>
+      </div>
+      )
+        }
+  }
 
 job_verified_icon_l3a = () => {
   let jobProgressIcon = ['far', 'hourglass']
     let jobProgressClass = 'tileActionIndicator disabledIcon'
-  
-    if (this.props.sen2agriL3AJob.job_status === 'submitted') {
-      jobProgressIcon = ['fas', 'hourglass-start']
-      jobProgressClass = 'tileActionIndicator grey'
-    } else if (this.props.sen2agriL3AJob.job_status === 'assigned') {
-      jobProgressIcon = ['fas', 'hourglass-half']
-      jobProgressClass = 'tileActionIndicator '
-    } else if (this.props.sen2agriL3AJob.job_status === 'completed') {
-      jobProgressIcon = ['fas', 'hourglass-end']
-      jobProgressClass = 'tileActionIndicator '
-    }
-  
-    if (this.props.sen2agriL3AJob.job_result === 'success')
-      jobProgressClass += 'jobSuccess'
-    else if (this.props.sen2agriL3AJob.job_result === 'failed' && this.props.sen2agriL3AJob.job_status === 'completed')
-      jobProgressClass += 'jobFailed'
+    if (this.props.sen2agriL2AJob.hasOwnProperty('job_status')) {
+
+      if (this.props.sen2agriL3AJob.job_status === 'submitted') {
+        jobProgressIcon = ['fas', 'hourglass-start']
+        jobProgressClass = 'tileActionIndicator grey'
+      } else if (this.props.sen2agriL3AJob.job_status === 'assigned') {
+        jobProgressIcon = ['fas', 'hourglass-half']
+        jobProgressClass = 'tileActionIndicator '
+      } else if (this.props.sen2agriL3AJob.job_status === 'completed') {
+        jobProgressIcon = ['fas', 'hourglass-end']
+        jobProgressClass = 'tileActionIndicator '
+      }
     
-      return (
-    <div className={jobProgressClass}>
-    <FontAwesomeIcon icon={jobProgressIcon}/>
-    </div>
-    )
+      if (this.props.sen2agriL3AJob.job_result === 'success')
+        jobProgressClass += 'jobSuccess'
+      else if (this.props.sen2agriL3AJob.job_result === 'failed' && this.props.sen2agriL3AJob.job_status === 'completed')
+        jobProgressClass += 'jobFailed'
+      
+        return (
+      <div className={jobProgressClass}>
+      <FontAwesomeIcon icon={jobProgressIcon}/>
+      </div>
+      )
+        }
 }
 
 job_verified_icon_l3b = () => {
   let jobProgressIcon = ['far', 'hourglass']
   let jobProgressClass = 'tileActionIndicator disabledIcon'
+  if (this.props.sen2agriL2AJob.hasOwnProperty('job_status')) {
 
-  if (this.props.sen2agriL3BJob.job_status === 'submitted') {
-    jobProgressIcon = ['fas', 'hourglass-start']
-    jobProgressClass = 'tileActionIndicator grey'
-  } else if (this.props.sen2agriL3BJob.job_status === 'assigned') {
-    jobProgressIcon = ['fas', 'hourglass-half']
-    jobProgressClass = 'tileActionIndicator '
-  } else if (this.props.sen2agriL3BJob.job_status === 'completed') {
-    jobProgressIcon = ['fas', 'hourglass-end']
-    jobProgressClass = 'tileActionIndicator '
-  }
+    if (this.props.sen2agriL3BJob.job_status === 'submitted') {
+      jobProgressIcon = ['fas', 'hourglass-start']
+      jobProgressClass = 'tileActionIndicator grey'
+    } else if (this.props.sen2agriL3BJob.job_status === 'assigned') {
+      jobProgressIcon = ['fas', 'hourglass-half']
+      jobProgressClass = 'tileActionIndicator '
+    } else if (this.props.sen2agriL3BJob.job_status === 'completed') {
+      jobProgressIcon = ['fas', 'hourglass-end']
+      jobProgressClass = 'tileActionIndicator '
+    }
 
-  if (this.props.sen2agriL3BJob.job_result === 'success')
-    jobProgressClass += 'jobSuccess'
-  else if (this.props.sen2agriL3BJob.job_result === 'failed' && this.props.sen2agriL3BJob.job_status === 'completed')
-    jobProgressClass += 'jobFailed'
-  
-    return (
-  <div className={jobProgressClass}>
-  <FontAwesomeIcon icon={jobProgressIcon}/>
-  </div>
-  )
+    if (this.props.sen2agriL3BJob.job_result === 'success')
+      jobProgressClass += 'jobSuccess'
+    else if (this.props.sen2agriL3BJob.job_result === 'failed' && this.props.sen2agriL3BJob.job_status === 'completed')
+      jobProgressClass += 'jobFailed'
+    
+      return (
+    <div className={jobProgressClass}>
+    <FontAwesomeIcon icon={jobProgressIcon}/>
+    </div>
+    )
+      }
   }
 
 
