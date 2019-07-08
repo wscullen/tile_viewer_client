@@ -11,10 +11,18 @@
 	overflow-x: hidden;
 }
 
+.listOfTiles {
+	list-style: none;
+	padding-left: 0px;
+	z-index: -9999;
+}
+
 .tileList ul {
 	list-style: none;
 	padding-left: 0px;
+	z-index: -9999;
 }
+
 
 
 

@@ -134,12 +134,30 @@ export default class TileList extends Component {
           {/* {props.open ? props.children : null} */}
           <div className="tileOptionPanel">
             <h4>Job Options</h4>
-
-                <input onChange={(e) => this.updateSettings('atmosphericCorrection', e)} id={this.id} type="checkbox" checked={this.props.settings.atmosphericCorrection} />
-                <label htmlFor={this.id}>Atmospheric Correction</label>
+              <ul>
+                <li>
+                  <input onChange={(e) => this.updateSettings('atmosphericCorrection', e)} id={this.id} type="checkbox" checked={this.props.settings.atmosphericCorrection} />
+                  <label htmlFor={this.id}>Atmospheric Correction (Sen2Cor/LaSRC)</label>
+                </li>
+                <li>
+                  <button onClick={this.props.saveTileJson}>Save Tile List as JSON</button>
+                </li>
+              </ul>
+              <h4>Sen2Agri</h4>
+              <ul>
+                <li>
+                  <button onClick={() => console.log('running sen2agri l2a job')}>Generate Atmos. Corrected (L2A)</button>
+                </li>
+                <li>
+                  <button onClick={() => console.log('running sen2agri l3a job')}>Generate Cloudfree Composites (L3A)</button>
+                </li>
+                <li>
+                  <button onClick={() => console.log('running sen2agri l3b job')}>Generate LAI/NDVI For Each Date (L3B)</button>
+                </li>
+              </ul>
           </div>
         </SlideDown>
-        <ul>
+        <ul className="listOfTiles">
           {Object.keys(this.props.selectedTiles).map((d) => {
             let listElements = []
             

@@ -1080,6 +1080,30 @@ export default class MainContainer extends Component {
     console.log(newSettings)
   }
 
+  saveTileJson = () => {
+
+    console.log('trying to save to json')
+    const { dialog } = require('electron').remote
+    console.log(dialog)
+    dialog.showSaveDialog({defaultPath: "tilelist.json"}, (filename) => {
+      if (filename) {
+        const dateList = this.state.selectedTiles
+        let tileList = {}
+        for (let d in dateList) {
+          if (dateList[d].length > 0) {
+            let singleDateList = dateList[d].map((ele) => ele.properties.name)
+            tileList[d] = singleDateList
+          }
+        }
+        console.log(filename)
+        console.log(tileList)
+        fs.writeFileSync(filename, JSON.stringify(tileList));
+        console.log('stringified AOI list successfully')
+      }
+    })
+
+  }
+
   sortTilesByDate = (tiles) => {
     if (tiles) {
       let formatted_tiles = [];
@@ -1161,7 +1185,7 @@ export default class MainContainer extends Component {
             <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent}/>
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} />
+          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} saveTileJson={this.saveTileJson}/>
         </div>
       );
     }
