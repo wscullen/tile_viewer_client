@@ -48,7 +48,13 @@ const defaultState = {
     cloudPercentFilter: 100,
     jobSettings: {
       atmosphericCorrection: false
-    }
+    },
+    enableSen2AgriL2A: false,
+    enableSen2AgriL3A: false,
+    enableSen2AgriL3B: false,
+    sen2agri_l2a_job: {},
+    sen2agri_l3a_job: {},
+    sen2agri_l3b_job: {}
 }
 
 // const JOB_MANAGER_SERVER_URL = 'http://zeus684440.agr.gc.ca:8080'
@@ -133,6 +139,12 @@ export default class MainContainer extends Component {
     console.log(currentDate)
     console.log('aoi_list')
     console.log(aoi_list)
+    const {enableSen2AgriL2A, 
+    enableSen2AgriL3A,
+    enableSen2AgriL3B,
+    sen2agri_l2a_job,
+    sen2agri_l3a_job,
+    sen2agri_l3b_job } = this.state
 
     let currentAOIList = [...aoi_list]
 
@@ -201,7 +213,13 @@ export default class MainContainer extends Component {
     const jsonData = {
       aoi_list: currentAOIList,
       tileDict: tileDict,
-      jobDict: jobDict
+      jobDict: jobDict,
+      enableSen2AgriL2A, 
+      enableSen2AgriL3A,
+      enableSen2AgriL3B,
+      sen2agri_l2a_job,
+      sen2agri_l3a_job,
+      sen2agri_l3b_job
     }
     console.log(jsonData)
     // Used to try and detect circular references
@@ -238,6 +256,14 @@ export default class MainContainer extends Component {
     let aoi_list = data.aoi_list
     let tileDict = data.tileDict
     let jobDict = data.jobDict
+
+    const {enableSen2AgriL2A, 
+      enableSen2AgriL3A,
+      enableSen2AgriL3B,
+      sen2agri_l2a_job,
+      sen2agri_l3a_job,
+      sen2agri_l3b_job } = data 
+
     let cloudPercentFilter = 100
     console.log(aoi_list)
 
@@ -295,7 +321,13 @@ export default class MainContainer extends Component {
       allTiles: {},
       tileDict,
       jobDict,
-      cloudPercentFilter
+      cloudPercentFilter,
+      enableSen2AgriL2A, 
+        enableSen2AgriL3A,
+        enableSen2AgriL3B,
+        sen2agri_l2a_job,
+        sen2agri_l3a_job,
+        sen2agri_l3b_job
     },
     () => {
       if (activeAOI !== null) {
@@ -504,8 +536,30 @@ export default class MainContainer extends Component {
       }
     })
 
+    let l2a_job = this.state.sen2agri_l2a_job
+
+    if (l2a_job.hasOwnProperty('job_status')) {
+      l2a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL2AJobStatus(l2a_job['job_id']), 1000 * 60)
+    }
+
+    let l3a_job = this.state.sen2agri_l3a_job
+
+    if (l3a_job.hasOwnProperty('job_status')) {
+      l3a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3AJobStatus(l3a_job['job_id']), 1000 * 60)
+    }
+
+    let l3b_job = this.state.sen2agri_l3b_job
+
+    if (l3b_job.hasOwnProperty('job_status')) {
+      l3b_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3BJobStatus(l3b_job['job_id']), 1000 * 60)
+    }
+
+
     this.setState({
-      selectedTiles: tiles
+      selectedTiles: tiles,
+      sen2agri_l2a_job: l2a_job,
+      sen2agri_l3a_job: l3a_job,
+      sen2agri_l3b_job: l3b_job
     })
   }
 
@@ -659,12 +713,28 @@ export default class MainContainer extends Component {
         currentTile['times_checked'] += 1
 
         console.log(currentTile['job_status'])
+        let allJobsDone = false
+
         if (currentTile['job_status'] === 'completed') {
           console.log('clearing the job status check')
           clearInterval(currentTile['job_check_interval'])
-        }
+          allJobsDone = true
+
+          Object.keys(tiles).map((ele) => {
+            
+            if (tiles[ele].length > 0) {
+              tiles[ele].map((t) => {
+                if (t['job_status'] !== jobStatusVerbose[response['status']] && t['job_result'] !== 'success') {
+                  allJobsDone = false
+                }
+              })
+          } 
+        })
+      }
+
         this.setState({
-          selectedTiles: tiles
+          selectedTiles: tiles,
+          enableSen2AgriL2A: allJobsDone
         })
 
       }).catch((err) => {
@@ -674,6 +744,173 @@ export default class MainContainer extends Component {
 
     }
   }
+
+  checkSen2AgriL2AJobStatus = (job_id) => {
+    let jobStatusVerbose = {
+      'C': 'completed',
+      'A': 'assigned',
+      'S': 'submitted'
+    }
+
+    if (this.state.job_csrf_token === null) {
+
+      this.getCSRFToken(this.checkSen2AgriL2AJobStatus, 'job_manager', [job_id])
+
+    } else {
+
+      let headers = new Headers();
+      headers.append("X-CSRFToken", this.state.job_csrf_token);
+      headers.append("Content-Type", "application/json")
+
+      headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
+
+      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
+        method: 'GET',
+        headers: headers,
+      })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        console.log(response)
+        
+        let sen2agri_job_status = this.state.sen2agri_l2a_job
+
+        sen2agri_job_status['job_id'] = response["id"]
+
+        sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
+        sen2agri_job_status['job_status'] = jobStatusVerbose[response['status']]
+        sen2agri_job_status['job_assigned'] = response['assigned']
+        sen2agri_job_status['job_completed'] = response['completed']
+        sen2agri_job_status["job_submitted"] = response["submitted"]
+        sen2agri_job_status['job_result_message'] = response['result_message']
+        sen2agri_job_status['times_checked'] += 1
+
+        let enableL3Other = false
+
+        if (sen2agri_job_status['job_status'] === 'completed') {
+          enableL3Other = true
+        }
+
+        this.setState({
+          sen2agri_l2a_job: sen2agri_job_status,
+          enableSen2AgriL3A: enableL3Other,
+          enableSen2AgriL3B: enableL3Other
+        })
+
+      }).catch((err) => {
+        console.log(err)
+        console.log('something went wrong when trying to check the job')
+      })
+
+    }
+  }
+
+  checkSen2AgriL3AJobStatus = (job_id) => {
+    let jobStatusVerbose = {
+      'C': 'completed',
+      'A': 'assigned',
+      'S': 'submitted'
+    }
+
+    if (this.state.job_csrf_token === null) {
+
+      this.getCSRFToken(this.checkSen2AgriL3AJobStatus, 'job_manager', [job_id])
+
+    } else {
+
+      let headers = new Headers();
+      headers.append("X-CSRFToken", this.state.job_csrf_token);
+      headers.append("Content-Type", "application/json")
+
+      headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
+
+      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
+        method: 'GET',
+        headers: headers,
+      })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        console.log(response)
+        
+        let sen2agri_job_status = this.state.sen2agri_l3a_job
+
+        sen2agri_job_status['job_id'] = response["id"]
+
+        sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
+        sen2agri_job_status['job_status'] = jobStatusVerbose[response['status']]
+        sen2agri_job_status['job_assigned'] = response['assigned']
+        sen2agri_job_status['job_completed'] = response['completed']
+        sen2agri_job_status["job_submitted"] = response["submitted"]
+        sen2agri_job_status['job_result_message'] = response['result_message']
+        sen2agri_job_status['times_checked'] += 1
+
+
+        this.setState({
+          sen2agri_l3a_job: sen2agri_job_status,
+        })
+
+      }).catch((err) => {
+        console.log(err)
+        console.log('something went wrong when trying to check the job')
+      })
+
+    }
+  }
+
+  checkSen2AgriL3BJobStatus = (job_id) => {
+    let jobStatusVerbose = {
+      'C': 'completed',
+      'A': 'assigned',
+      'S': 'submitted'
+    }
+
+    if (this.state.job_csrf_token === null) {
+
+      this.getCSRFToken(this.checkSen2AgriL3BJobStatus, 'job_manager', [job_id])
+
+    } else {
+
+      let headers = new Headers();
+      headers.append("X-CSRFToken", this.state.job_csrf_token);
+      headers.append("Content-Type", "application/json")
+
+      headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
+
+      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
+        method: 'GET',
+        headers: headers,
+      })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        console.log(response)
+        
+        let sen2agri_job_status = this.state.sen2agri_l3b_job
+
+        sen2agri_job_status['job_id'] = response["id"]
+
+        sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
+        sen2agri_job_status['job_status'] = jobStatusVerbose[response['status']]
+        sen2agri_job_status['job_assigned'] = response['assigned']
+        sen2agri_job_status['job_completed'] = response['completed']
+        sen2agri_job_status["job_submitted"] = response["submitted"]
+        sen2agri_job_status['job_result_message'] = response['result_message']
+        sen2agri_job_status['times_checked'] += 1
+
+
+        this.setState({
+          sen2agri_l3b_job: sen2agri_job_status,
+        })
+
+      }).catch((err) => {
+        console.log(err)
+        console.log('something went wrong when trying to check the job')
+      })
+
+    }
+  }
+
 
   selectAllVisibleTiles = () => {
     let currentTiles = [...this.state.currentTiles]
@@ -1080,6 +1317,23 @@ export default class MainContainer extends Component {
     console.log(newSettings)
   }
 
+  getTileList = () => {
+    
+    
+    let tileList = {}
+    const dateList = this.state.selectedTiles
+
+    for (let d in dateList) {
+      if (dateList[d].length > 0) {
+        let singleDateList = dateList[d].map((ele) => ele.properties.name)
+        tileList[d] = singleDateList
+      }
+    }
+
+    return tileList
+  }
+  
+
   saveTileJson = () => {
 
     console.log('trying to save to json')
@@ -1087,14 +1341,7 @@ export default class MainContainer extends Component {
     console.log(dialog)
     dialog.showSaveDialog({defaultPath: "tilelist.json"}, (filename) => {
       if (filename) {
-        const dateList = this.state.selectedTiles
-        let tileList = {}
-        for (let d in dateList) {
-          if (dateList[d].length > 0) {
-            let singleDateList = dateList[d].map((ele) => ele.properties.name)
-            tileList[d] = singleDateList
-          }
-        }
+        let tileList = this.getTileList()
         console.log(filename)
         console.log(tileList)
         fs.writeFileSync(filename, JSON.stringify(tileList));
@@ -1102,6 +1349,270 @@ export default class MainContainer extends Component {
       }
     })
 
+  }
+
+  submitSen2agriL2A = () => {
+    console.log('trying to submit sen2agri l2a job')
+
+    // get tile List
+    const tiles = this.getTileList()
+
+    if (this.state.job_csrf_token === null) {
+      let headers = new Headers();
+
+      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'default',
+        headers: headers
+      })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        this.setState({
+          job_csrf_token: JSON.stringify(response)
+        });
+
+        setTimeout(() => this.submitSen2agriL2A, 200)
+      })
+      .catch((err) =>
+        console.log('something blew up')
+      );
+
+    } else {
+            const jobReqBody = {
+              label: "Sen2agri L2A JOb",
+              command: "na",
+              job_type: "Sen2Agri_L2A",
+              parameters: {
+                imagery_list: tiles
+              },
+              priority: "3"
+            }
+            let headers = new Headers();
+            headers.append("X-CSRFToken", this.state.job_csrf_token);
+            headers.append("Content-Type", "application/json")
+
+            headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
+
+            fetch(`${this.props.settings.job_url}/jobs/`, {
+              method: 'POST',
+              body: JSON.stringify(jobReqBody),
+              headers: headers,
+            })
+            .then(response => response.json())
+            .then(response => {
+              console.log('Success:', JSON.stringify(response))
+
+              // // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
+              // // Todo update each tile with job info (id, status, success, workerid)
+              // tile['job_id'] = response["id"]
+              // tile['job_result'] = null
+              // tile['job_status'] = 'submitted'
+              // tile['job_assigned'] = null
+              // tile['job_completed'] = null
+              // tile["job_submitted"] = response["submitted"]
+
+              let job_status = {}
+              job_status['job_id'] = response['id']
+
+              job_status['job_result'] = null
+              job_status['job_status'] = 'submitted'
+              job_status['job_assigned'] = null
+              job_status['job_completed'] = null
+              job_status["job_submitted"] = response["submitted"]
+
+              console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
+              job_status['job_check_interval'] = setInterval(() => this.checkSen2AgriL2AJobStatus(job_status['job_id']), 1000 * 60)
+
+              job_status['times_checked'] = 0
+
+              this.setState({
+                sen2agri_l2a_job: job_status
+              })
+            }).catch((err) => {
+              console.log(err)
+              console.log('something went wrong when trying to submit the job')
+            })
+
+    // submit job
+  }
+}
+
+  submitSen2agriL3A = () => {
+    console.log('trying to submit sen2agri l3a job')
+    // get tile List
+    const tiles = this.getTileList()
+
+    if (this.state.job_csrf_token === null) {
+      let headers = new Headers();
+
+      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'default',
+        headers: headers
+      })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        this.setState({
+          job_csrf_token: JSON.stringify(response)
+        });
+
+        setTimeout(() => this.submitSen2agriL3A, 200)
+      })
+      .catch((err) =>
+        console.log('something blew up')
+      );
+
+    } else {
+            const jobReqBody = {
+              label: "Sen2agri L3A JOb",
+              command: "na",
+              job_type: "Sen2Agri_L3A",
+              parameters: {
+                imagery_list: tiles,
+                aoi_name: this.state.activeAOI,
+                window_size: 30
+              },
+              priority: "3"
+            }
+            let headers = new Headers();
+            headers.append("X-CSRFToken", this.state.job_csrf_token);
+            headers.append("Content-Type", "application/json")
+
+            headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
+
+            fetch(`${this.props.settings.job_url}/jobs/`, {
+              method: 'POST',
+              body: JSON.stringify(jobReqBody),
+              headers: headers,
+            })
+            .then(response => response.json())
+            .then(response => {
+              console.log('Success:', JSON.stringify(response))
+
+              // // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
+              // // Todo update each tile with job info (id, status, success, workerid)
+              // tile['job_id'] = response["id"]
+              // tile['job_result'] = null
+              // tile['job_status'] = 'submitted'
+              // tile['job_assigned'] = null
+              // tile['job_completed'] = null
+              // tile["job_submitted"] = response["submitted"]
+
+              let job_status = {}
+              job_status['job_id'] = response['id']
+
+              job_status['job_result'] = null
+              job_status['job_status'] = 'submitted'
+              job_status['job_assigned'] = null
+              job_status['job_completed'] = null
+              job_status["job_submitted"] = response["submitted"]
+
+              console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
+              job_status['job_check_interval'] = setInterval(() => this.checkSen2AgriL3AJobStatus(job_status['job_id']), 1000 * 60)
+
+              job_status['times_checked'] = 0
+
+              this.setState({
+                sen2agri_l3a_job: job_status
+              })
+            }).catch((err) => {
+              console.log(err)
+              console.log('something went wrong when trying to submit the job')
+            })
+
+  }
+}
+
+  
+
+  submitSen2agriL3B = () => {
+    console.log('trying to submit sen2agri l3b job')
+    const tiles = this.getTileList()
+
+    if (this.state.job_csrf_token === null) {
+      let headers = new Headers();
+
+      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'default',
+        headers: headers
+      })
+      .then(response => response.json())
+      .then(response => {
+        console.log('Success:', JSON.stringify(response))
+        this.setState({
+          job_csrf_token: JSON.stringify(response)
+        });
+
+        setTimeout(() => this.submitSen2agriL3A, 200)
+      })
+      .catch((err) =>
+        console.log('something blew up')
+      );
+
+    } else {
+            const jobReqBody = {
+              label: "Sen2agri L3B JOb",
+              command: "na",
+              job_type: "Sen2Agri_L3A",
+              parameters: {
+                imagery_list: tiles,
+                aoi_name: this.state.activeAOI
+              },
+              priority: "3"
+            }
+            let headers = new Headers();
+            headers.append("X-CSRFToken", this.state.job_csrf_token);
+            headers.append("Content-Type", "application/json")
+
+            headers.append("Authorization", `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
+
+            fetch(`${this.props.settings.job_url}/jobs/`, {
+              method: 'POST',
+              body: JSON.stringify(jobReqBody),
+              headers: headers,
+            })
+            .then(response => response.json())
+            .then(response => {
+              console.log('Success:', JSON.stringify(response))
+
+              // // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
+              // // Todo update each tile with job info (id, status, success, workerid)
+              // tile['job_id'] = response["id"]
+              // tile['job_result'] = null
+              // tile['job_status'] = 'submitted'
+              // tile['job_assigned'] = null
+              // tile['job_completed'] = null
+              // tile["job_submitted"] = response["submitted"]
+
+              let job_status = {}
+              job_status['job_id'] = response['id']
+
+              job_status['job_result'] = null
+              job_status['job_status'] = 'submitted'
+              job_status['job_assigned'] = null
+              job_status['job_completed'] = null
+              job_status["job_submitted"] = response["submitted"]
+
+              console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
+              job_status['job_check_interval'] = setInterval(() => this.checkSen2AgriL3BJobStatus(job_status['job_id']), 1000 * 60)
+
+              job_status['times_checked'] = 0
+
+
+              this.setState({
+                sen2agri_l3b_job: job_status
+              })
+            }).catch((err) => {
+              console.log(err)
+              console.log('something went wrong when trying to submit the job')
+            })
+  }
   }
 
   sortTilesByDate = (tiles) => {
@@ -1185,7 +1696,16 @@ export default class MainContainer extends Component {
             <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent}/>
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} saveTileJson={this.saveTileJson}/>
+          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} 
+                    selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} 
+                    tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} 
+                    submitAllJobs={this.handleSubmitAllJobs} saveTileJson={this.saveTileJson} 
+                    submitSen2agriL2A={this.submitSen2agriL2A} enableSen2agriL2A={this.state.enableSen2AgriL2A}
+                    submitSen2agriL3A={this.submitSen2agriL3A} enableSen2agriL3A={this.state.enableSen2AgriL3A}
+                    submitSen2agriL3B={this.submitSen2agriL2B} enableSen2agriL3B={this.state.enableSen2AgriL3B} 
+                    sen2agriL2AJob={this.state.sen2agri_l2a_job}
+                    sen2agriL3AJob={this.state.sen2agri_l3a_job}
+                    sen2agriL3BJob={this.state.sen2agri_l3b_job}/>
         </div>
       );
     }
