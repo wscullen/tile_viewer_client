@@ -118,7 +118,7 @@ export default class TileList extends Component {
   job_verified_icon_l2a = () => {
     let jobProgressIcon = ['far', 'hourglass']
     let jobProgressClass = 'tileActionIndicator disabledIcon'
-    if (this.props.sen2agriL2AJob.hasOwnProperty('job_status')) {
+    if (this.props.sen2agriL2AJob) {
       if (this.props.sen2agriL2AJob.job_status === 'submitted') {
         jobProgressIcon = ['fas', 'hourglass-start']
         jobProgressClass = 'tileActionIndicator grey'
@@ -146,7 +146,7 @@ export default class TileList extends Component {
 job_verified_icon_l3a = () => {
   let jobProgressIcon = ['far', 'hourglass']
     let jobProgressClass = 'tileActionIndicator disabledIcon'
-    if (this.props.sen2agriL2AJob.hasOwnProperty('job_status')) {
+    if (this.props.sen2agriL3AJob) {
 
       if (this.props.sen2agriL3AJob.job_status === 'submitted') {
         jobProgressIcon = ['fas', 'hourglass-start']
@@ -175,7 +175,7 @@ job_verified_icon_l3a = () => {
 job_verified_icon_l3b = () => {
   let jobProgressIcon = ['far', 'hourglass']
   let jobProgressClass = 'tileActionIndicator disabledIcon'
-  if (this.props.sen2agriL2AJob.hasOwnProperty('job_status')) {
+  if (this.props.sen2agriL3BJob) {
 
     if (this.props.sen2agriL3BJob.job_status === 'submitted') {
       jobProgressIcon = ['fas', 'hourglass-start']
