@@ -24,7 +24,9 @@ import { faCheckSquare,
          faHourglassHalf,
          faHourglassEnd,
          faCircle,
-         faCog} from '@fortawesome/free-solid-svg-icons'
+         faCog,
+         faEye,
+         faEyeSlash} from '@fortawesome/free-solid-svg-icons'
 
 import {faHourglass as farHourglass,
         faCircle as farCircle} from '@fortawesome/free-regular-svg-icons'
@@ -49,7 +51,9 @@ library.add(fab,
             faHourglassEnd,
             faCircle,
             farCircle,
-            faCog)
+            faCog,
+            faEye,
+            faEyeSlash)
 
 
 import { MemoryRouter as Router, Switch } from 'react-router-dom';

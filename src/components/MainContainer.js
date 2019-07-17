@@ -32,6 +32,7 @@ const { remote } = require ('electron');
 const path = require ('path');
 
 const resourcesPath = path.join(remote.app.getPath('userData'), 'localstorage.json')
+
 console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
@@ -521,8 +522,8 @@ export default class MainContainer extends Component {
       if (tiles[ele].length > 0) {
         console.log('found date with tiles')
         tiles[ele].map((tile) => {
-          
-          if (tile.hasOwnProperty('job_id')) {
+         
+          if (tile && tile.hasOwnProperty('job_id')) {
             console.log('Checking tile job status')
 
             if (tile['job_check_interval'] !== null)
@@ -538,19 +539,19 @@ export default class MainContainer extends Component {
 
     let l2a_job = this.state.sen2agri_l2a_job
 
-    if (l2a_job.hasOwnProperty('job_status')) {
+    if (l2a_job && l2a_job.hasOwnProperty('job_status')) {
       l2a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL2AJobStatus(l2a_job['job_id']), 1000 * 60)
     }
 
     let l3a_job = this.state.sen2agri_l3a_job
 
-    if (l3a_job.hasOwnProperty('job_status')) {
+    if (l3a_job && l3a_job.hasOwnProperty('job_status')) {
       l3a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3AJobStatus(l3a_job['job_id']), 1000 * 60)
     }
 
     let l3b_job = this.state.sen2agri_l3b_job
 
-    if (l3b_job.hasOwnProperty('job_status')) {
+    if (l3b_job && l3b_job.hasOwnProperty('job_status')) {
       l3b_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3BJobStatus(l3b_job['job_id']), 1000 * 60)
     }
 
@@ -561,6 +562,40 @@ export default class MainContainer extends Component {
       sen2agri_l3a_job: l3a_job,
       sen2agri_l3b_job: l3b_job
     })
+  }
+
+  toggleVisibility = (tileId) => {
+
+    let allTiles = {...this.state.allTiles}
+    let selectedTiles = {...this.state.selectedTiles}
+    let tileDict = {...this.state.tileDict}
+
+    let currentTiles = [...allTiles[this.state.currentDate]]
+
+    for (let tile of currentTiles) {
+        if (tile['id'] === tileId) {
+          tile.visible = !tile.visible
+          tileDict[tile.id].visible = !tile.visible
+        }
+    }
+
+    let selectedCurrentTiles = [...selectedTiles[this.state.currentDate]]
+
+    for (let tile of selectedCurrentTiles) {
+      if (tile['id'] === tileId) {
+        tile.visible = !tile.visible
+      }
+    }
+
+    selectedTiles[this.state.currentDate] = selectedCurrentTiles
+
+    this.setState({
+      tileDict,
+      selectedTiles,
+      currentTiles: allTiles[this.state.currentDate]
+    })
+
+
   }
 
   activateAOI = (aoi_name) => {
@@ -634,6 +669,7 @@ export default class MainContainer extends Component {
       dateList,
       currentDate,
       aoi_list,
+      cloudPercentFilter: activeAOI['cloudPercentFilter']
     })
   }
 
@@ -1238,14 +1274,18 @@ export default class MainContainer extends Component {
   }
 
   handleUpdateCloudFilter = (cloud) => {
+    
     if (!this.state.activeAOI)
       return
+    
     console.log('User changed the filter % for cloud')
     console.log(cloud)
 
 
     let allTiles = {...this.state.allTiles}
+    let selectedTiles = {...this.state.selectedTiles}
     let tileDict = {...this.state.tileDict}
+
     console.log(allTiles)
 
     let currentTiles = [...allTiles[this.state.currentDate]]
@@ -1260,11 +1300,21 @@ export default class MainContainer extends Component {
       }
     }
 
+    let selectedCurrentTiles = [...selectedTiles[this.state.currentDate]]
+
+    for (let tile of selectedCurrentTiles) {
+      tile['visible'] = tileDict[tile['id']].visible
+      console.log('updating selected tiles')
+      console.log(tile)
+    }
+
+    selectedTiles[this.state.currentDate] = selectedCurrentTiles
+
     this.setState({
-      allTiles,
       tileDict,
+      selectedTiles,
       currentTiles: allTiles[this.state.currentDate],
-      cloudPercentFilter: cloud
+      cloudPercentFilter: cloud[0]
     })
   }
 
@@ -1705,7 +1755,8 @@ export default class MainContainer extends Component {
                     submitSen2agriL3B={this.submitSen2agriL2B} enableSen2agriL3B={this.state.enableSen2AgriL3B} 
                     sen2agriL2AJob={this.state.sen2agri_l2a_job}
                     sen2agriL3AJob={this.state.sen2agri_l3a_job}
-                    sen2agriL3BJob={this.state.sen2agri_l3b_job}/>
+                    sen2agriL3BJob={this.state.sen2agri_l3b_job}
+                    toggleTileVisibility={this.toggleVisibility}/>
         </div>
       );
     }

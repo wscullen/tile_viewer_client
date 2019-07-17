@@ -42,6 +42,7 @@ if (process.platform === 'win32') {
 }
 
 let resources
+
 if (dev) {
   resources = path.join(__dirname, 'assets', 'icons')
   console.log(__dirname)
