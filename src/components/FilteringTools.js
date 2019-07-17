@@ -110,28 +110,40 @@ const formatTicks = (d) => {
     return `${d}`;
   };
 
-  export default class MainContainer extends Component {
+  export default class FilteringTools extends Component {
 
     constructor(props) {
       super(props)
-      console.log('maincontainer constructor running')
-
+      
+      console.log('Filtering tools constructor.')
       let { cloudPercentFilter } = props
-      console.log(this.props.settings)
+      console.log(cloudPercentFilter)
+      
       this.state = {
         cloudPercentFilter
-        }
+      }
+
       console.log(`default state is ${this.state}`)
       console.log(this.state)
     }
 
     componentDidMount() {
       console.log('======================> Inside component did mount')
-
+      console.log(this.props.cloudPercentFilter)
       this.setState({
         cloudPercentFilter: this.props.cloudPercentFilter
       })
 
+    }
+
+    componentDidUpdate() {
+      console.log('======================> Inside component did update')
+      console.log(this.state)
+      console.log(this.props)
+
+      // this.setState({
+      //   cloudPercentFilter: this.props.cloudPercentFilter
+      // })
     }
 
     render() {
@@ -149,9 +161,9 @@ const formatTicks = (d) => {
           rootStyle={sliderStyle}
           onChange={(values) => this.props.updateCloudFilter(values)}
           onUpdate={(values) => {
-            setTimeout(this.props.updateCloudFilter(values), 500)
+            setTimeout(this.props.updateCloudFilter(values), 150)
           }}
-          values={[this.state.cloudPercentFilter]}
+          values={[this.props.cloudPercentFilter]}
         >
           <Rail>
             {({ getRailProps }) => (

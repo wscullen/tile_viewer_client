@@ -1,0 +1,60 @@
+.tileListItemCompact {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tileListItemActions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tileListItemLeft {
+    display: flex;
+    flex-direction: row;
+}
+
+.tileActionButton {
+    cursor: pointer;
+    color: #000;
+    padding: 0px 4px;
+
+    text-decoration:none;
+    outline: none;
+    background: none;
+    border: none;
+}
+
+
+.tileActionButton:hover {
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);	
+}
+
+.tileActionButton:active {
+    position: relative;
+    top: 1px;
+}
+
+.jobSuccess {
+    color: lightgreen;
+}
+.jobFailed {
+    color: red;
+}
+
+.removeAction {
+    color: red;
+}
+
+.nonvisibleIcon {
+    color: gray;
+    font-size: 12px;
+}
+
+.visibleIcon {
+    color: lightskyblue;
+    font-size: 13px;
+}
