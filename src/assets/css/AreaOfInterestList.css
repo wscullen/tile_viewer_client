@@ -15,8 +15,13 @@
     align-items: center;
 
     background: #eee;
-	border-bottom: 1px #bbb solid;
-	font-weight: 300;
+    border-bottom: 1px #bbb solid;
+    font-weight: 300;
+    box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
+    position: sticky;
+    top: 0px;
+    width: 100%;
+    z-index: 999;
 
 }
 

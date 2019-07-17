@@ -2427,6 +2427,11 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
+classnames@^2.2.5:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
+  integrity sha512-JR/iSQOSt+LQIWwrwEzJ9uk0xfN3mTVYMwt1Ir5mUcSN6pU+V4zQFFaJsclJbPuAUQH+yfWef6tm7l1quW3C8Q==
+
 clean-css@4.1.x:
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/clean-css/-/clean-css-4.1.11.tgz#2ecdf145aba38f54740f26cefd0ff3e03e125d6a"
@@ -7161,6 +7166,14 @@ react-addons-shallow-compare@^15.6.2:
     fbjs "^0.8.4"
     object-assign "^4.1.0"
 
+react-animate-height@^2.0.15:
+  version "2.0.15"
+  resolved "https://registry.yarnpkg.com/react-animate-height/-/react-animate-height-2.0.15.tgz#155f42e1ab0befe785b36b3e76233230172c1857"
+  integrity sha512-YTyXGx833DyiRrjMfwRqXNkvIYEdBGCR3vAK56Hj/2yvZnLE0ySiVEu58pNuH0Pkn8uU9ZDZWCVNZEv7eAlPeQ==
+  dependencies:
+    classnames "^2.2.5"
+    prop-types "^15.6.1"
+
 react-compound-slider@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/react-compound-slider/-/react-compound-slider-2.0.0.tgz#ea0e5d26b61ced4856cfef3e5e73f2787f5e27ed"
@@ -7276,13 +7289,6 @@ react-simple-storage@^1.4.1:
   integrity sha512-r9bFP/XwacW0cRunHpKie1SUZapk/hrLa17BPSlPMOhqxGp1ckO6NIoalDP4QaYFsZDvqtp5anQp+chDDR2nZg==
   dependencies:
     store "^2.0.12"
-
-react-slidedown@^2.4.3:
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/react-slidedown/-/react-slidedown-2.4.3.tgz#92e9c2132eae3d0ddc848df91a3cd1f09c04c12f"
-  integrity sha512-KTkdqh+G8hiMMz5mmk+/3eXfUVgbRZeL9PhfWtO1dX62gUKUdx31cfknabOkj2UAmf/lJvPmC6YKoBRgjA7/8A==
-  dependencies:
-    tslib "^1.9.0"
 
 react-spinners@^0.5.4:
   version "0.5.4"

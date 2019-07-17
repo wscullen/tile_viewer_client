@@ -6,17 +6,20 @@
     flex-grow: 1;
     min-width: 30%;
     max-width: 40%;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    max-height: 100%;
+    overflow-y: hidden;
 }
 
 .listOfTiles {
     list-style: none;
     padding-left: 0px;
     z-index: -9999;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 100%;
 }
 
-.tileList ul {
+.listOfTiles > ul {
     list-style: none;
     padding-left: 0px;
     z-index: -9999;
@@ -52,11 +55,21 @@
     background: #eee;
     border-bottom: 1px #bbb solid;
     box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
-    z-index: 99999;
+    position: sticky;
+    top: 0px;
+    width: 100%;
+    z-index: 999;
+}
+
+.buttonSection {
+    z-index: 1000;
+    height: 100%; 
 }
 
 .my-dropdown-slidedown {
     z-index: -1;
+    position: sticky;
+    top: 40px;
 }
 
 .myButton {
@@ -104,8 +117,11 @@
     padding: 1px 4px;
     font-weight: 700;
     font-size: 14px;
+    position: sticky;
+    top: 0;
     background: #fff;
 }
+
 
 .altBackground {
     background: #dededf;
@@ -177,7 +193,15 @@
     background-color: #ddd;
     padding: 6px;
     z-index: -1;
-    /* box-shadow: inset 0 0 2px #000000; */
-    /* box-shadow: inset 0 -5px 5px -5px #333; */
-    box-shadow: inset 0px 1px 3px rgba(100, 100, 100, 0.3), inset 0px -1px 3px rgba(100, 100, 100, 0.3);
+    box-shadow: inset 0px 1px 3px rgba(100, 100, 100, 0.3);
+}
+
+.tileOptionPanel ul {
+    list-style: none;
+    padding-left: 0px;
+}
+
+.menuItem {
+    display: flex;
+    flex-direction: row;
 }

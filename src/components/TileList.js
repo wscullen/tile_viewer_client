@@ -9,10 +9,14 @@ import {SlideDown} from 'react-slidedown'
 import moment from 'moment';
 import { renderComponent } from 'recompose';
 
+import AnimateHeight from 'react-animate-height';
+
+
 import TileListItemCompact from './TileListItemCompact'
 
 const defaultState = {
-  optionsHide: true
+  optionsHide: true,
+  height: 0
 }
 
 export default class TileList extends Component {
@@ -40,6 +44,14 @@ export default class TileList extends Component {
       optionsHide: !this.state.optionsHide
     })
   }
+
+  toggle = () => {
+    const { height } = this.state;
+
+    this.setState({
+      height: height === 0 ? 'auto' : 0,
+    });
+  };
 
 
   job_verified_icon_l2a = () => {
@@ -132,12 +144,21 @@ job_verified_icon_l3b = () => {
   render() {
     console.log(this.props.selectedTilesInList)
     console.log(this.props.settings)
+
+    let dateSectionHeaderClassname = 'dateSection'
+
+    const { height } = this.state;
+
+    if (!this.state.optionsHide) {
+      dateSectionHeaderClassname += ' dateSectionOptionsVisible'
+    }
+
     return (
       <div className="tileList">
         <div className="header">
             <h3 className="sectionLabel">Tile List</h3>
             <div className="buttonSection">
-              <button className="settingsButton" onClick={this.toggleTileSettings}>
+            <button className="settingsButton" onClick={this.toggle}>
                 <FontAwesomeIcon icon="cog"/>
               </button>
               <button className="addAreaButton myButton" onClick={() => this.props.submitAllJobs()}>
@@ -145,8 +166,9 @@ job_verified_icon_l3b = () => {
               </button>
             </div>
         </div>
-        <SlideDown className={'my-dropdown-slidedown'} closed={this.state.optionsHide}>
-          {/* {props.open ? props.children : null} */}
+        <AnimateHeight
+          duration={ 650 }
+          height={ height }>
           <div className="tileOptionPanel">
             <h4>Job Options</h4>
               <ul>
@@ -161,24 +183,31 @@ job_verified_icon_l3b = () => {
               <h4>Sen2Agri</h4>
               <ul>
                 <li>
+                  <div className="menuItem">
                   <button onClick={this.props.submitSen2agriL2A} disabled={!this.props.enableSen2agriL2A}>Generate Atmos. Corrected (L2A)</button>{this.job_verified_icon_l2a()}
+                  </div>
                 </li>
                 <li>
+                  <div className="menuItem">
                   <button onClick={this.props.submitSen2agriL3A} disabled={!this.props.enableSen2agriL3A}>Generate Cloudfree Composites (L3A)</button>{this.job_verified_icon_l3a()}
+                  </div>
                 </li>
                 <li>
+                  <div className="menuItem">
                   <button onClick={this.props.submitSen2agriL3B} disabled={!this.props.enableSen2agriL3B}>Generate LAI/NDVI For Each Date (L3B)</button>{this.job_verified_icon_l3b()}
+                  </div>
                 </li>
               </ul>
           </div>
-        </SlideDown>
-        <ul className="listOfTiles">
+        </AnimateHeight>
+        <div className="listOfTiles">
+        <ul>
           {Object.keys(this.props.selectedTiles).map((d) => {
             let listElements = []
             
             if (this.props.selectedTiles[d].length > 0) {
               
-              let headerEle = (<li className="dateSection" key={d}>{moment(d).format('MMMM DD YYYY')}</li>)
+              let headerEle = (<li className={dateSectionHeaderClassname} key={d}>{moment(d).format('MMMM DD YYYY')}</li>)
               listElements.push(headerEle)
               let counter = 0
               for (let tile of this.props.selectedTiles[d]) {
@@ -202,6 +231,8 @@ job_verified_icon_l3b = () => {
           })}
         </ul>
       </div>
+      </div>
+
     );
   }
 

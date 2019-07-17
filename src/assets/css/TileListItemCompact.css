@@ -52,9 +52,11 @@
 .nonvisibleIcon {
     color: gray;
     font-size: 12px;
+    width: 25px;
 }
 
 .visibleIcon {
     color: lightskyblue;
     font-size: 13px;
+    width: 25px;
 }
