@@ -70,7 +70,6 @@ export default class MapViewer extends Component {
 
           var featureOverlay = new VectorLayer({
             source: new VectorSource(),
-            map: map,
             style: this.getStyle(undefined, 'highlight')
           });
 
@@ -79,11 +78,10 @@ export default class MapViewer extends Component {
 
           let selectedInListOverlay = new VectorLayer({
             source: new VectorSource(),
-            map: map
           });
 
           selectedInListOverlay.setZIndex(88888)
-
+          
           var map = new Map({
             layers: [raster, featureOverlay, selectedInListOverlay],
             target: 'map',
@@ -105,51 +103,6 @@ export default class MapViewer extends Component {
             this.displayFeatureInfo(pixel, evt.pointerEvent.ctrlKey, evt.pointerEvent.shiftKey);
           });
 
-          // var selectSingleClick = new Select(
-          //   {
-          //     filter: (feature, layer) => {
-          //       console.log('inside the filter function')
-          //       console.log(layer)
-          //       console.log(layer.get('name'))
-          //       console.log(layer.get('name') !== 'currentAoiFootprint')
-          //       if (layer.get('name') !== 'currentAoiFootprint')
-          //         return true
-
-          //       return false
-          //     },
-          //     multi: true
-          //   }
-          // );
-
-          // this.setState({
-          //   mapSelect: selectSingleClick
-          // })
-
-          // map.addInteraction(selectSingleClick);
-
-          // selectSingleClick.on('select', (e) => {
-          //   console.log(e.target.getFeatures())
-
-          //   let layersSelected = []
-          //   let features = e.target.getFeatures()
-
-          //   features.forEach((feature) => {
-          //     let layer = e.target.getLayer(feature)
-          //     layersSelected.push(layer)
-          //   })
-
-          //   console.log(layersSelected)
-          //   let tileNames = []
-          //   for (let layer of layersSelected) {
-          //     tileNames.push(layer.get('tile_name'))
-          //   }
-
-          //   this.props.tileSelected(tileNames, e.target)
-          // });
-
-        // TODO: Need to refactor how the vector layer is created (create 1 vector layer with many features
-        //       instead of many vector layers each with 1 feature) before this can be implemented properly
-        // // a DragBox interaction used to select features by drawing boxes
         var dragBox = new DragBox({
           condition: platformModifierKeyOnly
         });
@@ -192,12 +145,18 @@ export default class MapViewer extends Component {
 
       }
 
+      clearOverlay = () => {
+        let featureOverlay = this.state.featureOverlay
+        featureOverlay.getSource().clear()
+
+        return featureOverlay
+      }
+
       displayFeatureInfo (pixel, ctrlKey, shiftKey) {
         const map = this.state.map
         console.log(ctrlKey)
         console.log(shiftKey)
-        let featureOverlay = this.state.featureOverlay
-        featureOverlay.getSource().clear()
+        let featureOverlay = this.clearOverlay()
 
         map.forEachFeatureAtPixel(pixel, (feature, layer) => {
           console.log(layer)
@@ -761,7 +720,7 @@ export default class MapViewer extends Component {
     render () {
       return (
         <div id="mapViewer" className="mapViewer" ref={ (mapViewer) => this.mapViewer = mapViewer}>
-          <div id="map" className="map" ref="map"></div>
+          <div id="map" className="map" ref="map" onMouseLeave={this.clearOverlay}></div>
         </div>
       );
     }

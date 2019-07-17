@@ -1,11 +1,7 @@
-
 import './../assets/css/TileList.css'
 
 import React, { Component } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
-import {SlideDown} from 'react-slidedown'
-
 import moment from 'moment';
 import { renderComponent } from 'recompose';
 
