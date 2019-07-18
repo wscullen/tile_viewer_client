@@ -461,6 +461,7 @@ export default class MainContainer extends Component {
 
     let aoiListTemp = [...this.state.aoi_list]
     let tileDictTemp = {...this.state.tileDict}
+    let jobDict = {...this.state.jobDict}
 
     const tiles = [...area.raw_tile_list]
 
@@ -488,6 +489,11 @@ export default class MainContainer extends Component {
 
     let areaSimple = {...area}
 
+    jobDict[areaSimple.name] = {
+      'sentinel2': {},
+      'landsat8': {}
+    }
+
     delete areaSimple['raw_tile_list']
 
     areaSimple['tiles'] = datesObjectWithIds
@@ -504,7 +510,8 @@ export default class MainContainer extends Component {
 
     this.setState({
       aoi_list: aoiListTemp,
-      tileDict: tileDictTemp
+      tileDict: tileDictTemp,
+      jobDict
     })
   }
 
@@ -666,7 +673,7 @@ export default class MainContainer extends Component {
       newSelectedTiles[d] = activeSelectedTiles[d].map((id) => {
         return {
           ...tileDict[id],
-          ...this.state.jobDict[aoi_name]['sentinel2'][id]
+          ...jobDict[aoi_name]['sentinel2'][id]
         }
       })
     }
