@@ -114,11 +114,11 @@ const formatTicks = (d) => {
 
     constructor(props) {
       super(props)
-      
+
       console.log('Filtering tools constructor.')
       let { cloudPercentFilter } = props
       console.log(cloudPercentFilter)
-      
+
       this.state = {
         cloudPercentFilter
       }
@@ -130,9 +130,9 @@ const formatTicks = (d) => {
     componentDidMount() {
       console.log('======================> Inside component did mount')
       console.log(this.props.cloudPercentFilter)
-      this.setState({
-        cloudPercentFilter: this.props.cloudPercentFilter
-      })
+      // this.setState({
+      //   cloudPercentFilter: this.props.cloudPercentFilter
+      // })
 
     }
 

@@ -39,12 +39,12 @@
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 14px;
     font-weight: 400;
-    background: #eee;   
+    background: #eee;
 }
 
 .tileList > .header {
     padding: 4px;
-    
+
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -56,12 +56,12 @@
     position: sticky;
     top: 0px;
     width: 100%;
-    z-index: 999;
+    z-index: 1;
 }
 
 .buttonSection {
-    z-index: 1000;
-    height: 100%; 
+    z-index: 2;
+    height: 100%;
 }
 
 .my-dropdown-slidedown {

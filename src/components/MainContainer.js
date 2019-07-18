@@ -102,7 +102,6 @@ export default class MainContainer extends Component {
     console.log(this.state)
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose);
-
     window.addEventListener('keydown', this.handleKeyPress)
   }
 
@@ -136,11 +135,11 @@ export default class MainContainer extends Component {
   saveToLocalStorage = () => {
     console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
     console.log(this.state.aoi_list)
-    let { activeAOI, selectedTiles, aoi_list, currentDate, tileDict } = this.state;
+    let { activeAOI, selectedTiles, aoi_list, currentDate, tileDict, jobDict } = this.state;
     console.log(currentDate)
     console.log('aoi_list')
     console.log(aoi_list)
-    const {enableSen2AgriL2A, 
+    const {enableSen2AgriL2A,
     enableSen2AgriL3A,
     enableSen2AgriL3B,
     sen2agri_l2a_job,
@@ -149,7 +148,15 @@ export default class MainContainer extends Component {
 
     let currentAOIList = [...aoi_list]
 
-    let jobDict = {}
+    // Initialize jobDict
+    aoi_list.map((aoi) => {
+      if (!jobDict.hasOwnProperty(aoi.name)) {
+        jobDict[aoi.name] = {
+          'sentinel2': {},
+          'landsat8': {}
+        }
+      }
+    });
 
     if (activeAOI !== null) {
       // Save the selcted tiles for later
@@ -158,11 +165,6 @@ export default class MainContainer extends Component {
       const aoi_index = this.getAoiIndex(activeAOI)
 
       let currentAOIObj = {...currentAOIList[aoi_index]}
-
-      jobDict[activeAOI] = {
-        'sentinel2': {},
-        'landsat8': {}
-      }
 
       for (let d of Object.keys(selectedTiles)) {
         selectedTiles[d].map((tile) => {
@@ -189,7 +191,6 @@ export default class MainContainer extends Component {
       }
 
       // Do a sensor specific check here (landsat, sentinel2)
-
       currentAOIObj['selectedTiles'] = {}
 
       currentAOIObj['cloudPercentFilter'] = this.state.cloudPercentFilter
@@ -215,7 +216,7 @@ export default class MainContainer extends Component {
       aoi_list: currentAOIList,
       tileDict: tileDict,
       jobDict: jobDict,
-      enableSen2AgriL2A, 
+      enableSen2AgriL2A,
       enableSen2AgriL3A,
       enableSen2AgriL3B,
       sen2agri_l2a_job,
@@ -258,12 +259,12 @@ export default class MainContainer extends Component {
     let tileDict = data.tileDict
     let jobDict = data.jobDict
 
-    const {enableSen2AgriL2A, 
+    const {enableSen2AgriL2A,
       enableSen2AgriL3A,
       enableSen2AgriL3B,
       sen2agri_l2a_job,
       sen2agri_l3a_job,
-      sen2agri_l3b_job } = data 
+      sen2agri_l3b_job } = data
 
     let cloudPercentFilter = 100
     console.log(aoi_list)
@@ -323,7 +324,7 @@ export default class MainContainer extends Component {
       tileDict,
       jobDict,
       cloudPercentFilter,
-      enableSen2AgriL2A, 
+      enableSen2AgriL2A,
         enableSen2AgriL3A,
         enableSen2AgriL3B,
         sen2agri_l2a_job,
@@ -429,7 +430,7 @@ export default class MainContainer extends Component {
 
   decrementDate = () => {
     console.log('decrement date pressed')
-    
+
     if (!this.state.activeAOI)
       return
 
@@ -518,17 +519,17 @@ export default class MainContainer extends Component {
     Object.keys(tiles).map((ele) => {
       console.log(ele)
       console.log(tiles[ele])
-      
+
       if (tiles[ele].length > 0) {
         console.log('found date with tiles')
         tiles[ele].map((tile) => {
-         
+
           if (tile && tile.hasOwnProperty('job_id')) {
             console.log('Checking tile job status')
 
             if (tile['job_check_interval'] !== null)
               clearInterval(tile['job_check_interval'])
-            
+
               tile['job_check_interval'] = setInterval(() => this.checkJobStatus(tile['job_id'],
                                                                            tile.properties.name,
                                                                            ele), 1000 * 60)
@@ -565,17 +566,27 @@ export default class MainContainer extends Component {
   }
 
   toggleVisibility = (tileId) => {
-
+    console.log(tileId)
     let allTiles = {...this.state.allTiles}
+
     let selectedTiles = {...this.state.selectedTiles}
     let tileDict = {...this.state.tileDict}
 
     let currentTiles = [...allTiles[this.state.currentDate]]
 
-    for (let tile of currentTiles) {
-        if (tile['id'] === tileId) {
-          tile.visible = !tile.visible
-          tileDict[tile.id].visible = !tile.visible
+    for (let t of currentTiles) {
+        if (t['id'] === tileId) {
+          console.log('found match in currentTiles!')
+          // console.log(t)
+          let updatedTile = {...t}
+
+          updatedTile['visible'] = !t['visible']
+
+          // console.log(t.visible)
+          t = updatedTile
+          tileDict[t.id] = updatedTile
+          console.log(t)
+          // console.log(updatedTile)
         }
     }
 
@@ -583,19 +594,26 @@ export default class MainContainer extends Component {
 
     for (let tile of selectedCurrentTiles) {
       if (tile['id'] === tileId) {
+        console.log('found match in selectedCurrentTiles!')
+        console.log(tile)
         tile.visible = !tile.visible
+        console.log(tile)
       }
     }
 
     selectedTiles[this.state.currentDate] = selectedCurrentTiles
 
+    allTiles[this.state.currentDate] = currentTiles
+
+    console.log(selectedTiles)
+    console.log(currentTiles)
+
     this.setState({
       tileDict,
       selectedTiles,
-      currentTiles: allTiles[this.state.currentDate]
+      currentTiles,
+      allTiles
     })
-
-
   }
 
   activateAOI = (aoi_name) => {
@@ -660,6 +678,8 @@ export default class MainContainer extends Component {
         return {...tileDict[id]}
       })
     }
+    // for newly activated AOI the cloudPercentFilter will be unpopulated
+    const cloudPercentFilter = activeAOI['cloudPercentFilter'] ? activeAOI['cloudPercentFilter'] : this.state.cloudPercentFilter
 
     this.setState({
       activeAOI: aoi_name,
@@ -669,7 +689,7 @@ export default class MainContainer extends Component {
       dateList,
       currentDate,
       aoi_list,
-      cloudPercentFilter: activeAOI['cloudPercentFilter']
+      cloudPercentFilter
     })
   }
 
@@ -757,14 +777,14 @@ export default class MainContainer extends Component {
           allJobsDone = true
 
           Object.keys(tiles).map((ele) => {
-            
+
             if (tiles[ele].length > 0) {
               tiles[ele].map((t) => {
                 if (t['job_status'] !== jobStatusVerbose[response['status']] && t['job_result'] !== 'success') {
                   allJobsDone = false
                 }
               })
-          } 
+          }
         })
       }
 
@@ -808,7 +828,7 @@ export default class MainContainer extends Component {
       .then(response => {
         console.log('Success:', JSON.stringify(response))
         console.log(response)
-        
+
         let sen2agri_job_status = this.state.sen2agri_l2a_job
 
         sen2agri_job_status['job_id'] = response["id"]
@@ -868,7 +888,7 @@ export default class MainContainer extends Component {
       .then(response => {
         console.log('Success:', JSON.stringify(response))
         console.log(response)
-        
+
         let sen2agri_job_status = this.state.sen2agri_l3a_job
 
         sen2agri_job_status['job_id'] = response["id"]
@@ -921,7 +941,7 @@ export default class MainContainer extends Component {
       .then(response => {
         console.log('Success:', JSON.stringify(response))
         console.log(response)
-        
+
         let sen2agri_job_status = this.state.sen2agri_l3b_job
 
         sen2agri_job_status['job_id'] = response["id"]
@@ -1274,12 +1294,12 @@ export default class MainContainer extends Component {
   }
 
   handleUpdateCloudFilter = (cloud) => {
-    
+
     console.log(cloud)
 
     if (!this.state.activeAOI)
       return
-    
+
     console.log('User changed the filter % for cloud')
     console.log(cloud)
 
@@ -1370,8 +1390,8 @@ export default class MainContainer extends Component {
   }
 
   getTileList = () => {
-    
-    
+
+
     let tileList = {}
     const dateList = this.state.selectedTiles
 
@@ -1384,7 +1404,7 @@ export default class MainContainer extends Component {
 
     return tileList
   }
-  
+
 
   saveTileJson = () => {
 
@@ -1579,7 +1599,7 @@ export default class MainContainer extends Component {
   }
 }
 
-  
+
 
   submitSen2agriL3B = () => {
     console.log('trying to submit sen2agri l3b job')
@@ -1748,13 +1768,13 @@ export default class MainContainer extends Component {
             <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent}/>
             <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate}/>
           </div>
-          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} 
-                    selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList} 
-                    tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} 
-                    submitAllJobs={this.handleSubmitAllJobs} saveTileJson={this.saveTileJson} 
+          <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings}
+                    selectedTiles={this.state.selectedTiles} selectedTilesInList={this.state.selectedTilesInList}
+                    tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected}
+                    submitAllJobs={this.handleSubmitAllJobs} saveTileJson={this.saveTileJson}
                     submitSen2agriL2A={this.submitSen2agriL2A} enableSen2agriL2A={this.state.enableSen2AgriL2A}
                     submitSen2agriL3A={this.submitSen2agriL3A} enableSen2agriL3A={this.state.enableSen2AgriL3A}
-                    submitSen2agriL3B={this.submitSen2agriL2B} enableSen2agriL3B={this.state.enableSen2AgriL3B} 
+                    submitSen2agriL3B={this.submitSen2agriL2B} enableSen2agriL3B={this.state.enableSen2AgriL3B}
                     sen2agriL2AJob={this.state.sen2agri_l2a_job}
                     sen2agriL3AJob={this.state.sen2agri_l3a_job}
                     sen2agriL3BJob={this.state.sen2agri_l3b_job}
