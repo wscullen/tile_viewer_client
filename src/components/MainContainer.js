@@ -574,18 +574,16 @@ export default class MainContainer extends Component {
 
     let currentTiles = [...allTiles[this.state.currentDate]]
 
-    for (let t of currentTiles) {
-        if (t['id'] === tileId) {
+    for (let idx in currentTiles) {
+        if (currentTiles[idx]['id'] === tileId) {
           console.log('found match in currentTiles!')
-          // console.log(t)
-          let updatedTile = {...t}
+          let updatedTile = {...currentTiles[idx]}
 
-          updatedTile['visible'] = !t['visible']
+          updatedTile['visible'] = !currentTiles[idx]['visible']
 
           // console.log(t.visible)
-          t = updatedTile
-          tileDict[t.id] = updatedTile
-          console.log(t)
+          currentTiles[idx] = updatedTile
+          tileDict[updatedTile.id] = updatedTile
           // console.log(updatedTile)
         }
     }
