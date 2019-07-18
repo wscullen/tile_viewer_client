@@ -421,7 +421,6 @@ export default class MainContainer extends Component {
         currentTiles: [...allTiles[newDate]],
         aoi_list: aoi_list_copy
       },  () => {
-        console.log(this.state.cloudPercentFilter)
         this.handleUpdateCloudFilter(this.state.cloudPercentFilter)
       })
 
@@ -430,6 +429,7 @@ export default class MainContainer extends Component {
 
   decrementDate = () => {
     console.log('decrement date pressed')
+    
     if (!this.state.activeAOI)
       return
 
@@ -1275,6 +1275,8 @@ export default class MainContainer extends Component {
 
   handleUpdateCloudFilter = (cloud) => {
     
+    console.log(cloud)
+
     if (!this.state.activeAOI)
       return
     
@@ -1291,7 +1293,7 @@ export default class MainContainer extends Component {
     let currentTiles = [...allTiles[this.state.currentDate]]
 
     for (let tile of currentTiles) {
-      if (parseFloat(tile.properties.cloud_percent) > parseFloat(cloud[0])) {
+      if (parseFloat(tile.properties.cloud_percent) > parseFloat(cloud)) {
         tile.visible = false
         tileDict[tile.id].visible = false
       } else {
@@ -1314,7 +1316,7 @@ export default class MainContainer extends Component {
       tileDict,
       selectedTiles,
       currentTiles: allTiles[this.state.currentDate],
-      cloudPercentFilter: cloud[0]
+      cloudPercentFilter: cloud
     })
   }
 
