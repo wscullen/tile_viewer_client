@@ -8,18 +8,25 @@
     align-items: center;
     justify-content: space-between;
     padding: 5px;
-    
+
 }
 
 .controlGroup {
     display: flex;
+    flex-grow: 2;
     align-items: center;
 }
 
 .controlGroup2 {
+    flex-grow: 3;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     min-width: 40%;
+}
+
+.controlGroup2 > p {
+    padding: 10px;
 }
 
 

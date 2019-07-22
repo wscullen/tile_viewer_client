@@ -1,7 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const MinifyPlugin = require("babel-minify-webpack-plugin");
+const MinifyPlugin = require('babel-minify-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
@@ -10,6 +10,11 @@ const defaultInclude = path.resolve(__dirname, 'src')
 module.exports = {
   module: {
     rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      },
       {
         test: /\.css$/,
         use: [
@@ -36,10 +41,13 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
+  },
   target: 'electron-renderer',
   plugins: [
     new HtmlWebpackPlugin({
-      title: "Tile Viewer"
+      title: 'Tile Viewer'
     }),
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output

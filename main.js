@@ -17,11 +17,11 @@ const url = require('url')
 //   // event.reply('asynchronous-reply', 'pong')
 // })
 
-const log = require('electron-log');
-const {autoUpdater} = require("electron-updater");
+const log = require('electron-log')
+const { autoUpdater } = require('electron-updater')
 
 const os = require('os')
-const fs = require("fs");
+const fs = require('fs')
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
@@ -32,7 +32,6 @@ let dev = false
 if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
   dev = true
 }
-
 
 // Temporary fix broken high-dpi scale factor on Windows (125% scaling)
 // info: https://github.com/electron/electron/issues/9691
@@ -51,68 +50,67 @@ if (dev) {
   console.log(resources)
 }
 
-function createWindow() {
-
+function createWindow () {
   var menu = Menu.buildFromTemplate([
-    {label: 'File',
-        submenu: [
-              {
-                label:'Settings',
-                click: (menuItem, currentWindow) => {
-                  currentWindow.webContents.send('menu-item', {
-                    menuItem,
-                    currentWindow
-                  })
-                }
-              }, {
-                label:'Exit',
-                click: () => app.quit()
-              },
-        ],
-    }, {
-        label: 'Dev',
-        submenu: [
-          {
-            label: 'Clear Local Storage',
-            click: (menuItem, currentWindow) => {
-              console.log(menuItem)
-              currentWindow.webContents.send('menu-item', {
-                menuItem,
-                currentWindow
-              })
-            }
-          },
-          {
-            label: 'Reload',
-            click: (menuItem, currentWindow) => {
-              console.log(menuItem)
-              currentWindow.webContents.reload()
-            }
-          },
-          {
-            label: 'Hard Reload',
-            click: (menuItem, currentWindow) => {
-              console.log(menuItem)
-              currentWindow.webContents.reloadIgnoringCache();
-            }
-          },
-          {
-            label: 'Toggle Dev Tools',
-            click: (menuItem, currentWindow) => {
-              console.log(menuItem)
-              currentWindow.toggleDevTools()
-            }
+    { label: 'File',
+      submenu: [
+        {
+          label: 'Settings',
+          click: (menuItem, currentWindow) => {
+            currentWindow.webContents.send('menu-item', {
+              menuItem,
+              currentWindow
+            })
           }
-        ]
+        }, {
+          label: 'Exit',
+          click: () => app.quit()
+        }
+      ]
+    }, {
+      label: 'Dev',
+      submenu: [
+        {
+          label: 'Clear Local Storage',
+          click: (menuItem, currentWindow) => {
+            console.log(menuItem)
+            currentWindow.webContents.send('menu-item', {
+              menuItem,
+              currentWindow
+            })
+          }
+        },
+        {
+          label: 'Reload',
+          click: (menuItem, currentWindow) => {
+            console.log(menuItem)
+            currentWindow.webContents.reload()
+          }
+        },
+        {
+          label: 'Hard Reload',
+          click: (menuItem, currentWindow) => {
+            console.log(menuItem)
+            currentWindow.webContents.reloadIgnoringCache()
+          }
+        },
+        {
+          label: 'Toggle Dev Tools',
+          click: (menuItem, currentWindow) => {
+            console.log(menuItem)
+            currentWindow.toggleDevTools()
+          }
+        }
+      ]
     }
   ])
-  Menu.setApplicationMenu(menu);
+  Menu.setApplicationMenu(menu)
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1250,
     height: 768,
-    minWidth:1000,
+    minWidth: 1000,
     minHeight: 700,
     show: false,
     icon: path.join(resources, '96x96.png')
@@ -120,9 +118,9 @@ function createWindow() {
 
   if (dev) {
     console.log(os.homedir())
-    let devToolsPath;
+    let devToolsPath
     if (process.platform === 'win32') {
-      devToolsPath = path.join(os.homedir(), "AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0")
+      devToolsPath = path.join(os.homedir(), 'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
     } else if (process.platform === 'linux') {
       // Ubuntu dev machine
       devToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
@@ -134,7 +132,6 @@ function createWindow() {
         devToolsPath
       )
     }
-   
   }
   // and load the index.html of the app.
   let indexPath
@@ -150,19 +147,18 @@ function createWindow() {
     indexPath = url.format({
       protocol: 'file:',
       pathname: path.join(__dirname, 'dist', 'index.html'),
-      slashes: true,
+      slashes: true
     })
   }
 
-  createDefaultWindow();
+  createDefaultWindow()
 
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdatesAndNotify()
 
   mainWindow.loadURL(indexPath)
 
   // Don't show until we are ready and loaded
   mainWindow.once('ready-to-show', () => {
-
     // Open the DevTools automatically if developing
     if (dev) {
       console.log('wats happening')
@@ -170,19 +166,15 @@ function createWindow() {
       mainWindow.webContents.openDevTools()
     }
     mainWindow.show()
-
-
   })
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', function() {
+  mainWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
   })
-
-
 }
 
 // This method will be called when Electron has finished
@@ -207,53 +199,51 @@ app.on('activate', () => {
   }
 })
 
+let win
 
-let win;
-
-function sendStatusToWindow(text) {
-  log.info(text);
-  win.webContents.send('message', text);
+function sendStatusToWindow (text) {
+  log.info(text)
+  win.webContents.send('message', text)
 }
 
-function createDefaultWindow() {
+function createDefaultWindow () {
   win = new BrowserWindow({
     icon: path.join(resources, '96x96.png'),
     width: 400,
     height: 200,
     resizable: false
   }
-  );
+  )
 
   // win.setMenuBarVisibility(false)
   // win.webContents.openDevTools();
   win.on('closed', () => {
-    win = null;
-  });
-  win.loadURL(`file://${__dirname}/version.html#${app.getVersion()}`);
-  return win;
+    win = null
+  })
+  win.loadURL(`file://${__dirname}/version.html#${app.getVersion()}`)
+  return win
 }
 autoUpdater.on('checking-for-update', () => {
-  sendStatusToWindow('Checking for update...');
+  sendStatusToWindow('Checking for update...')
 })
 autoUpdater.on('update-available', (info) => {
-  sendStatusToWindow('Update available.');
+  sendStatusToWindow('Update available.')
 })
 autoUpdater.on('update-not-available', (info) => {
-  sendStatusToWindow('Update not available.');
+  sendStatusToWindow('Update not available.')
 })
 autoUpdater.on('error', (err) => {
-  sendStatusToWindow('Error in auto-updater. ' + err);
+  sendStatusToWindow('Error in auto-updater. ' + err)
 })
 autoUpdater.on('download-progress', (progressObj) => {
-  let log_message = "Download speed: " + progressObj.bytesPerSecond;
-  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-  sendStatusToWindow(log_message);
+  let log_message = 'Download speed: ' + progressObj.bytesPerSecond
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
+  log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
+  sendStatusToWindow(log_message)
 })
 autoUpdater.on('update-downloaded', (info) => {
-  sendStatusToWindow('Update downloaded');
-});
-
+  sendStatusToWindow('Update downloaded')
+})
 
 // app.on('ready', function() {
 //   // Create the Menu
@@ -271,12 +261,12 @@ autoUpdater.on('update-downloaded', (info) => {
 // CHOOSE one of the following options for Auto updates
 //
 
-//-------------------------------------------------------------------
+// -------------------------------------------------------------------
 // Auto updates - Option 1 - Simplest version
 //
 // This will immediately download an update, then install when the
 // app quits.
-//-------------------------------------------------------------------
+// -------------------------------------------------------------------
 // app.on('ready', function()  {
 //   autoUpdater.checkForUpdatesAndNotify();
 // });

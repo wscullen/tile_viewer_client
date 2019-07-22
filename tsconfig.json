@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "outDir": "renderer",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "jsx": "react",
+    "allowJs": true,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  }
+}

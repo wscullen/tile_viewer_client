@@ -6,17 +6,22 @@ const { spawn } = require('child_process')
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
 const defaultInclude = path.resolve(__dirname, 'src')
 
-
 module.exports = {
   module: {
     rules: [
       {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      },
+      {
         test: /\.css$/,
-        use: [{ loader: 'style-loader' }, { loader: 'css-loader', options: {
-          importLoaders: 1,
-        } }, { loader: 'postcss-loader' }],
+        use: [{ loader: 'style-loader' }, { loader: 'css-loader',
+          options: {
+            importLoaders: 1
+          } }, { loader: 'postcss-loader' }],
         include: [defaultInclude,
-                  path.resolve(__dirname, '/../../node_modules/ol/ol.css' )
+          path.resolve(__dirname, '/../../node_modules/ol/ol.css')
         ]
       },
       {
@@ -36,16 +41,23 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
+  },
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
   target: 'electron-renderer',
   plugins: [
     new HtmlWebpackPlugin({
-      title: "Tile Viewer"
+      title: 'Tile Viewer'
     }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development')
     })
   ],
-  devtool: 'cheap-source-map',
+  devtool: 'inline-source-map',
   devServer: {
     contentBase: path.resolve(__dirname, 'dist'),
     stats: {
@@ -54,14 +66,14 @@ module.exports = {
       children: false
     },
     historyApiFallback: true,
-    before() {
+    before () {
       spawn(
         'electron',
         ['.'],
         { shell: true, env: process.env, stdio: 'inherit' }
       )
-      .on('close', code => process.exit(0))
-      .on('error', spawnError => console.error(spawnError))
+        .on('close', code => process.exit(0))
+        .on('error', spawnError => console.error(spawnError))
     }
   }
 }

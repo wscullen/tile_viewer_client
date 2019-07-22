@@ -20,7 +20,7 @@ module.exports = {
       mediaQuery: false,
       minPixelValue: 0
     },
-    'postcss-nested': {},
-   
+    'postcss-nested': {}
+
   }
 }

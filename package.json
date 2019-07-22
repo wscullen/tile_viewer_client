@@ -56,9 +56,10 @@
   },
   "main": "main.js",
   "scripts": {
-    "prod": "webpack --mode production --config webpack.build.config.js && electron --noDevServer .",
+    "prod": "webpack --mode production --config webpack.build.config.js",
+    "run-electron": "electron . --noDevServer",
     "start": "webpack-dev-server --hot --host 0.0.0.0 --config=./webpack.dev.config.js --mode development",
-    "build": "webpack --config webpack.build.config.js --mode production",
+    "build": "node --max-old-space-size=8192 node_modules/webpack/bin/webpack --config webpack.build.config.js --mode production",
     "package": "npm run build",
     "postpackage": "electron-packager ./ tile-viewer --out=./builds",
     "package-win": "electron-packager ./ tile-viewer --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/icon.ico --prune=true --out=./builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Tile Viewer\"",
@@ -66,17 +67,71 @@
     "pack": "electron-builder --dir",
     "dist-builder": "electron-builder",
     "dist-publish": "electron-builder --p onTagOrDraft",
-    "publish": "build"
+    "publish": "build",
+    "test": "jest",
+    "lint-fix": "./node_modules/.bin/standard --fix",
+    "lint-fix-ts": "standard --fix *.ts",
+    "lint": "tslint -p ."
+  },
+  "standard": {
+    "ignore": [
+      "dist/*",
+      "out-builds"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint/eslint-plugin"
+    ],
+    "env": [
+      "jest",
+      "es6",
+      "browser"
+    ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest",
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "setupFiles": [
+      "<rootDir>/setupTests.js",
+      "jest-canvas-mock"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(ol|labelgun|mapbox-to-ol-style|ol-mapbox-style)/).*/"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "env-setup.js"
+    ],
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
+      "\\.(css|less)$": "identity-obj-proxy",
+      "electron": "<rootDir>/src/__mocks__/electron.js"
+    },
+    "testPathIgnorePatterns": [
+      "./__mocks__/"
+    ]
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
-    "@fortawesome/fontawesome-svg-core": "^1.2.17",
+    "@fortawesome/fontawesome-svg-core": "^1.2.19",
     "@fortawesome/free-brands-svg-icons": "^5.8.1",
     "@fortawesome/free-regular-svg-icons": "^5.8.2",
     "@fortawesome/free-solid-svg-icons": "^5.8.1",
     "@fortawesome/react-fontawesome": "^0.1.4",
+    "@types/ol": "^5.3.3",
+    "@types/react": "^16.8.23",
+    "@types/react-dom": "^16.8.4",
+    "@types/redux": "^3.6.0",
+    "@types/jest": "^24.0.15",
+    "@types/react-redux": "^7.1.1",
+    "@types/react-router-dom": "^4.3.4",
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
     "add": "^2.0.6",
     "base-64": "^0.1.0",
+    "canvas-prebuilt": "^2.0.0-alpha.14",
     "electron-log": "^3.0.5",
     "electron-updater": "^4.0.6",
     "formik": "^1.5.2",
@@ -87,9 +142,12 @@
     "react-compound-slider": "^2.0.0",
     "react-dates": "^20.1.0",
     "react-dom": "^16.8.6",
+    "react-redux": "^7.1.0",
     "react-router-dom": "^5.0.0",
     "react-simple-storage": "^1.4.1",
     "react-spinners": "^0.5.4",
+    "redux": "^4.0.4",
+    "redux-thunk": "^2.3.0",
     "yarn": "^1.15.2"
   },
   "devDependencies": {
@@ -97,21 +155,40 @@
     "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
+    "awesome-typescript-loader": "^5.2.1",
+    "babel-jest": "^24.8.0",
     "babel-loader": "^8.0.5",
     "babel-minify-webpack-plugin": "^0.3.1",
     "css-loader": "^2.1.1",
     "electron": "^4.1.4",
     "electron-builder": "^20.40.2",
     "electron-packager": "^13.1.1",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.14.0",
+    "enzyme-to-json": "^3.3.5",
     "file-loader": "^3.0.1",
     "html-webpack-plugin": "^3.2.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^24.8.0",
+    "jest-canvas-mock": "^2.1.0",
     "mini-css-extract-plugin": "^0.6.0",
     "postcss-cssnext": "^3.1.0",
     "postcss-import": "^12.0.1",
     "postcss-loader": "^3.0.0",
     "postcss-nested": "^4.1.2",
     "postcss-pxtorem": "^4.0.1",
+    "prettier": "^1.18.2",
+    "redux-devtools-extension": "^2.13.8",
+    "source-map-loader": "^0.2.4",
+    "standard": "^13.1.0",
     "style-loader": "^0.23.1",
+    "ts-jest": "^24.0.2",
+    "ts-loader": "^6.0.4",
+    "tslint": "^5.18.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-config-standard": "^8.0.1",
+    "tslint-react": "^4.0.0",
+    "typescript": "^3.5.3",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.0",
     "webpack-dev-server": "^3.3.1"
