@@ -152,12 +152,19 @@ export default class MapViewer extends Component {
     console.log(shiftKey)
     const featureOverlay = this.clearOverlay()
 
+    const featuresHovered = []
+
     map.forEachFeatureAtPixel(pixel, (feature, layer) => {
       console.log(layer)
-      if (layer.get('name') === 'tileLayer') {
+      if (layer.get('name') === 'tileLayer' || layer.get('name') === 'wrsOverlay') {
+        
         layer.setZIndex(100)
         const featureClone = feature.clone()
-        featureClone.setStyle(this.getStyle(featureClone, 'highlighted'))
+        if (layer.get('name') === 'tileLayer') {
+          featureClone.setStyle(this.getStyle(featureClone, 'highlighted'))
+        } else {
+          featureClone.setStyle(this.getStyle(featureClone, 'wrsOverlay'))
+        }
         featureClone.setId(feature.getId())
         featureOverlay.getSource().addFeature(featureClone)
         featureOverlay.setZIndex(999999)
@@ -165,9 +172,12 @@ export default class MapViewer extends Component {
         console.log(featureClone)
         const name = feature.getId() + ': ' + feature.get('name')
         console.log(name)
+
+        if (layer.get('name') === 'tileLayer') {
+          featuresHovered.push(feature.getId())
+        }
       }
     })
-    const featuresHovered = featureOverlay.getSource().getFeatures().map((feat) => feat.getId())
 
     this.setState({
       featuresHovered
@@ -257,6 +267,30 @@ export default class MapViewer extends Component {
       })
     })
 
+    function getOverlayStyle (feature) {
+      const wrsOverlayStyle = new Style({
+        stroke: new Stroke({
+          color: 'rgba(100,100,220,0.2)',
+          width: 1
+        }),
+        fill: new Fill({
+          color: 'rgba(0,0,0,0)'
+        }),
+        text: new Text({
+          font: '11px Calibri,sans-serif',
+          fill: new Fill({
+            color: '#000'
+          }),
+          stroke: new Stroke({
+            color: '#fff',
+            width: 1
+          }),
+          text: feature.get('name')
+        })
+      })
+      return wrsOverlayStyle
+    }
+
     console.log('inside component will update')
     console.log(prevProps.activeAOI)
     console.log(this.props.activeAOI)
@@ -265,11 +299,18 @@ export default class MapViewer extends Component {
       const map = this.state.map
       let aoiFootprintLayer
       let tileFootprintLayer
+      let wrsOverlayLayer
 
       map.getLayers().forEach((ele) => {
         console.log(ele)
         console.log(ele.get('name'))
-        if (ele.get('name') === 'currentAoiFootprint') { aoiFootprintLayer = ele } else if (ele.get('name') === 'tileFootprint') { tileFootprintLayer = ele }
+        if (ele.get('name') === 'currentAoiFootprint') {
+          aoiFootprintLayer = ele
+        } else if (ele.get('name') === 'tileFootprint') {
+          tileFootprintLayer = ele
+        } else if (ele.get('name') === 'wrsOverlay') {
+          wrsOverlayLayer = ele
+        }
       })
 
       console.log(this.props.activeAOI)
@@ -307,8 +348,49 @@ export default class MapViewer extends Component {
 
         this.state.map.getView().fit(extent, { duration: 1500 })
       }
-    }
 
+      if (this.props.wrsOverlay) {
+        console.log('Trying to add WRS overlay')
+        const featureList = []
+
+        for (const feature of this.props.wrsOverlay.features) {
+          const geojsonFormat = new GeoJSON()
+          const geojsonFeature = geojsonFormat.readFeature(feature, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857'
+          })
+          featureList.push(geojsonFeature)
+        }
+
+        // TODO: In the future, try to update the existing layer source, instead of removing it
+        if (wrsOverlayLayer) {
+          console.log('wrs overlay layer exists, updating')
+          wrsOverlayLayer.getSource().clear()
+          for (const feature of featureList) {
+            wrsOverlayLayer.getSource().addFeature(feature)
+          }
+        } else {
+          console.log('wrs overlay does not exist, create')
+
+          wrsOverlayLayer = new VectorLayer({
+            source: new VectorSource({
+              features: featureList
+            }),
+            name: 'wrsOverlay',
+            style: getOverlayStyle
+          })
+
+          map.addLayer(wrsOverlayLayer)
+        }
+
+        const extent = feature.getGeometry().getExtent()
+        console.log(extent)
+        aoiFootprintLayer.setZIndex(9999)
+        wrsOverlayLayer.setZIndex(99999)
+
+        this.state.map.getView().fit(extent, { duration: 1500 })
+      }
+    }
     console.log(prevProps)
     console.log(this.props)
 
@@ -372,8 +454,8 @@ export default class MapViewer extends Component {
     if (feature_type === 'tile') {
       style = new Style({
         stroke: new Stroke({
-          color: '#aaa',
-          width: 1
+          color: 'rgba(230,34,99,0.5)',
+          width: 2
         }),
         fill: new Fill({
           color: 'rgba(0,0,0,0)'
@@ -438,6 +520,26 @@ export default class MapViewer extends Component {
         stroke: new Stroke({
           color: '#f55',
           width: 2
+        }),
+        fill: new Fill({
+          color: 'rgba(255,0,0,0)'
+        }),
+        text: new Text({
+          font: '11px Source Sans Pro, sans-serif',
+          fill: new Fill({
+            color: '#000'
+          }),
+          stroke: new Stroke({
+            color: '#fff',
+            width: 2
+          })
+        })
+      })
+    } else if (feature_type === 'wrsOverlay') {
+      style = new Style({
+        stroke: new Stroke({
+          color: '#55f',
+          width: 1
         }),
         fill: new Fill({
           color: 'rgba(255,0,0,0)'

@@ -1,6 +1,6 @@
 .centerContainer {
     border: 1px solid lightgrey;
-    flex-grow: 2;
+    flex-grow: 1;
     
     display: flex;
     flex-direction: column;

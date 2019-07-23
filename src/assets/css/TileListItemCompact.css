@@ -56,7 +56,26 @@
 }
 
 .visibleIcon {
-    color: lightskyblue;
+    color: lightgreen;
     font-size: 13px;
     width: 25px;
+}
+
+
+.tileListItem {
+    padding: 6px 2px;
+    border: 2px #eee solid;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    background: #eee;
+}
+
+.altBackground {
+    background: #dededf;
+    border: 2px #dededf solid;
+}
+
+.activeSelection {
+    border: 2px cyan solid;
 }

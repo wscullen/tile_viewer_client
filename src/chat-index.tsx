@@ -3,7 +3,7 @@ import { render } from "react-dom";
 import { Provider } from "react-redux";
 import configureStore from "./store";
 
-import App from "./Components/ChatApp";
+import App from "./components/ChatApp";
 
 const store = configureStore();
 

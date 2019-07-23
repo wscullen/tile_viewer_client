@@ -1681,6 +1681,7 @@ class MainContainer extends Component {
 
   render() {
     let wkt_footprint = null
+    let wrsOverlay = null
     // get AOI wkt from the currently active AOI
     console.log(this.state)
     console.log(this.state.activeAOI)
@@ -1689,6 +1690,9 @@ class MainContainer extends Component {
       const aoi_index = this.getAoiIndex(this.state.activeAOI)
       console.log(aoi_index)
       wkt_footprint = this.state.aoi_list[aoi_index].wkt_footprint
+      wrsOverlay = this.state.aoi_list[aoi_index].wrs_overlay
+      console.log('WRS OVERLAY')
+      console.log(wrsOverlay)
     }
 
     const areasOfInterests = this.state.aoi_list
@@ -1701,7 +1705,7 @@ class MainContainer extends Component {
         <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings} />
         <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={this.state.aoi_list} activateAOI={this.activateAOI} activeAOI={this.state.activeAOI} />
         <div className='centerContainer'>
-          <MapViewer tiles={this.state.currentTiles} tilesSelectedInList={this.state.selectedTilesInList} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate} />
+          <MapViewer tiles={this.state.currentTiles} tilesSelectedInList={this.state.selectedTilesInList} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} wrsOverlay={wrsOverlay} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate} />
           <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent} />
           <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate} />
         </div>

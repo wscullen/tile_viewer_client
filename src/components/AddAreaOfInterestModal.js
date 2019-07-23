@@ -203,6 +203,9 @@ class AddAreaOfInterestModal extends React.Component {
         const data = response['data']
         console.log(this.state.files)
 
+        console.log('WRS GEOJSON')
+        console.log(data['wrs_geojson'])
+
         const aoi = {
           name: this.state.name,
           startDate: this.state.startDate,
@@ -211,7 +214,8 @@ class AddAreaOfInterestModal extends React.Component {
           wkt_footprint: data['wkt_footprint'],
           mgrs_list: data['mgrs_list'],
           wrs_list: data['wrs_list'],
-          raw_tile_list: data['tile_results']
+          raw_tile_list: data['tile_results'],
+          wrs_overlay: data['wrs_geojson']
         }
         this.props.addAreaOfInterest(aoi)
         console.log(aoi)

@@ -1,9 +1,7 @@
 .tileList {
     border-left: 1px solid lightgrey;
 
-    flex-grow: 1;
-    min-width: 30%;
-    max-width: 40%;
+    width: 500px;
     max-height: 100%;
     overflow-y: hidden;
 }
@@ -15,6 +13,7 @@
     overflow-y: scroll;
     overflow-x: hidden;
     height: 100%;
+    min-width: 400px;
 }
 
 .listOfTiles > ul {
@@ -31,15 +30,6 @@
 .notVerified {
     color: red;
     font-size: 20px;
-}
-
-.tileListItem {
-    padding: 8px 5px;
-    border: 2px #eee solid;
-    font-family: 'Source Sans Pro', sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    background: #eee;
 }
 
 .tileList > .header {
@@ -118,16 +108,6 @@
     position: sticky;
     top: 0;
     background: #fff;
-}
-
-
-.altBackground {
-    background: #dededf;
-    border: 2px #dededf solid;
-}
-
-.activeSelection {
-    border: 2px cyan solid;
 }
 
 .tileActionIndicator {
