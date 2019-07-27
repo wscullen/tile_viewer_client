@@ -78,9 +78,9 @@ const defaultProps = {
   // navigation related props
   navPrev: null,
   navNext: null,
-  onPrevMonthClick () {},
-  onNextMonthClick () {},
-  onClose () {},
+  onPrevMonthClick() { },
+  onNextMonthClick() { },
+  onClose() { },
 
   // day presentation and interaction related props
   renderCalendarDay: undefined,
@@ -102,7 +102,7 @@ const defaultProps = {
 }
 
 class AddAreaOfInterestModal extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     console.log(START_DATE)
@@ -119,7 +119,7 @@ class AddAreaOfInterestModal extends React.Component {
       focusedInput,
       startDate: props.initialStartDate,
       endDate: props.initialEndDate,
-      platform: 's2_sr',
+      platforms: [],
       files: [],
       loading: false,
       showResult: false,
@@ -144,7 +144,19 @@ class AddAreaOfInterestModal extends React.Component {
   }
 
   platformSelected = (event) => {
-    console.log(event)
+    const platformName = event.target.name
+    const platforms = [...this.state.platforms]
+    const platformIndex = platforms.indexOf(platformName)
+
+    if (platformIndex === -1) {
+      platforms.push(platformName)
+    } else {
+      platforms.splice(platformIndex, 1)
+    }
+
+    this.setState({
+      platforms
+    })
   }
 
   filesSelected = (event) => {
@@ -174,7 +186,8 @@ class AddAreaOfInterestModal extends React.Component {
   submitAreaOfInterest = () => {
     const formData = new FormData()
 
-    formData.append('platform', this.state.platform)
+    // should be an array once s2 and l8 are supported together
+    formData.append('platforms', this.state.platforms)
     formData.append('startDate', this.state.startDate.format('YYYYMMDD'))
     formData.append('endDate', this.state.endDate.format('YYYYMMDD'))
 
@@ -207,6 +220,7 @@ class AddAreaOfInterestModal extends React.Component {
         console.log(data['wrs_geojson'])
 
         const aoi = {
+          id: data['id'],
           name: this.state.name,
           startDate: this.state.startDate,
           endDate: this.state.endDate,
@@ -215,7 +229,8 @@ class AddAreaOfInterestModal extends React.Component {
           mgrs_list: data['mgrs_list'],
           wrs_list: data['wrs_list'],
           raw_tile_list: data['tile_results'],
-          wrs_overlay: data['wrs_geojson']
+          wrs_overlay: data['wrs_geojson'],
+          sensor_list: data['sensor_list']
         }
         this.props.addAreaOfInterest(aoi)
         console.log(aoi)
@@ -305,7 +320,7 @@ class AddAreaOfInterestModal extends React.Component {
     }
   }
 
-  render () {
+  render() {
     const { focusedInput, startDate, endDate } = this.state
 
     // autoFocus, autoFocusEndDate, initialStartDate and initialEndDate are helper props for the
@@ -324,6 +339,9 @@ class AddAreaOfInterestModal extends React.Component {
     ])
 
     const showHideClassName = this.state.showResult ? 'loadingIndicators display-inline' : 'loadingIndicators display-none'
+
+    const landsat8Selected = this.state.platforms.indexOf('landsat8') !== -1
+    const sentinel2Selected = this.state.platforms.indexOf('sentinel2') !== -1
 
     return (
       <Modal show={this.props.show} handleClose={this.modalCleanup}>
@@ -352,12 +370,15 @@ class AddAreaOfInterestModal extends React.Component {
           <input type='file' name='shapefiles' ref={this.fileInput} multiple onChange={this.filesSelected} />
           {this.showSelectedFiles()}
 
-          <label htmlFor='platform-select'>Platform</label>
-          <br />
-          <select id='platform-select' value={this.state.platform} onChange={this.platformSelected} >
-            <option value='l8_sr' disabled>Landsat-8 (SR)</option>
-            <option value='s2_sr'>Sentinel-2 (SR)</option>
-          </select>
+          <h4>Platforms</h4>
+          <div>
+            <input type='checkbox' id='landsat8' name='landsat8' checked={landsat8Selected} onChange={this.platformSelected} />
+            <label htmlFor='landsat8'>Landsat 8</label>
+          </div>
+          <div>
+            <input type='checkbox' id='sentinel2' name='sentinel2' checked={sentinel2Selected} onChange={this.platformSelected} />
+            <label htmlFor='sentinel2'>Sentinel 2</label>
+          </div>
           <button className='createButton' type='submit' disabled={this.state.loading}>Create Area of Interest</button>
         </form>
         <div className={showHideClassName}>

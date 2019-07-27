@@ -1,16 +1,20 @@
-import * as React from "react";
-import { render } from "react-dom";
-import { Provider } from "react-redux";
-import configureStore from "./store";
+import * as React from 'react'
+import { render } from 'react-dom'
+import { Provider } from 'react-redux'
+import configureStore from './store'
 
-import App from "./components/ChatApp";
+import { PersistGate } from 'redux-persist/integration/react'
 
-const store = configureStore();
+import App from './components/ChatApp'
+
+const { store, persistor } = configureStore()
 
 const Root = () => (
-  <Provider store={store} >
-    <App />
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <App />
+    </PersistGate>
   </Provider>
-);
+)
 
-render(<Root />, document.getElementById("root"));
+render(<Root />, document.getElementById('root'))

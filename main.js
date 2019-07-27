@@ -50,9 +50,10 @@ if (dev) {
   console.log(resources)
 }
 
-function createWindow () {
+function createWindow() {
   var menu = Menu.buildFromTemplate([
-    { label: 'File',
+    {
+      label: 'File',
       submenu: [
         {
           label: 'Settings',
@@ -118,18 +119,29 @@ function createWindow () {
 
   if (dev) {
     console.log(os.homedir())
-    let devToolsPath
+    let reactDevToolsPath
+    let reduxDevToolsPath
+
     if (process.platform === 'win32') {
-      devToolsPath = path.join(os.homedir(), 'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+      reactDevToolsPath = path.join(os.homedir(), 'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+      reduxDevToolsPath = path.join(os.homedir(), 'AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
     } else if (process.platform === 'linux') {
       // Ubuntu dev machine
-      devToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+      reactDevToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+      reduxDevToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
     }
-    console.log(devToolsPath)
+    console.log(reactDevToolsPath)
+    console.log(reduxDevToolsPath)
 
-    if (fs.existsSync(devToolsPath)) {
+    if (fs.existsSync(reactDevToolsPath)) {
       BrowserWindow.addDevToolsExtension(
-        devToolsPath
+        reactDevToolsPath
+      )
+    }
+
+    if (fs.existsSync(reduxDevToolsPath)) {
+      BrowserWindow.addDevToolsExtension(
+        reduxDevToolsPath
       )
     }
   }
@@ -201,12 +213,12 @@ app.on('activate', () => {
 
 let win
 
-function sendStatusToWindow (text) {
+function sendStatusToWindow(text) {
   log.info(text)
   win.webContents.send('message', text)
 }
 
-function createDefaultWindow () {
+function createDefaultWindow() {
   win = new BrowserWindow({
     icon: path.join(resources, '96x96.png'),
     width: 400,
