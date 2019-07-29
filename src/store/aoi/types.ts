@@ -17,8 +17,8 @@ export interface Session {
   currentPlatform: string;
 }
 
-interface DateObject {
-  [index: string]: Object
+export interface DateObject {
+  [index: string]: string[]
 }
 
 export interface TileList {
@@ -49,15 +49,21 @@ export interface StateById {
   allIds: Array<string>;
 }
 
-export interface AreaOfInterestState {
-  areasOfInterest: StateById;
+export interface AreaOfInterestState extends StateById {
+
 }
 
 export const ADD_AOI = "ADD_AOI"
+export const UPDATE_SESSION = "UPDATE_SESSION"
 
 interface AddAoiAction {
   type: typeof ADD_AOI;
   payload: AreaOfInterest;
 }
 
-export type AoiActionTypes = AddAoiAction
+interface UpdateSessionAction {
+  type: typeof UPDATE_SESSION;
+  payload: { session: Session, id: string };
+}
+
+export type AoiActionTypes = AddAoiAction | UpdateSessionAction

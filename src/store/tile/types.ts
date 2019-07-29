@@ -24,9 +24,9 @@ export interface Properties {
 
 export interface Tile extends Feature {
   id: string;
-  date: string;
-  footprint: Geometry;
+  geometry: Geometry;
   properties: Properties;
+  date: string;
   selected: boolean;
   visible: boolean;
   highlighted: boolean;
@@ -38,18 +38,23 @@ export interface StateById {
   allIds: Array<string>;
 }
 
-export interface TileState {
-  tiles: StateById;
+export interface TileState extends StateById{
 }
 
 export const ADD_TILE = "ADD_TILE"
+export const UPDATE_TILE = "UPDATE_TILE"
 
 interface AddTileAction {
   type: typeof ADD_TILE;
   payload: Tile;
 }
 
-export type TileActionTypes = AddTileAction
+interface UpdateTileAction {
+  type: typeof UPDATE_TILE;
+  payload: Tile;
+}
+
+export type TileActionTypes = AddTileAction | UpdateTileAction
 
 // // Describing the shape of the chat's slice of state
 // export interface Message {

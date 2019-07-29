@@ -33,3 +33,9 @@
 #cloudiness {
     min-width: 50%;
 }
+
+.cloudPercent {
+    min-width: 50px;
+    padding: 4px;
+    text-align: center;
+}

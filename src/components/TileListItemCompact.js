@@ -83,7 +83,7 @@ export default function TileListItemCompact (props) {
         </button>
         <button className='tileActionButton removeAction' onClick={(event) => {
           console.log('trying to remove tile, inside tile list')
-          props.removeTile(props.tile)
+          props.removeTile(props.tile.id)
           event.stopPropagation()
         }}>
           <FontAwesomeIcon icon='times-circle' />

@@ -57,3 +57,4 @@ ehthumbs.db
 out-builds/
 
 .vscode
+yarn.lock

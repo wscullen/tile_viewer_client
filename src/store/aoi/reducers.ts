@@ -1,14 +1,13 @@
 import {
   AreaOfInterestState,
   ADD_AOI,
+  UPDATE_SESSION,
   AoiActionTypes
 } from "./types";
 
 const initialState: AreaOfInterestState = {
-  areasOfInterest: {
-    byId: {},
-    allIds: []
-  }
+  byId: {},
+  allIds: []
 };
 
 export function aoiReducer(
@@ -17,11 +16,20 @@ export function aoiReducer(
 ): AreaOfInterestState {
   switch (action.type) {
     case ADD_AOI: {
-      let areasOfInterest = { ...state.areasOfInterest }
+      const areasOfInterest = { ...state }
       areasOfInterest.byId[action.payload.id] = action.payload
       areasOfInterest.allIds.push(action.payload.id)
       return {
-        areasOfInterest
+        ...areasOfInterest
+      };
+    }
+    case UPDATE_SESSION: {
+      const areasOfInterest = { ...state }
+      const areaOfInterest = areasOfInterest.byId[action.payload.id]
+      areaOfInterest.session = { ...action.payload.session }
+      
+      return {
+        ...areasOfInterest
       };
     }
     default:

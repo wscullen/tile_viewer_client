@@ -1,6 +1,4 @@
-import { Tile, ADD_TILE, TileActionTypes } from './types'
-
-
+import { Tile, ADD_TILE, UPDATE_TILE, TileActionTypes } from './types'
 
 
 
@@ -12,6 +10,14 @@ export function addTile(newTile: Tile): TileActionTypes {
     payload: newTile
   }
 }
+
+export function updateTile(existingTile: Tile): TileActionTypes {
+  return {
+    type: UPDATE_TILE,
+    payload: existingTile
+  }
+}
+
 
 // // TypeScript infers that this function is returning DeleteMessageAction
 // export function deleteMessage(timestamp: number): ChatActionTypes {

@@ -1,124 +1,136 @@
-import './../assets/css/MapViewer.css'
+import "./../assets/css/MapViewer.css";
 
-import React, { Component } from 'react'
+import React, { Component } from "react";
 
-import Map from 'ol/Map'
-import View from 'ol/View'
-import WKT from 'ol/format/WKT'
-import GeoJSON from 'ol/format/GeoJSON'
-import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
-import ImageLayer from 'ol/layer/Image'
-import { OSM, Vector as VectorSource } from 'ol/source'
-import { fromLonLat } from 'ol/proj'
-import Static from 'ol/source/ImageStatic'
-import { DragBox, Select, defaults as InteractionDefaults } from 'ol/interaction'
-import { platformModifierKeyOnly } from 'ol/events/condition'
+import Map from "ol/Map";
+import View from "ol/View";
+import WKT from "ol/format/WKT";
+import GeoJSON from "ol/format/GeoJSON";
+import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
+import ImageLayer from "ol/layer/Image";
+import { OSM, Vector as VectorSource } from "ol/source";
+import { fromLonLat } from "ol/proj";
+import Static from "ol/source/ImageStatic";
+import {
+  DragBox,
+  Select,
+  defaults as InteractionDefaults
+} from "ol/interaction";
+import { platformModifierKeyOnly } from "ol/events/condition";
 
-import { Fill, Stroke, Style, Text } from 'ol/style'
+import { Fill, Stroke, Style, Text } from "ol/style";
 
-import imgNotFound from '../assets/img/notfound.png'
+import moment from "moment";
 
-const middleCanada = [-97.02, 55.72]
-const middleCanadaWebMercatorProj = fromLonLat(middleCanada)
+import imgNotFound from "../assets/img/notfound.png";
+
+const middleCanada = [-97.02, 55.72];
+const middleCanadaWebMercatorProj = fromLonLat(middleCanada);
 
 export default class MapViewer extends Component {
   static defaultProps = {
     tiles: [],
     currentDate: null,
     currentAOIName: null
-  }
+  };
 
   constructor(props) {
-    super(props)
+    super(props);
 
-    this.getMeta = this.getMeta.bind(this)
+    this.getMeta = this.getMeta.bind(this);
 
     this.state = {
       currentInstance: this,
       featuresHovered: [],
       imageLayers: {}
-    }
+    };
   }
 
   componentDidMount() {
     var style = new Style({
       fill: new Fill({
-        color: 'rgba(255, 255, 255, 0.6)'
+        color: "rgba(255, 255, 255, 0.6)"
       }),
       stroke: new Stroke({
-        color: '#319FD3',
+        color: "#319FD3",
         width: 1
       }),
       text: new Text({
-        font: '12px Calibri,sans-serif',
+        font: "12px Calibri,sans-serif",
         fill: new Fill({
-          color: '#000'
+          color: "#000"
         }),
         stroke: new Stroke({
-          color: '#fff',
+          color: "#fff",
           width: 3
         })
       })
-    })
+    });
 
     var raster = new TileLayer({
       source: new OSM()
-    })
+    });
 
     var featureOverlay = new VectorLayer({
       source: new VectorSource(),
-      style: this.getStyle(undefined, 'highlight')
-    })
+      style: this.getStyle(undefined, "highlight")
+    });
 
-    featureOverlay.setZIndex(99999)
+    featureOverlay.setZIndex(99999);
 
     const selectedInListOverlay = new VectorLayer({
       source: new VectorSource()
-    })
+    });
 
-    selectedInListOverlay.setZIndex(88888)
+    selectedInListOverlay.setZIndex(88888);
 
     var map = new Map({
       layers: [raster, featureOverlay, selectedInListOverlay],
-      target: 'map',
+      target: "map",
       view: new View({
         center: middleCanadaWebMercatorProj,
         zoom: 3.5
       }),
       interactions: InteractionDefaults({ doubleClickZoom: false })
-    })
+    });
 
-    map.on('pointermove', (evt) => {
+    map.on("pointermove", evt => {
       if (evt.dragging) {
-        return
+        return;
       }
-      console.log('POINTER MOVE EVENT')
-      console.log(evt)
-      var pixel = map.getEventPixel(evt.originalEvent)
+      console.log("POINTER MOVE EVENT");
+      console.log(evt);
+      var pixel = map.getEventPixel(evt.originalEvent);
 
-      this.displayFeatureInfo(pixel, evt.pointerEvent.ctrlKey, evt.pointerEvent.shiftKey)
-    })
+      this.displayFeatureInfo(
+        pixel,
+        evt.pointerEvent.ctrlKey,
+        evt.pointerEvent.shiftKey
+      );
+    });
 
     var dragBox = new DragBox({
       condition: platformModifierKeyOnly
-    })
+    });
 
-    map.addInteraction(dragBox)
+    map.addInteraction(dragBox);
 
-    dragBox.on('boxend', () => {
+    dragBox.on("boxend", () => {
       // features that intersect the box are added to the collection of
       // selected features
-      const selectedFeatures = []
-      var extent = dragBox.getGeometry().getExtent()
-      this.state.tileLayer.getSource().forEachFeatureIntersectingExtent(extent, function (feature) {
-        selectedFeatures.push(feature.getId())
-      })
-      console.log('dragbox selected features')
-      this.props.tileSelected(selectedFeatures)
-      console.log(selectedFeatures)
-    })
+      const selectedFeatures = [];
+      var extent = dragBox.getGeometry().getExtent();
+      this.state.tileLayer
+        .getSource()
+        .forEachFeatureIntersectingExtent(extent, function(feature) {
+          selectedFeatures.push(feature.getId());
+        });
+      console.log("dragbox selected features");
+      this.props.tileSelected(selectedFeatures);
+      console.log(selectedFeatures);
+    });
 
-    map.on('click', this.handleMapClick.bind(this))
+    map.on("click", this.handleMapClick.bind(this));
 
     // const height = this.mapViewer.clientHeight;
     // const width = this.mapViewer.clientWidth;
@@ -127,7 +139,7 @@ export default class MapViewer extends Component {
 
     // console.log(height)
     // console.log(width)
-    console.log('map div height')
+    console.log("map div height");
 
     // save map and layer references to local state
     this.setState({
@@ -136,99 +148,103 @@ export default class MapViewer extends Component {
       featureOverlay,
       selectedInListOverlay
       //   featuresLayer: featuresLayer
-    })
+    });
   }
 
   clearOverlay = () => {
-    const featureOverlay = this.state.featureOverlay
-    featureOverlay.getSource().clear()
+    const featureOverlay = this.state.featureOverlay;
+    featureOverlay.getSource().clear();
 
-    return featureOverlay
-  }
+    return featureOverlay;
+  };
 
   displayFeatureInfo(pixel, ctrlKey, shiftKey) {
-    const map = this.state.map
-    console.log(ctrlKey)
-    console.log(shiftKey)
-    const featureOverlay = this.clearOverlay()
+    const map = this.state.map;
+    console.log(ctrlKey);
+    console.log(shiftKey);
+    const featureOverlay = this.clearOverlay();
 
-    const featuresHovered = []
+    const featuresHovered = [];
 
     map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-      console.log(layer)
-      if (layer.get('name') === 'tileLayer' || layer.get('name') === 'wrsOverlay') {
-        
-        layer.setZIndex(100)
-        const featureClone = feature.clone()
-        if (layer.get('name') === 'tileLayer') {
-          featureClone.setStyle(this.getStyle(featureClone, 'highlighted'))
+      console.log(layer);
+      if (
+        layer.get("name") === "tileLayer" ||
+        layer.get("name") === "wrsOverlay"
+      ) {
+        layer.setZIndex(100);
+        const featureClone = feature.clone();
+        if (layer.get("name") === "tileLayer") {
+          featureClone.setStyle(this.getStyle(featureClone, "highlighted"));
         } else {
-          featureClone.setStyle(this.getStyle(featureClone, 'wrsOverlay'))
+          featureClone.setStyle(this.getStyle(featureClone, "wrsOverlay"));
         }
-        featureClone.setId(feature.getId())
-        featureOverlay.getSource().addFeature(featureClone)
-        featureOverlay.setZIndex(999999)
-        console.log(feature)
-        console.log(featureClone)
-        const name = feature.getId() + ': ' + feature.get('name')
-        console.log(name)
+        featureClone.setId(feature.getId());
+        featureOverlay.getSource().addFeature(featureClone);
+        featureOverlay.setZIndex(999999);
+        console.log(feature);
+        console.log(featureClone);
+        const name = feature.getId() + ": " + feature.get("name");
+        console.log(name);
 
-        if (layer.get('name') === 'tileLayer') {
-          featuresHovered.push(feature.getId())
+        if (layer.get("name") === "tileLayer") {
+          featuresHovered.push(feature.getId());
         }
       }
-    })
+    });
 
     this.setState({
       featuresHovered
-    })
+    });
   }
 
   async getMeta(tile) {
-    console.log('fetching meta for image')
-    console.log(tile)
+    console.log("fetching meta for image");
+    console.log(tile);
     return new Promise((resolve, reject) => {
-      console.log(tile)
-      console.log('inside promise')
-      const img = new Image()
-      img.crossOrigin = 'Anonymous'
+      console.log(tile);
+      console.log("inside promise");
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
 
       img.onload = () => {
-        console.log('is img onload callback ever run??!')
-        console.log(img)
-        resolve({ img, tile })
-      }
+        console.log("is img onload callback ever run??!");
+        console.log(img);
+        resolve({ img, tile });
+      };
 
       img.onerror = () => {
-        console.log('problem loading image')
-        tile.properties.lowres_preview_url = imgNotFound
-        resolve({ img, tile })
-      }
-      console.log(tile.properties.lowres_preview_url)
-      img.src = tile.properties.lowres_preview_url
-    })
+        console.log("problem loading image");
+        tile.properties.lowresPreviewUrl = imgNotFound;
+        resolve({ img, tile });
+      };
+      console.log(tile.properties.lowresPreviewUrl);
+      img.src = tile.properties.lowresPreviewUrl;
+    });
   }
 
   // pass new features from props into the OpenLayers layer object
   componentDidUpdate(prevProps, prevState) {
     // Programmatically set selected features NOT WORKING TODO: fix this
-    console.log(prevState)
-    console.log(this.state)
+    console.log(prevState);
+    console.log(this.state);
 
-    console.log('inside component will update')
+    console.log("inside component will update");
 
     if (prevProps === this.props) {
-      console.log('========================== prev props the same as new props')
+      console.log(
+        "========================== prev props the same as new props"
+      );
 
-      console.log(prevProps)
-      console.log(this.props)
-      return
+      console.log(prevProps);
+      console.log(this.props);
+      return;
     }
 
-    console.log('=========================== props have changed')
-    console.log(prevProps)
-    console.log(this.props)
-    this.updateAllStyle()
+    console.log("=========================== props have changed");
+    console.log(prevProps);
+    console.log(this.props);
+    this.updateAllStyle();
 
     // let layersToSelect = []
 
@@ -259,335 +275,346 @@ export default class MapViewer extends Component {
 
     const aoi_style = new Style({
       stroke: new Stroke({
-        color: '#e11',
+        color: "#e11",
         width: 2
       }),
       fill: new Fill({
-        color: 'rgba(0,0,0,0)'
+        color: "rgba(0,0,0,0)"
       })
-    })
+    });
 
-    function getOverlayStyle (feature) {
+    function getOverlayStyle(feature) {
       const wrsOverlayStyle = new Style({
         stroke: new Stroke({
-          color: 'rgba(100,100,220,0.2)',
+          color: "rgba(100,100,220,0.2)",
           width: 1
         }),
         fill: new Fill({
-          color: 'rgba(0,0,0,0)'
+          color: "rgba(0,0,0,0)"
         }),
         text: new Text({
-          font: '11px Calibri,sans-serif',
+          font: "11px Calibri,sans-serif",
           fill: new Fill({
-            color: '#000'
+            color: "#000"
           }),
           stroke: new Stroke({
-            color: '#fff',
+            color: "#fff",
             width: 1
           }),
-          text: feature.get('name')
+          text: feature.get("name")
         })
-      })
-      return wrsOverlayStyle
+      });
+      return wrsOverlayStyle;
     }
 
-    console.log('inside component will update')
-    console.log(prevProps.activeAOI)
-    console.log(this.props.activeAOI)
-
+    console.log("inside component will update");
+    console.log(prevProps.activeAOI);
+    console.log(this.props.activeAOI);
+    console.log(prevProps.activeAOI);
+    console.log(this.props.activeAOI);
     if (prevProps.activeAOI !== this.props.activeAOI) {
-      const map = this.state.map
-      let aoiFootprintLayer
-      let tileFootprintLayer
-      let wrsOverlayLayer
+      console.log("updating AOI info");
+      const map = this.state.map;
+      let aoiFootprintLayer;
+      let tileFootprintLayer;
+      let wrsOverlayLayer;
 
-      map.getLayers().forEach((ele) => {
-        console.log(ele)
-        console.log(ele.get('name'))
-        if (ele.get('name') === 'currentAoiFootprint') {
-          aoiFootprintLayer = ele
-        } else if (ele.get('name') === 'tileFootprint') {
-          tileFootprintLayer = ele
-        } else if (ele.get('name') === 'wrsOverlay') {
-          wrsOverlayLayer = ele
+      map.getLayers().forEach(ele => {
+        console.log(ele);
+        console.log(ele.get("name"));
+        if (ele.get("name") === "currentAoiFootprint") {
+          aoiFootprintLayer = ele;
+        } else if (ele.get("name") === "tileFootprint") {
+          tileFootprintLayer = ele;
+        } else if (ele.get("name") === "wrsOverlay") {
+          wrsOverlayLayer = ele;
         }
-      })
+      });
 
-      console.log(this.props.activeAOI)
+      console.log(this.props.activeAOI);
 
       if (this.props.currentAoiWkt) {
-        console.log('Trying to add AOI footprint ')
-        var format = new WKT()
+        console.log("Trying to add AOI footprint ");
+        var format = new WKT();
         var feature = format.readFeature(this.props.currentAoiWkt, {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        })
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857"
+        });
 
         // TODO: In the future, try to update the existing layer source, instead of removing it
         if (aoiFootprintLayer) {
-          console.log('aoi footprint layer exists, updating')
-          aoiFootprintLayer.getSource().clear()
-          aoiFootprintLayer.getSource().addFeature(feature)
+          console.log("aoi footprint layer exists, updating");
+          aoiFootprintLayer.getSource().clear();
+          aoiFootprintLayer.getSource().addFeature(feature);
         } else {
-          console.log('aoi footprint does not exist, create')
+          console.log("aoi footprint does not exist, create");
 
           aoiFootprintLayer = new VectorLayer({
             source: new VectorSource({
               features: [feature]
             }),
-            name: 'currentAoiFootprint',
+            name: "currentAoiFootprint",
             style: aoi_style
-          })
+          });
 
-          map.addLayer(aoiFootprintLayer)
+          map.addLayer(aoiFootprintLayer);
         }
 
-        const extent = feature.getGeometry().getExtent()
-        console.log(extent)
-        aoiFootprintLayer.setZIndex(9999)
+        const extent = feature.getGeometry().getExtent();
+        console.log(extent);
+        aoiFootprintLayer.setZIndex(9999);
 
-        this.state.map.getView().fit(extent, { duration: 1500 })
+        this.state.map.getView().fit(extent, { duration: 1500 });
       }
 
       if (this.props.wrsOverlay) {
-        console.log('Trying to add WRS overlay')
-        const featureList = []
+        console.log("Trying to add WRS overlay");
+        const featureList = [];
 
         for (const feature of this.props.wrsOverlay.features) {
-          const geojsonFormat = new GeoJSON()
+          const geojsonFormat = new GeoJSON();
           const geojsonFeature = geojsonFormat.readFeature(feature, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-          })
-          featureList.push(geojsonFeature)
+            dataProjection: "EPSG:4326",
+            featureProjection: "EPSG:3857"
+          });
+          featureList.push(geojsonFeature);
         }
 
         // TODO: In the future, try to update the existing layer source, instead of removing it
         if (wrsOverlayLayer) {
-          console.log('wrs overlay layer exists, updating')
-          wrsOverlayLayer.getSource().clear()
+          console.log("wrs overlay layer exists, updating");
+          wrsOverlayLayer.getSource().clear();
           for (const feature of featureList) {
-            wrsOverlayLayer.getSource().addFeature(feature)
+            wrsOverlayLayer.getSource().addFeature(feature);
           }
         } else {
-          console.log('wrs overlay does not exist, create')
+          console.log("wrs overlay does not exist, create");
 
           wrsOverlayLayer = new VectorLayer({
             source: new VectorSource({
               features: featureList
             }),
-            name: 'wrsOverlay',
+            name: "wrsOverlay",
             style: getOverlayStyle
-          })
+          });
 
-          map.addLayer(wrsOverlayLayer)
+          map.addLayer(wrsOverlayLayer);
         }
 
-        const extent = feature.getGeometry().getExtent()
-        console.log(extent)
-        aoiFootprintLayer.setZIndex(9999)
-        wrsOverlayLayer.setZIndex(99999)
+        const extent = feature.getGeometry().getExtent();
+        console.log(extent);
+        aoiFootprintLayer.setZIndex(9999);
+        wrsOverlayLayer.setZIndex(99999);
 
-        this.state.map.getView().fit(extent, { duration: 1500 })
+        this.state.map.getView().fit(extent, { duration: 1500 });
       }
     }
-    console.log(prevProps)
-    console.log(this.props)
+    console.log(prevProps);
+    console.log(this.props);
 
-    if (prevProps.tilesSelectedInList !== this.props.tilesSelectedInList) { this.updateSelectedOverlay() }
+    if (prevProps.tilesSelectedInList !== this.props.tilesSelectedInList) {
+      this.updateSelectedOverlay();
+    }
 
-    if (prevProps.tiles.length === 0 && this.props.tiles.length !== 0) { this.updateMap() }
+    if (prevProps.tiles.length === 0 && this.props.tiles.length !== 0) {
+      this.updateMap();
+    }
 
-    if (prevProps.currentDate !== this.props.currentDate || prevProps.activeAOI !== this.props.activeAOI) {
-      console.log('updating map....')
-      this.updateMap()
-      this.updateAllStyle()
+    if (
+      prevProps.currentDate !== this.props.currentDate ||
+      prevProps.activeAOI !== this.props.activeAOI
+    ) {
+      console.log("updating map....");
+      this.updateMap();
+      this.updateAllStyle();
     }
   }
 
   updateSelectedOverlay = () => {
-    console.log('updating list selection overlay')
-    const selectedLayer = this.state.selectedInListOverlay
-    console.log(selectedLayer.getSource())
-    const featuresToRemove = []
+    console.log("updating list selection overlay");
+    const selectedLayer = this.state.selectedInListOverlay;
+    console.log(selectedLayer.getSource());
+    const featuresToRemove = [];
     // Iterate over features in selectedTilesInListLayer, if there are any NOT in selectedTilesInList, remove them
-    selectedLayer.getSource().forEachFeature((feature) => {
-      console.log(feature)
-      if (!this.props.tilesSelectedInList.includes(feature.getId())) {
-        console.log(feature)
-        featuresToRemove.push(feature)
-      }
-    })
-
-    console.log('removing')
-    for (const feat of featuresToRemove) {
-      selectedLayer.getSource().removeFeature(feat)
-    }
+    selectedLayer.getSource().forEachFeature(feature => {
+      selectedLayer.getSource().removeFeature(feature);
+    });
 
     // Iterate over current tiles
     // if current tile is in selectedTilesInList,
     // create a new feature and add it to the layer
     for (const tile of this.props.tiles) {
-      if (this.props.tilesSelectedInList.includes(tile.id)) {
-        const format = new GeoJSON()
+      const tileDate = moment(tile.date).format("YYYYMMDD");
+
+      if (
+        this.props.tilesSelectedInList.includes(tile.id) &&
+        this.props.currentDate === tileDate
+      ) {
+        const format = new GeoJSON();
 
         const feature = format.readFeature(tile, {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        })
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857"
+        });
 
-        feature.setStyle(this.getStyle(feature, 'selected-in-list'))
-        console.log('adding overlay feature to layer')
-        selectedLayer.getSource().addFeature(feature)
+        feature.setStyle(this.getStyle(feature, "selected-in-list"));
+        console.log("adding overlay feature to layer");
+        selectedLayer.getSource().addFeature(feature);
       }
     }
 
     this.setState({
       selectedInListOverlay: selectedLayer
-    })
-  }
+    });
+  };
 
   getStyle(feature, feature_type) {
-    let style
-    console.log('getting STYLE')
+    let style;
+    console.log("getting STYLE");
 
-    if (feature_type === 'tile') {
+    if (feature_type === "tile") {
       style = new Style({
         stroke: new Stroke({
-          color: 'rgba(230,34,99,0.5)',
+          color: "rgba(230,34,99,0.5)",
           width: 2
         }),
         fill: new Fill({
-          color: 'rgba(0,0,0,0)'
+          color: "rgba(0,0,0,0)"
         }),
         text: new Text({
-          font: '13px Source Sans Pro, sans-serif',
+          font: "13px Source Sans Pro, sans-serif",
           fill: new Fill({
-            color: '#000'
+            color: "#000"
           }),
           stroke: new Stroke({
-            color: '#fff',
+            color: "#fff",
             width: 2
           }),
-          text: feature.get('name').split('_')[1]
+          text: feature.get("name").split("_")[1]
         })
-      })
-    } else if (feature_type === 'selected-in-list') {
-      console.log('SELECTED STYLE')
+      });
+    } else if (feature_type === "selected-in-list") {
+      console.log("SELECTED STYLE");
       style = new Style({
         stroke: new Stroke({
-          color: '#0ff',
+          color: "#0ff",
           width: 3
         }),
         fill: new Fill({
-          color: 'rgba(0,255,0,0)'
+          color: "rgba(0,255,0,0)"
         }),
         text: new Text({
-          font: '11px Source Sans Pro, sans-serif',
+          font: "11px Source Sans Pro, sans-serif",
           fill: new Fill({
-            color: '#000'
+            color: "#000"
           }),
           stroke: new Stroke({
-            color: '#fff',
+            color: "#fff",
             width: 2
           })
         })
-      })
-    } else if (feature_type === 'selected') {
-      console.log('SELECTED STYLE')
+      });
+    } else if (feature_type === "selected") {
+      console.log("SELECTED STYLE");
       style = new Style({
         stroke: new Stroke({
-          color: '#5f5',
+          color: "#5f5",
           width: 2
         }),
         fill: new Fill({
-          color: 'rgba(0,255,0,0)'
+          color: "rgba(0,255,0,0)"
         }),
         text: new Text({
-          font: '13px Source Sans Pro, sans-serif',
+          font: "13px Source Sans Pro, sans-serif",
           fill: new Fill({
-            color: '#000'
+            color: "#000"
           }),
           stroke: new Stroke({
-            color: '#fff',
+            color: "#fff",
             width: 2
           }),
-          text: feature.get('name').split('_')[1]
+          text: feature.get("name").split("_")[1]
         })
-      })
-    } else if (feature_type === 'highlight') {
+      });
+    } else if (feature_type === "highlight") {
       style = new Style({
         stroke: new Stroke({
-          color: '#f55',
+          color: "#f55",
           width: 2
         }),
         fill: new Fill({
-          color: 'rgba(255,0,0,0)'
+          color: "rgba(255,0,0,0)"
         }),
         text: new Text({
-          font: '11px Source Sans Pro, sans-serif',
+          font: "11px Source Sans Pro, sans-serif",
           fill: new Fill({
-            color: '#000'
+            color: "#000"
           }),
           stroke: new Stroke({
-            color: '#fff',
+            color: "#fff",
             width: 2
           })
         })
-      })
-    } else if (feature_type === 'wrsOverlay') {
+      });
+    } else if (feature_type === "wrsOverlay") {
       style = new Style({
         stroke: new Stroke({
-          color: '#55f',
+          color: "#55f",
           width: 1
         }),
         fill: new Fill({
-          color: 'rgba(255,0,0,0)'
+          color: "rgba(255,0,0,0)"
         }),
         text: new Text({
-          font: '11px Source Sans Pro, sans-serif',
+          font: "11px Source Sans Pro, sans-serif",
           fill: new Fill({
-            color: '#000'
+            color: "#000"
           }),
           stroke: new Stroke({
-            color: '#fff',
+            color: "#fff",
             width: 2
           })
         })
-      })
+      });
     }
 
-    return style
+    return style;
   }
 
   updateMap() {
-    const map = this.state.map
+    const map = this.state.map;
 
-    console.log('this is where we would iterate over tiles for the current active date')
+    console.log(
+      "this is where we would iterate over tiles for the current active date"
+    );
 
-    const features = []
-    const promiseArray = []
-    console.log('props.tiles')
-    console.log(this.props.tiles)
+    const features = [];
+    const promiseArray = [];
+    console.log("props.tiles");
+    console.log(this.props.tiles);
 
     for (const tile in this.props.tiles) {
-      const format = new GeoJSON()
-      const tile_copy = { ...this.props.tiles[tile] }
+      const format = new GeoJSON();
+      const tile_copy = { ...this.props.tiles[tile] };
 
-      console.log('TILE:')
-      console.log(tile_copy)
+      console.log("TILE:");
+      console.log(tile_copy);
 
       const feature = format.readFeature(tile_copy, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-      })
+        dataProjection: "EPSG:4326",
+        featureProjection: "EPSG:3857"
+      });
 
-      tile_copy['vector_feature'] = feature
+      tile_copy["vector_feature"] = feature;
 
-      promiseArray.push(this.getMeta(tile_copy).catch((err) => {
-        console.log('this image had an err, handling it first before sending back to overall catch func')
-        console.log(err)
-      }))
+      promiseArray.push(
+        this.getMeta(tile_copy).catch(err => {
+          console.log(
+            "this image had an err, handling it first before sending back to overall catch func"
+          );
+          console.log(err);
+        })
+      );
     }
 
     // console.log("promiseArray")
@@ -599,186 +626,191 @@ export default class MapViewer extends Component {
     //     tileLayer = layer
     // })
 
-    Promise.all(promiseArray).then((values) => {
-      const tiles = []
+    Promise.all(promiseArray)
+      .then(values => {
+        const tiles = [];
 
-      for (const val of values) {
-        console.log('DOES THIS RUN?!')
-        let img = val.img
-        const tile = val.tile
-        console.log(tile)
+        for (const val of values) {
+          console.log("DOES THIS RUN?!");
+          let img = val.img;
+          const tile = val.tile;
+          console.log(tile);
 
-        const feature = tile['vector_feature']
-        console.log(img)
+          const feature = tile["vector_feature"];
+          console.log(img);
 
-        console.log(tile)
-        let opacity = 0.90
+          console.log(tile);
+          let opacity = 0.9;
 
-        console.log(tile.properties.lowres_preview_url)
-        console.log(img.width, img.height)
+          console.log(tile.properties.lowres_preview_url);
+          console.log(img.width, img.height);
 
-        if (tile.properties.lowres_preview_url === imgNotFound) {
-          img = {
-            width: 221,
-            height: 210
+          if (tile.properties.lowresPreviewUrl === imgNotFound) {
+            img = {
+              width: 221,
+              height: 210
+            };
+            opacity = 0.55;
           }
-          opacity = 0.55
+
+          const imageExtent = feature.getGeometry().getExtent();
+          console.log(imageExtent);
+          console.log("TILE PROPERTIES");
+          console.log(tile.properties);
+
+          const s2image_layer = new ImageLayer({
+            source: new Static({
+              url: tile.properties.lowresPreviewUrl,
+              crossOrigin: "",
+              imageSize: [img.width, img.height],
+              projection: "EPSG:" + tile.properties.proj,
+              imageExtent: imageExtent
+            }),
+            opacity,
+            name: "lowres__" + tile.properties.name
+          });
+          console.log("trying to add the image layer");
+          tile["raster"] = s2image_layer;
+
+          tiles.push(tile);
         }
 
-        const imageExtent = feature.getGeometry().getExtent()
-        console.log(imageExtent)
-        console.log('TILE PROPERTIES')
-        console.log(tile.properties)
+        console.log("need to remove existing image layers");
+        const layersToRemove = [];
+        let tileLayer;
 
-        const s2image_layer = new ImageLayer({
-          source: new Static({
-            url: tile.properties.lowres_preview_url,
-            crossOrigin: '',
-            imageSize: [img.width, img.height],
-            projection: 'EPSG:' + tile.properties.proj,
-            imageExtent: imageExtent
-          }),
-          opacity,
-          name: 'lowres__' + tile.properties.name
-        })
-        console.log('trying to add the image layer')
-        tile['raster'] = s2image_layer
-
-        tiles.push(tile)
-      }
-
-      console.log('need to remove existing image layers')
-      const layersToRemove = []
-      let tileLayer
-
-      map.getLayers().forEach((layer) => {
-        console.log(layer)
-        const name = layer.get('name')
-        if (name) {
-          if (name.search('lowres') !== -1) {
-            console.log('have existing image to remove')
-            layersToRemove.push(layer)
+        map.getLayers().forEach(layer => {
+          console.log(layer);
+          const name = layer.get("name");
+          if (name) {
+            if (name.search("lowres") !== -1) {
+              console.log("have existing image to remove");
+              layersToRemove.push(layer);
+            }
+            if (name.search("tileLayer") !== -1) {
+              tileLayer = layer;
+            }
           }
-          if (name.search('tileLayer') !== -1) {
-            tileLayer = layer
+        });
+
+        layersToRemove.forEach(layer => {
+          map.removeLayer(layer);
+        });
+
+        console.log(tileLayer);
+        // TODO: In the future, try to update the existing layer source, instead of removing it
+        if (tileLayer) {
+          const features = tiles.map(t => t.vector_feature);
+          console.log(features);
+          console.log("tile layer exists, clearing and adding features");
+          tileLayer.getSource().clear();
+          tileLayer.getSource().addFeatures(features);
+        } else {
+          console.log("tileLayer does not exist, create");
+
+          tileLayer = new VectorLayer({
+            source: new VectorSource({
+              features: []
+            }),
+            name: "tileLayer"
+          });
+
+          tileLayer.setZIndex(100);
+          map.addLayer(tileLayer);
+        }
+        console.log("tiles: ");
+        console.log(tiles);
+        const imageLayers = {};
+        for (const t of tiles) {
+          console.log("adding raster to map");
+          console.log(t);
+          if (!t.visible) {
+            t.raster.setOpacity(0);
           }
+          map.addLayer(t.raster);
+          imageLayers[t.id] = t.raster;
+          const vectorFeature = t["vector_feature"];
+          vectorFeature.setStyle(this.getStyle(vectorFeature, "tile"));
+          tileLayer.getSource().addFeature(vectorFeature);
         }
+
+        this.setState(
+          {
+            tileLayer,
+            imageLayers
+          },
+          () => {
+            this.updateAllStyle();
+          }
+        );
       })
-
-      layersToRemove.forEach((layer) => {
-        map.removeLayer(layer)
-      })
-
-      console.log(tileLayer)
-      // TODO: In the future, try to update the existing layer source, instead of removing it
-      if (tileLayer) {
-        const features = tiles.map((t) => t.vector_feature)
-        console.log(features)
-        console.log('tile layer exists, clearing and adding features')
-        tileLayer.getSource().clear()
-        tileLayer.getSource().addFeatures(features)
-      } else {
-        console.log('tileLayer does not exist, create')
-
-        tileLayer = new VectorLayer({
-          source: new VectorSource({
-            features: []
-          }),
-          name: 'tileLayer'
-        })
-
-        tileLayer.setZIndex(100)
-        map.addLayer(tileLayer)
-      }
-      console.log('tiles: ')
-      console.log(tiles)
-      const imageLayers = {}
-      for (const t of tiles) {
-        console.log('adding raster to map')
-        console.log(t)
-        if (!t.visible) {
-          t.raster.setOpacity(0)
-        }
-        map.addLayer(t.raster)
-        imageLayers[t.id] = t.raster
-        const vectorFeature = t['vector_feature']
-        vectorFeature.setStyle(this.getStyle(vectorFeature, 'tile'))
-        tileLayer.getSource().addFeature(vectorFeature)
-      }
-
-      this.setState({
-        tileLayer,
-        imageLayers
-      }, () => {
-        this.updateAllStyle()
-      })
-    }).catch((errors) => {
-      console.log(errors)
-      console.log('handle errors in catch function')
-    })
+      .catch(errors => {
+        console.log(errors);
+        console.log("handle errors in catch function");
+      });
   }
 
   updateStyle(features) {
-    console.log('UPDATE STYLE')
-    console.log(features)
-    this.state.tileLayer.getSource().forEachFeature((feature) => {
+    console.log("UPDATE STYLE");
+    console.log(features);
+    this.state.tileLayer.getSource().forEachFeature(feature => {
       for (const feat of features) {
         if (feat === feature.getId()) {
-          feature.setStyle(this.getStyle(feature, 'selected'))
-          console.log(feat)
+          feature.setStyle(this.getStyle(feature, "selected"));
+          console.log(feat);
         }
-        console.log(feat)
+        console.log(feat);
       }
-      console.log(feature)
-    })
+      console.log(feature);
+    });
   }
 
   updateAllStyle() {
-    console.log('update all styles')
-    console.log(this.props.tiles)
-    this.props.tiles.forEach((tile) => {
-      console.log('updating tile styles')
-      console.log(tile)
-      let feature
+    console.log("update all styles");
+    console.log(this.props.tiles);
+    this.props.tiles.forEach(tile => {
+      console.log("updating tile styles");
+      console.log(tile);
+      let feature;
       if (this.state.tileLayer) {
-        console.log('getting feature')
-        console.log(tile)
-        console.log(tile.id)
-        console.log(this.state.tileLayer.getSource().getFeatures())
-        feature = this.state.tileLayer.getSource().getFeatureById(tile.id)
+        console.log("getting feature");
+        console.log(tile);
+        console.log(tile.id);
+        console.log(this.state.tileLayer.getSource().getFeatures());
+        feature = this.state.tileLayer.getSource().getFeatureById(tile.id);
       }
-      console.log(this.state)
+      console.log(this.state);
       if (this.state.imageLayers.hasOwnProperty(tile.id)) {
-        console.log(this.state.imageLayers)
+        console.log(this.state.imageLayers);
         if (!tile.visible) {
-          this.state.imageLayers[tile.id].setOpacity(0.0)
+          this.state.imageLayers[tile.id].setOpacity(0.0);
         } else {
-          this.state.imageLayers[tile.id].setOpacity(0.9)
+          this.state.imageLayers[tile.id].setOpacity(0.9);
         }
       }
 
-      console.log('FEATURE:')
-      console.log(feature)
+      console.log("FEATURE:");
+      console.log(feature);
       if (feature) {
-        console.log('setting style')
+        console.log("setting style");
 
         if (tile.selected) {
-          feature.setStyle(this.getStyle(feature, 'selected'))
+          feature.setStyle(this.getStyle(feature, "selected"));
         } else {
-          feature.setStyle(this.getStyle(feature, 'tile'))
+          feature.setStyle(this.getStyle(feature, "tile"));
         }
       }
-    })
+    });
   }
 
   handleMapClick(event) {
-    console.log(event)
-    console.log('Mapped was clicked')
-    console.log(this.state.featuresHovered)
+    console.log(event);
+    console.log("Mapped was clicked");
+    console.log(this.state.featuresHovered);
 
-    this.updateStyle(this.state.featuresHovered)
-    console.log(this.state)
-    this.props.tileSelected(this.state.featuresHovered)
+    this.updateStyle(this.state.featuresHovered);
+    console.log(this.state);
+    this.props.tileSelected(this.state.featuresHovered);
 
     // // create WKT writer
     // var wktWriter = new WKT();
@@ -798,9 +830,18 @@ export default class MapViewer extends Component {
 
   render() {
     return (
-      <div id='mapViewer' className='mapViewer' ref={(mapViewer) => this.mapViewer = mapViewer}>
-        <div id='map' className='map' ref='map' onMouseLeave={this.clearOverlay} />
+      <div
+        id="mapViewer"
+        className="mapViewer"
+        ref={mapViewer => (this.mapViewer = mapViewer)}
+      >
+        <div
+          id="map"
+          className="map"
+          ref="map"
+          onMouseLeave={this.clearOverlay}
+        />
       </div>
-    )
+    );
   }
 }

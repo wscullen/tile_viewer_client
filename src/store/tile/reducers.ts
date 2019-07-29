@@ -1,28 +1,49 @@
 import {
   TileState,
   ADD_TILE,
-  TileActionTypes
+  UPDATE_TILE,
+  TileActionTypes,
 } from "./types";
 
 const initialState: TileState = {
-  tiles: {
-    byId: {},
-    allIds: []
-  }
+  byId: {},
+  allIds: []
 };
+
+// export function selectedTiles(
+//   tileState, allTiles): Object {
+
+//     for (const d of allTiles) {
+
+//     }
+
+//   }
 
 export function tileReducer(
   state = initialState,
   action: TileActionTypes
 ): TileState {
   switch (action.type) {
-    case ADD_TILE:
-      let tiles = { ...state.tiles }
-      tiles.byId[action.payload.id] = action.payload
+    case ADD_TILE: {
+      const tiles = { ...state }
+      tiles.byId[action.payload.id] = {...action.payload}
       tiles.allIds.push(action.payload.id)
+      
       return {
-        tiles
+        ...tiles
       };
+    }
+    case UPDATE_TILE: {
+      const tiles = { ...state }
+
+      if (state.allIds.includes(action.payload.id)) {
+        tiles.byId[action.payload.id] = {...action.payload}
+      }
+
+      return {
+        ...tiles
+      };
+    }
     default:
       return state;
   }

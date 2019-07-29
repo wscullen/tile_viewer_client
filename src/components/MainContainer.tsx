@@ -1,87 +1,111 @@
 import './../assets/css/MainContainer.css'
+
 import './../assets/css/CenterContainer.css'
 
 import React, { Component } from 'react'
-import { connect } from "react-redux";
+
+import { connect } from 'react-redux'
 
 import { AppState } from '../store/'
 
 import { TileState, Tile } from '../store/tile/types'
-import { addTile } from '../store/tile/actions'
 
-import { AreaOfInterestState, AreaOfInterest, TileList as TileListInterface, Session, CurrentDates } from '../store/aoi/types'
-import { addAoi } from '../store/aoi/actions'
+import { addTile, updateTile } from '../store/tile/actions'
+
+import {
+  AreaOfInterestState,
+  AreaOfInterest,
+  TileList as TileListInterface,
+  Session,
+  CurrentDates,
+  DateObject,
+} from '../store/aoi/types'
+
+import { addAoi, updateSession } from '../store/aoi/actions'
 
 import { thunkSendMessage } from '../thunks'
 
 import MapViewer from './MapViewer'
+
 import AreaOfInterestList from './AreaOfInterestList'
+
 import TimelineViewer from './TimelineViewer'
+
 import TileList from './TileList'
+
 import AddAreaOfInterestModal from './AddAreaOfInterestModal'
+
 import FilteringTools from './FilteringTools'
 
 import moment from 'moment'
 
-//@ts-ignore
-import base64 from 'base-64'
+// @ts-ignore
 
+import base64 from 'base-64'
 import { ipcRenderer } from 'electron'
-import { MemoryHistory } from 'history';
-import { unByKey } from 'ol/Observable';
+import { MemoryHistory } from 'history'
+import { unByKey } from 'ol/Observable'
 
 const fs = require('fs') // or directly
 
 // To use it, simply call
 
 const remote = require('electron').remote
-
 const path = require('path')
 
-const resourcesPath = path.join(remote.app.getPath('userData'), 'localstorage.json')
+const resourcesPath = path.join(
+  remote.app.getPath('userData'),
+  'localstorage.json',
+)
 
 console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
+interface SingleDateTileList {
+  [index: string]: Tile[]
+}
+
 interface AppProps {
-  addTile: typeof addTile;
-  addAoi: typeof addAoi;
-  aois: AreaOfInterestState;
-  tiles: TileState;
-  thunkSendMessage: any;
-  history: MemoryHistory;
-  settings: Object;
+  addTile: typeof addTile
+  updateTile: typeof updateTile
+  addAoi: typeof addAoi
+  updateSession: typeof updateSession
+  aois: AreaOfInterestState
+  tiles: TileState
+  thunkSendMessage: any
+  history: MemoryHistory
+  settings: Record<string, any>
 }
 
 interface JobStatusVerbose {
-  [key: string]: string;
-  C: string;
-  A: string;
-  S: string;
+  [key: string]: string
+  C: string
+  A: string
+  S: string
 }
 
 interface DefaultAppState {
-  show: boolean;
-  aoi_list: Array<Object>;
-  activeAOI: string;
-  allTiles: Object;
+  show: boolean
+  aoi_list: Record<string, any>[]
+  activeAOI: string
+  allTiles: Record<string, any>
   selectedTiles: {
-    [key: string]: Object
-  };
-  selectedTilesInList: Array<string>;
-  job_csrf_token: string;
-  currentDate: string;
-  tileDict: Object;
-  cloudPercentFilter: number;
+    [key: string]: Record<string, any>
+  }
+  selectedTilesInList: string[]
+  job_csrf_token: string
+  currentDate: string
+  tileDict: Record<string, any>
+  cloudPercentFilter: number
   jobSettings: {
-    atmosphericCorrection: boolean;
-  };
-  enableSen2AgriL2A: boolean;
-  enableSen2AgriL3A: boolean;
-  enableSen2AgriL3B: boolean;
-  sen2agri_l2a_job: Object;
-  sen2agri_l3a_job: Object;
-  sen2agri_l3b_job: Object;
+    atmosphericCorrection: boolean
+  }
+  enableSen2AgriL2A: boolean
+  enableSen2AgriL3A: boolean
+  enableSen2AgriL3B: boolean
+  sen2agri_l2a_job: Record<string, any>
+  sen2agri_l3a_job: Record<string, any>
+  sen2agri_l3b_job: Record<string, any>
 }
 
 const defaultState: DefaultAppState = {
@@ -89,16 +113,14 @@ const defaultState: DefaultAppState = {
   aoi_list: [],
   activeAOI: null,
   allTiles: {},
-  selectedTiles: {
-
-  },
+  selectedTiles: {},
   selectedTilesInList: [],
   job_csrf_token: null,
   currentDate: null,
   tileDict: {},
   cloudPercentFilter: 100,
   jobSettings: {
-    atmosphericCorrection: false
+    atmosphericCorrection: false,
   },
   enableSen2AgriL2A: false,
   enableSen2AgriL3A: false,
@@ -111,10 +133,14 @@ const defaultState: DefaultAppState = {
 class MainContainer extends Component<AppProps, AppState> {
   constructor(props: AppProps) {
     super(props)
+
     // clear react simple storage (for debuggin and testing purposes)
+
     ipcRenderer.on('menu-item', (event: any, arg: any) => {
       console.log(event)
+
       console.log(arg)
+
       if (arg.menuItem.label === 'Clear Local Storage') {
         localStorage.clear()
         // store.clear()
@@ -125,33 +151,36 @@ class MainContainer extends Component<AppProps, AppState> {
       if (arg.menuItem.label === 'Settings') {
         console.log('trying to go to settings')
         const { history } = this.props
-
         history.push('/settings')
       }
     })
 
     console.log(this.props.settings)
+
     this.state = {
       ...defaultState,
-      ...this.state
+      ...this.state,
     }
+
     console.log(`default state is ${this.state}`)
     console.log(this.state)
   }
 
   componentDidMount() {
     console.log('======================> Inside component did mount')
-
     this.loadFromLocalStorage()
     console.log(this.state)
+
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose)
+
     //@ts-ignore
     window.addEventListener('keydown', this.handleKeyPress)
   }
 
   componentWillUnmount() {
     console.log('=================> Inside component will unmount')
+
     console.log(this.state)
     this.saveToLocalStorage()
 
@@ -160,7 +189,7 @@ class MainContainer extends Component<AppProps, AppState> {
     //@ts-ignore
     const selectedTiles = this.state.selectedTiles
 
-    Object.keys(selectedTiles).map((date) => {
+    Object.keys(selectedTiles).map(date => {
       selectedTiles[date].map((tile: any) => {
         if (tile.hasOwnProperty('job_check_interval')) {
           console.log('CLEARING INTERVAL')
@@ -172,49 +201,67 @@ class MainContainer extends Component<AppProps, AppState> {
 
   cleanUpBeforeClose = () => {
     this.saveToLocalStorage()
-
     localStorage.removeItem('initial_load')
   }
 
   saveToLocalStorage = () => {
-    console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
+    console.log(
+      '------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE',
+    )
+
     //@ts-ignore
     console.log(this.state.aoi_list)
     //@ts-ignore
-    const { activeAOI, selectedTiles, aoi_list, currentDate, tileDict, jobDict } = this.state
+    const {
+      activeAOI,
+      selectedTiles,
+      aoi_list,
+      currentDate,
+      tileDict,
+      jobDict,
+    } = this.state
+
     console.log(currentDate)
     console.log('aoi_list')
     console.log(aoi_list)
 
     //@ts-ignore
-    const { enableSen2AgriL2A, enableSen2AgriL3A, enableSen2AgriL3B, sen2agri_l2a_job, sen2agri_l3a_job, sen2agri_l3b_job } = this.state
+
+    const {
+      enableSen2AgriL2A,
+      enableSen2AgriL3A,
+      enableSen2AgriL3B,
+      sen2agri_l2a_job,
+      sen2agri_l3a_job,
+      sen2agri_l3b_job,
+    } = this.state
 
     const currentAOIList = [...aoi_list]
 
     // Initialize jobDict
-    aoi_list.map((aoi: Object) => {
+
+    aoi_list.map((aoi: Record<string, any>) => {
       //@ts-ignore
       if (!jobDict.hasOwnProperty(aoi.name)) {
         //@ts-ignore
         jobDict[aoi.name] = {
           sentinel2: {},
-          landsat8: {}
+          landsat8: {},
         }
       }
     })
 
     if (activeAOI !== null) {
       // Save the selcted tiles for later
+
       console.log(activeAOI)
-
       const aoi_index = this.getAoiIndex(activeAOI)
-
       const currentAOIObj = { ...currentAOIList[aoi_index] }
 
       for (const d of Object.keys(selectedTiles)) {
-        selectedTiles[d].map((tile: Object) => {
-
+        selectedTiles[d].map((tile: Record<string, any>) => {
           //@ts-ignore
+
           jobDict[activeAOI]['sentinel2'][tile.id] = {
             //@ts-ignore
             job_id: tile['job_id'],
@@ -231,33 +278,35 @@ class MainContainer extends Component<AppProps, AppState> {
             //@ts-ignore
             job_result_message: tile['job_result_message'],
             //@ts-ignore
-            times_checked: tile['times_checked']
+            times_checked: tile['times_checked'],
           }
         })
       }
 
       // Do a sensor specific check here (landsat, sentinel2)
       currentAOIObj['selectedTiles'] = {}
+
       //@ts-ignore
       currentAOIObj['cloudPercentFilter'] = this.state.cloudPercentFilter
 
       for (const d of Object.keys(selectedTiles)) {
-        currentAOIObj['selectedTiles'][d] = selectedTiles[d].map((tile: any) => tile.id)
+        currentAOIObj['selectedTiles'][d] = selectedTiles[d].map(
+          (tile: any) => tile.id,
+        )
       }
 
       console.log('activeAOI is:')
       localStorage.setItem('active_aoi', activeAOI)
-
       currentAOIObj['currentDate'] = currentDate
       currentAOIList[aoi_index] = currentAOIObj
     }
 
     console.log('current settings!!!!!!!!!!!!!!!S')
     console.log(this.props.settings)
-
     localStorage.setItem('settings', JSON.stringify(this.props.settings))
     console.log('stringified settings successfully')
     console.log(currentAOIList)
+
     const jsonData = {
       aoi_list: currentAOIList,
       tileDict: tileDict,
@@ -267,20 +316,24 @@ class MainContainer extends Component<AppProps, AppState> {
       enableSen2AgriL3B,
       sen2agri_l2a_job,
       sen2agri_l3a_job,
-      sen2agri_l3b_job
+      sen2agri_l3b_job,
     }
     console.log(jsonData)
     // Used to try and detect circular references
     // console.log(inspect(currentAoiList,  { showHidden: true, depth: null }))
-
     fs.writeFileSync(resourcesPath, JSON.stringify(jsonData))
     console.log('stringified AOI list successfully')
   }
 
   loadFromLocalStorage = () => {
-    console.log('<<<<<<<<-------------------------------------- LOADING FROM LOCAL STORAGE')
+    console.log(
+      '<<<<<<<<-------------------------------------- LOADING FROM LOCAL STORAGE',
+    )
 
-    let activeAOI = localStorage.getItem('active_aoi') === null ? null : localStorage.getItem('active_aoi')
+    let activeAOI =
+      localStorage.getItem('active_aoi') === null
+        ? null
+        : localStorage.getItem('active_aoi')
 
     let dataString
     let data
@@ -297,7 +350,7 @@ class MainContainer extends Component<AppProps, AppState> {
       data = {
         aoi_list: [],
         tileDict: {},
-        jobDict: {}
+        jobDict: {},
       }
     }
 
@@ -305,12 +358,14 @@ class MainContainer extends Component<AppProps, AppState> {
     const tileDict = data.tileDict
     const jobDict = data.jobDict
 
-    const { enableSen2AgriL2A,
+    const {
+      enableSen2AgriL2A,
       enableSen2AgriL3A,
       enableSen2AgriL3B,
       sen2agri_l2a_job,
       sen2agri_l3a_job,
-      sen2agri_l3b_job } = data
+      sen2agri_l3b_job,
+    } = data
 
     let cloudPercentFilter = 100
     console.log(aoi_list)
@@ -318,9 +373,9 @@ class MainContainer extends Component<AppProps, AppState> {
     if (aoi_list.length === 0) {
       activeAOI = null
     }
+
     console.log('previously active AOI')
     console.log(activeAOI)
-
     const populatedSelectedTiles = {}
 
     if (activeAOI !== null) {
@@ -328,10 +383,12 @@ class MainContainer extends Component<AppProps, AppState> {
       aoi_list.forEach((ele: any) => {
         console.log(ele.name)
         console.log(activeAOI)
+
         if (ele.name === activeAOI) {
           currentAOI = ele
         }
       })
+
       console.log(currentAOI)
       //@ts-ignore
       const tiles = currentAOI.tiles
@@ -348,12 +405,11 @@ class MainContainer extends Component<AppProps, AppState> {
         console.log(selectedTiles[d])
         //@ts-ignore
         populatedSelectedTiles[d] = []
-
         selectedTiles[d].map((id: string) => {
           //@ts-ignore
           populatedSelectedTiles[d].push({
             ...tileDict[id],
-            ...jobDict[activeAOI]['sentinel2'][id]
+            ...jobDict[activeAOI]['sentinel2'][id],
           })
         })
       }
@@ -361,40 +417,45 @@ class MainContainer extends Component<AppProps, AppState> {
 
     console.log(jobDict)
 
-    this.setState({
-      //@ts-ignore
-      activeAOI,
-      aoi_list,
-      currentTiles: [],
-      selectedTiles: populatedSelectedTiles,
-      allTiles: {},
-      tileDict,
-      jobDict,
-      cloudPercentFilter,
-      enableSen2AgriL2A,
-      enableSen2AgriL3A,
-      enableSen2AgriL3B,
-      sen2agri_l2a_job,
-      sen2agri_l3a_job,
-      sen2agri_l3b_job
-    },
+    this.setState(
+      {
+        //@ts-ignore
+        activeAOI,
+        aoi_list,
+        currentTiles: [],
+        selectedTiles: populatedSelectedTiles,
+        allTiles: {},
+        tileDict,
+        jobDict,
+        cloudPercentFilter,
+        enableSen2AgriL2A,
+        enableSen2AgriL3A,
+        enableSen2AgriL3B,
+        sen2agri_l2a_job,
+        sen2agri_l3a_job,
+        sen2agri_l3b_job,
+      },
+
       () => {
         if (activeAOI !== null) {
           this.activateAOI(activeAOI)
           console.log('Trying to resume checking job_status')
           this.resumeCheckingJobStatus()
         }
-      })
+      },
+    )
   }
 
   resetState = () => {
     console.log('resetting state to defaults')
     try {
       fs.unlinkSync(resourcesPath)
+
       // file removed
     } catch (err) {
       console.error(err)
     }
+
     //@ts-ignore
     this.setState({ ...defaultState })
     //@ts-ignore
@@ -404,12 +465,12 @@ class MainContainer extends Component<AppProps, AppState> {
   showModal = () => {
     //@ts-ignore
     this.setState({ show: true })
-  };
+  }
 
   hideModal = () => {
     //@ts-ignore
     this.setState({ show: false })
-  };
+  }
 
   clearLocalStorage = () => {
     localStorage.clear()
@@ -418,6 +479,7 @@ class MainContainer extends Component<AppProps, AppState> {
   handleKeyPress = (event: React.KeyboardEvent<HTMLElement>) => {
     console.log('key pressed')
     console.log(event.key)
+
     //@ts-ignore
     if (this.state.activeAOI !== null) {
       switch (event.key) {
@@ -437,55 +499,51 @@ class MainContainer extends Component<AppProps, AppState> {
 
   incrementDate = () => {
     console.log('increment date button pressed')
-    //@ts-ignore
-    if (!this.state.activeAOI) { return }
+    // @ts-ignore
+    if (!this.state.activeAOI) {
+      return
+    }
 
-    //@ts-ignore
-    const dateList = this.state.dateList
-    //@ts-ignore
-    const indexOfCurrentDate = dateList.indexOf(this.state.currentDate)
-    //@ts-ignore
-    console.log(this.state.allTiles)
+    let currentAoi: AreaOfInterest
 
-    if (indexOfCurrentDate !== (dateList.length - 1)) {
+    const aois = this.props.aois.allIds.map((id: string) => {
+      const aoi = this.props.aois.byId[id]
+      // @ts-ignore
+      if (aoi.name === this.state.activeAOI) {
+        // TODO: create a SESSION reducer for current user session settings like activeAOI
+        currentAoi = aoi
+      }
+
+      return this.props.aois.byId[id]
+    })
+
+    const currentPlatform = currentAoi.session.currentPlatform
+    const dateList = currentAoi.session.datesList[currentPlatform].dates
+    const currentDate =
+      currentAoi.session.datesList[currentPlatform].currentDate
+
+    const indexOfCurrentDate = dateList.indexOf(currentDate)
+
+    const session = { ...currentAoi.session }
+
+    if (indexOfCurrentDate !== dateList.length - 1) {
       const newIndex = indexOfCurrentDate + 1
-
       const newDate = dateList[newIndex]
-
       console.log('incrementDATE!')
-
-      let currentAoi: AreaOfInterest
-
-      this.props.aois.areasOfInterest.allIds.map((id: string) => {
-        const aoi = this.props.aois.areasOfInterest.byId[id]
-        //@ts-ignore
-        if (aoi['name'] === this.state.activeAOI) { // TODO: create a SESSION reducer for current user session settings like activeAOI
-          currentAoi = aoi
-        }
-      })
-      console.log(currentAoi)
-
       //@ts-ignore
-      const allTilesIds: Array<string> = currentAoi['allTiles'][currentAoi.session.currentPlatform][newDate]
+      const allTilesIds: string[] =
+        currentAoi.allTiles[currentAoi.session.currentPlatform][newDate]
+
       console.log(allTilesIds)
-      const allTiles = allTilesIds.map((id) => {
-        return this.props.tiles.tiles.byId[id]
+      const allTiles = allTilesIds.map(id => {
+        return this.props.tiles.byId[id]
       })
-      console.log('allTiles')
-      console.log(allTiles)
-      //@ts-ignore
-      const aoi_list_copy = [...this.state.aoi_list]
-      //@ts-ignore
-      const activeAOIIndex = this.getAoiIndex(this.state.activeAOI)
-      aoi_list_copy[activeAOIIndex]['currentDate'] = newDate
 
-      this.setState({
-        //@ts-ignore
-        currentDate: newDate,
-        //@ts-ignore
-        currentTiles: [...allTiles],
-        aoi_list: aoi_list_copy
-      }, () => {
+      session.datesList[currentPlatform].currentDate = newDate
+
+      this.props.updateSession(currentAoi.id, session)
+
+      this.setState({}, () => {
         //@ts-ignore
         this.handleUpdateCloudFilter(this.state.cloudPercentFilter)
       })
@@ -493,31 +551,39 @@ class MainContainer extends Component<AppProps, AppState> {
   }
 
   decrementDate = () => {
-    console.log('decrement date pressed')
-    //@ts-ignore
-    if (!this.state.activeAOI) { return }
-    //@ts-ignore
-    const dateList = this.state.dateList
-    //@ts-ignore
-    const indexOfCurrentDate = dateList.indexOf(this.state.currentDate)
-    console.log(dateList)
+    console.log('decrement date button pressed')
+
+    // @ts-ignore
+    if (!this.state.activeAOI) {
+      return
+    }
+
+    let currentAoi: AreaOfInterest
+
+    const aois = this.props.aois.allIds.map((id: string) => {
+      const aoi = this.props.aois.byId[id]
+      // @ts-ignore
+      if (aoi.name === this.state.activeAOI) {
+        // TODO: create a SESSION reducer for current user session settings like activeAOI
+        currentAoi = aoi
+      }
+      return this.props.aois.byId[id]
+    })
+
+    const currentPlatform = currentAoi.session.currentPlatform
+    const dateList = currentAoi.session.datesList[currentPlatform].dates
+    const currentDate =
+      currentAoi.session.datesList[currentPlatform].currentDate
+    const indexOfCurrentDate = dateList.indexOf(currentDate)
+    const session = { ...currentAoi.session }
 
     if (indexOfCurrentDate !== 0) {
       const newIndex = indexOfCurrentDate - 1
       const newDate = dateList[newIndex]
-      //@ts-ignore
-      const aoi_list_copy = [...this.state.aoi_list]
-      //@ts-ignore
-      const activeAOIIndex = this.getAoiIndex(this.state.activeAOI)
-      aoi_list_copy[activeAOIIndex]['currentDate'] = newDate
-
-      this.setState({
-        //@ts-ignore
-        currentDate: newDate,
-        //@ts-ignore
-        currentTiles: [...this.state.allTiles[newDate]],
-        aoi_list: aoi_list_copy
-      }, () => {
+      console.log('decrementDATE!')
+      session.datesList[currentPlatform].currentDate = newDate
+      this.props.updateSession(currentAoi.id, session)
+      this.setState({}, () => {
         //@ts-ignore
         this.handleUpdateCloudFilter(this.state.cloudPercentFilter)
       })
@@ -525,7 +591,7 @@ class MainContainer extends Component<AppProps, AppState> {
   }
 
   addAreaOfInterest = (area: any) => {
-
+    console.log('Adding area of interest...')
     //@ts-ignore
     const aoiListTemp = [...this.state.aoi_list]
     //@ts-ignore
@@ -534,49 +600,51 @@ class MainContainer extends Component<AppProps, AppState> {
     const jobDict = { ...this.state.jobDict }
 
     const allTileId: TileListInterface = {
-      'sentinel2': {},
-      'landsat8': {}
+      sentinel2: {},
+      landsat8: {},
     }
 
     const currentDates: CurrentDates = {
       landsat8: {
-        currentDate: "",
-        dates: []
+        currentDate: '',
+        dates: [],
       },
       sentinel2: {
-        currentDate: "",
-        dates: []
+        currentDate: '',
+        dates: [],
       },
     }
 
-    const sensorList: Array<string> = []
+    const sensorList: string[] = []
 
     const selectedTileId: TileListInterface = {
-      'landsat8': {},
-      'sentinel2': {}
-     }
+      landsat8: {},
+      sentinel2: {},
+    }
 
     for (const key of Object.keys(area.raw_tile_list)) {
       //@ts-ignore
       const tiles = area.raw_tile_list[key]
       const sortedTiles = this.sortTilesByDate(tiles)
       const dateList = Object.keys(sortedTiles.datesObject)
-
       sensorList.push(key)
       const datesObjectWithIds = {}
       const selectedInit = {}
 
       for (const d of dateList) {
         //@ts-ignore
-        datesObjectWithIds[d] = sortedTiles.datesObject[d].map((ele) => ele.geojson.id)
+        datesObjectWithIds[d] = sortedTiles.datesObject[d].map(
+          ele => ele.geojson.id,
+        )
         //@ts-ignore
         selectedInit[d] = []
-
-        let tileIds: Array<string> = []
-
+        let tileIds: string[] = []
+        console.log(sortedTiles)
         //@ts-ignore
         for (const t of sortedTiles.datesObject[d]) {
-          console.log('===================================================')
+          console.log(
+            '<<<<<<<<<<<<<<<<<<<===================================================',
+          )
           console.log(t)
           const idTemp = t.geojson.id
           t.geojson.properties.lowres_preview_url = t.lowres_preview_url
@@ -588,15 +656,41 @@ class MainContainer extends Component<AppProps, AppState> {
           tileDictTemp[idTemp]['date'] = t.date
 
           const tile: Tile = {
-            ...t.geojson,
+            id: t.geojson.id,
+            geometry: t.geojson.geometry,
+            type: 'Feature',
+            bbox: t.geojson.bbox,
+            date: t.date,
+            properties: {
+              acquisitionEnd: t.geojson.properties.acquisition_end,
+              acquisitionStart: t.geojson.properties.acquisition_start,
+              apiSource: t.geojson.properties.api_source,
+              cloudPercent: parseFloat(t.geojson.properties.cloud_percent),
+              datasetName: t.geojson.properties.dataset_name,
+              entityId: t.geojson.properties.entity_id,
+              manualBulkorderUrl: t.geojson.properties.manual_bulkorder_url,
+              manualDownloadUrl: t.geojson.properties.manual_download_url,
+              manualProductUrl: t.geojson.properties.manual_product_url,
+              metadataUrl: t.geojson.properties.metadata_url,
+              mgrs: t.geojson.properties.mgrs,
+              name: t.geojson.properties.name,
+              pathrow: t.geojson.properties.pathrow,
+              platformName: t.geojson.properties.platform_name,
+              previewUrl: t.geojson.properties.preview_url,
+              satName: t.geojson.properties.sat_name,
+              summary: t.geojson.properties.summary,
+              vendorName: t.geojson.properties.vendor_name,
+              lowresPreviewUrl: t.geojson.properties.lowres_preview_url,
+            },
+
             selected: false,
             visible: true,
             highlighted: false,
-            jobs: []
+            jobs: [],
           }
 
+          console.log('ADDDDING TILE!!!')
           this.props.addTile(tile)
-
           tileIds.push(idTemp)
         }
 
@@ -609,7 +703,7 @@ class MainContainer extends Component<AppProps, AppState> {
     const session: Session = {
       cloudPercentFilter: 100,
       datesList: currentDates,
-      currentPlatform: "sentinel2"
+      currentPlatform: 'sentinel2',
     }
 
     const areaObject: AreaOfInterest = {
@@ -633,7 +727,7 @@ class MainContainer extends Component<AppProps, AppState> {
 
     jobDict[areaSimple.name] = {
       sentinel2: {},
-      landsat8: {}
+      landsat8: {},
     }
 
     delete areaSimple['raw_tile_list']
@@ -641,12 +735,11 @@ class MainContainer extends Component<AppProps, AppState> {
     const currentDate = session.datesList[currentPlatform]['currentDate']
     areaSimple['tiles'] = allTileId[session.currentPlatform][currentDate]
     areaSimple['selectedTiles'] = selectedTileId
-
     aoiListTemp.push(areaSimple)
-
-    console.log('=========================================================================')
+    console.log(
+      '=========================================================================',
+    )
     console.log('aoi_list clone with area pushed')
-
     console.log(aoiListTemp)
     console.log(tileDictTemp)
 
@@ -656,20 +749,21 @@ class MainContainer extends Component<AppProps, AppState> {
       //@ts-ignore
       aoi_list: aoiListTemp,
       tileDict: tileDictTemp,
-      jobDict
+      jobDict,
     })
   }
 
   resumeCheckingJobStatus = () => {
     // When starting up, check the job status of all tiles with (job id and job status of S or A)
     // Clear previous job_interval it exists
-
     //@ts-ignore
     const tiles = { ...this.state.selectedTiles }
+
     console.log('Current Selected tiles')
     console.log(tiles)
+
     // Iterating over selected tiles
-    Object.keys(tiles).map((ele) => {
+    Object.keys(tiles).map(ele => {
       console.log(ele)
       console.log(tiles[ele])
 
@@ -678,33 +772,47 @@ class MainContainer extends Component<AppProps, AppState> {
         tiles[ele].map((tile: any) => {
           if (tile && tile.hasOwnProperty('job_id')) {
             console.log('Checking tile job status')
+            if (tile['job_check_interval'] !== null) {
+              clearInterval(tile['job_check_interval'])
+            }
+            tile['job_check_interval'] = setInterval(
+              () =>
+                this.checkJobStatus(tile['job_id'], tile.properties.name, ele),
 
-            if (tile['job_check_interval'] !== null) { clearInterval(tile['job_check_interval']) }
-
-            tile['job_check_interval'] = setInterval(() => this.checkJobStatus(tile['job_id'],
-              tile.properties.name,
-              ele), 1000 * 60)
+              1000 * 60,
+            )
           }
         })
       }
     })
+
     //@ts-ignore
     const l2a_job = this.state.sen2agri_l2a_job
 
     if (l2a_job && l2a_job.hasOwnProperty('job_status')) {
-      l2a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL2AJobStatus(l2a_job['job_id']), 1000 * 60)
+      l2a_job['job_check_interval'] = setInterval(
+        () => this.checkSen2AgriL2AJobStatus(l2a_job['job_id']),
+        1000 * 60,
+      )
     }
+
     //@ts-ignore
     const l3a_job = this.state.sen2agri_l3a_job
 
     if (l3a_job && l3a_job.hasOwnProperty('job_status')) {
-      l3a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3AJobStatus(l3a_job['job_id']), 1000 * 60)
+      l3a_job['job_check_interval'] = setInterval(
+        () => this.checkSen2AgriL3AJobStatus(l3a_job['job_id']),
+        1000 * 60,
+      )
     }
+
     //@ts-ignore
     const l3b_job = this.state.sen2agri_l3b_job
-
     if (l3b_job && l3b_job.hasOwnProperty('job_status')) {
-      l3b_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3BJobStatus(l3b_job['job_id']), 1000 * 60)
+      l3b_job['job_check_interval'] = setInterval(
+        () => this.checkSen2AgriL3BJobStatus(l3b_job['job_id']),
+        1000 * 60,
+      )
     }
 
     this.setState({
@@ -712,60 +820,14 @@ class MainContainer extends Component<AppProps, AppState> {
       selectedTiles: tiles,
       sen2agri_l2a_job: l2a_job,
       sen2agri_l3a_job: l3a_job,
-      sen2agri_l3b_job: l3b_job
+      sen2agri_l3b_job: l3b_job,
     })
   }
 
   toggleVisibility = (tileId: any) => {
-    console.log(tileId)
-    //@ts-ignore
-    const allTiles = { ...this.state.allTiles }
-    //@ts-ignore
-    const selectedTiles = { ...this.state.selectedTiles }
-    //@ts-ignore
-    const tileDict = { ...this.state.tileDict }
-    //@ts-ignore
-    const currentTiles = [...allTiles[this.state.currentDate]]
-
-    for (const idx in currentTiles) {
-      if (currentTiles[idx]['id'] === tileId) {
-        console.log('found match in currentTiles!')
-        const updatedTile = { ...currentTiles[idx] }
-
-        updatedTile['visible'] = !currentTiles[idx]['visible']
-
-        // console.log(t.visible)
-        currentTiles[idx] = updatedTile
-        tileDict[updatedTile.id] = updatedTile
-        // console.log(updatedTile)
-      }
-    }
-    //@ts-ignore
-    const selectedCurrentTiles = [...selectedTiles[this.state.currentDate]]
-
-    for (const tile of selectedCurrentTiles) {
-      if (tile['id'] === tileId) {
-        console.log('found match in selectedCurrentTiles!')
-        console.log(tile)
-        tile.visible = !tile.visible
-        console.log(tile)
-      }
-    }
-    //@ts-ignore
-    selectedTiles[this.state.currentDate] = selectedCurrentTiles
-    //@ts-ignore
-    allTiles[this.state.currentDate] = currentTiles
-
-    console.log(selectedTiles)
-    console.log(currentTiles)
-
-    this.setState({
-      //@ts-ignore
-      tileDict,
-      selectedTiles,
-      currentTiles,
-      allTiles
-    })
+    const relevantTile: Tile = { ...this.props.tiles.byId[tileId] }
+    relevantTile.visible = !relevantTile.visible
+    this.props.updateTile(relevantTile)
   }
 
   activateAOI = (aoi_name: string) => {
@@ -789,13 +851,13 @@ class MainContainer extends Component<AppProps, AppState> {
 
     const selectedTiles = {}
     //@ts-ignore
+
     for (const d of Object.keys(this.state.selectedTiles)) {
       //@ts-ignore
-      selectedTiles[d] = this.state.selectedTiles[d].map((ele) => ele.id)
+      selectedTiles[d] = this.state.selectedTiles[d].map(ele => ele.id)
     }
 
     previousAOI['selectedTiles'] = selectedTiles
-
     aoi_list[prevIndex] = previousAOI
 
     // Since the AOI is newly activated, lets put the current date to the first date.
@@ -807,7 +869,7 @@ class MainContainer extends Component<AppProps, AppState> {
     }
 
     console.log(activeAOI)
-    let areasOfInterest = { ...this.props.aois.areasOfInterest.byId }
+    let areasOfInterest = { ...this.props.aois.byId }
     console.log(areasOfInterest)
     let areaOfInterest: AreaOfInterest
 
@@ -821,9 +883,9 @@ class MainContainer extends Component<AppProps, AppState> {
 
     const session = areaOfInterest['session']
     const currentPlatform = session['currentPlatform']
-
     const dateList = areaOfInterest.session.datesList[currentPlatform].dates
-    const currentDate = areaOfInterest.session.datesList[currentPlatform].currentDate
+    const currentDate =
+      areaOfInterest.session.datesList[currentPlatform].currentDate
 
     // populate the selected tile list from the aoi entry
     const activeSelectedTiles = areaOfInterest['selectedTiles'][currentPlatform]
@@ -831,23 +893,27 @@ class MainContainer extends Component<AppProps, AppState> {
 
     for (const d of Object.keys(activeSelectedTiles)) {
       //@ts-ignore
-      newSelectedTiles[d] = activeSelectedTiles[d].map((id) => {
+      newSelectedTiles[d] = activeSelectedTiles[d].map(id => {
         return {
           ...tileDict[id],
-          ...jobDict[aoi_name]['sentinel2'][id]
+          ...jobDict[aoi_name]['sentinel2'][id],
         }
       })
     }
 
     for (const d of Object.keys(activeAllTiles)) {
       //@ts-ignore
-      newAllTiles[d] = activeAllTiles[d].map((id) => {
+      newAllTiles[d] = activeAllTiles[d].map(id => {
         return { ...tileDict[id] }
       })
     }
+
     // for newly activated AOI the cloudPercentFilter will be unpopulated
     //@ts-ignore
-    const cloudPercentFilter = activeAOI['cloudPercentFilter'] ? activeAOI['cloudPercentFilter'] : this.state.cloudPercentFilter
+
+    const cloudPercentFilter = activeAOI['cloudPercentFilter']
+      ? activeAOI['cloudPercentFilter']
+      : this.state.cloudPercentFilter
 
     this.setState({
       //@ts-ignore
@@ -859,7 +925,7 @@ class MainContainer extends Component<AppProps, AppState> {
       dateList,
       currentDate,
       aoi_list,
-      cloudPercentFilter
+      cloudPercentFilter,
     })
   }
 
@@ -872,22 +938,21 @@ class MainContainer extends Component<AppProps, AppState> {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
+
           const csrf_obj = {}
           //@ts-ignore
-          if (api === 'job_manager') { csrf_obj['job_csrf_token'] = JSON.stringify(response) }
-
+          if (api === 'job_manager') {
+            csrf_obj['job_csrf_token'] = JSON.stringify(response)
+          }
           this.setState(csrf_obj)
-
           setTimeout(() => callback(...arg_list), 200)
         })
-        .catch((err) =>
-          console.log('something blew up')
-        )
+        .catch(err => console.log('something blew up'))
     }
   }
 
@@ -895,38 +960,52 @@ class MainContainer extends Component<AppProps, AppState> {
     const jobStatusVerbose = {
       C: 'completed',
       A: 'assigned',
-      S: 'submitted'
+      S: 'submitted',
     }
 
-    console.log('Checking job status-----------------------------------------------------------')
+    console.log(
+      'Checking job status-----------------------------------------------------------',
+    )
+
     console.log(job_id, tile_name, date)
     //@ts-ignore
     const tiles = this.state.selectedTiles
     //@ts-ignore
+
     if (this.state.job_csrf_token === null) {
-      this.getCSRFToken(this.checkJobStatus, 'job_manager', [job_id, tile_name, date])
+      this.getCSRFToken(this.checkJobStatus, 'job_manager', [
+        job_id,
+        tile_name,
+        date,
+      ])
     } else {
-      const currentTile = tiles[date].find((ele: any) => ele.properties.name == tile_name)
+      const currentTile = tiles[date].find(
+        (ele: any) => ele.properties.name == tile_name,
+      )
 
       const headers = new Headers()
       //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
         method: 'GET',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           console.log(currentTile)
           console.log(response)
-          currentTile['job_id'] = response['id']
 
+          currentTile['job_id'] = response['id']
           currentTile['job_result'] = response['success'] ? 'success' : 'failed'
+
           //@ts-ignore
           currentTile['job_status'] = jobStatusVerbose[response['status']]
           currentTile['job_assigned'] = response['assigned']
@@ -943,11 +1022,15 @@ class MainContainer extends Component<AppProps, AppState> {
             clearInterval(currentTile['job_check_interval'])
             allJobsDone = true
 
-            Object.keys(tiles).map((ele) => {
+            Object.keys(tiles).map(ele => {
               if (tiles[ele].length > 0) {
                 tiles[ele].map((t: any) => {
                   //@ts-ignore
-                  if (t['job_status'] !== jobStatusVerbose[response['status']] && t['job_result'] !== 'success') {
+
+                  if (
+                    t['job_status'] !== jobStatusVerbose[response['status']] &&
+                    t['job_result'] !== 'success'
+                  ) {
                     allJobsDone = false
                   }
                 })
@@ -958,9 +1041,10 @@ class MainContainer extends Component<AppProps, AppState> {
           this.setState({
             //@ts-ignore
             selectedTiles: tiles,
-            enableSen2AgriL2A: allJobsDone
+            enableSen2AgriL2A: allJobsDone,
           })
-        }).catch((err) => {
+        })
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to check the job')
         })
@@ -971,7 +1055,7 @@ class MainContainer extends Component<AppProps, AppState> {
     const jobStatusVerbose = {
       C: 'completed',
       A: 'assigned',
-      S: 'submitted'
+      S: 'submitted',
     }
 
     //@ts-ignore
@@ -979,28 +1063,35 @@ class MainContainer extends Component<AppProps, AppState> {
       this.getCSRFToken(this.checkSen2AgriL2AJobStatus, 'job_manager', [job_id])
     } else {
       const headers = new Headers()
+
       //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
         method: 'GET',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           console.log(response)
+
           //@ts-ignore
           const sen2agri_job_status = this.state.sen2agri_l2a_job
-
           sen2agri_job_status['job_id'] = response['id']
+          sen2agri_job_status['job_result'] = response['success']
+            ? 'success'
+            : 'failed'
 
-          sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
           //@ts-ignore
-          sen2agri_job_status['job_status'] = jobStatusVerbose[response['status']]
+          sen2agri_job_status['job_status'] =
+            jobStatusVerbose[response['status']]
           sen2agri_job_status['job_assigned'] = response['assigned']
           sen2agri_job_status['job_completed'] = response['completed']
           sen2agri_job_status['job_submitted'] = response['submitted']
@@ -1017,9 +1108,11 @@ class MainContainer extends Component<AppProps, AppState> {
             //@ts-ignore
             sen2agri_l2a_job: sen2agri_job_status,
             enableSen2AgriL3A: enableL3Other,
-            enableSen2AgriL3B: enableL3Other
+            enableSen2AgriL3B: enableL3Other,
           })
-        }).catch((err) => {
+        })
+
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to check the job')
         })
@@ -1030,36 +1123,43 @@ class MainContainer extends Component<AppProps, AppState> {
     const jobStatusVerbose: JobStatusVerbose = {
       C: 'completed',
       A: 'assigned',
-      S: 'submitted'
+      S: 'submitted',
     }
 
     //@ts-ignore
+
     if (this.state.job_csrf_token === null) {
       this.getCSRFToken(this.checkSen2AgriL3AJobStatus, 'job_manager', [job_id])
     } else {
       const headers = new Headers()
-      //@ts-ignore
 
+      //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
+
       fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
         method: 'GET',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           console.log(response)
           //@ts-ignore
+
           const sen2agri_job_status = this.state.sen2agri_l3a_job
-
           sen2agri_job_status['job_id'] = response['id']
-
-          sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
-          sen2agri_job_status['job_status'] = jobStatusVerbose[response['status']]
+          sen2agri_job_status['job_result'] = response['success']
+            ? 'success'
+            : 'failed'
+          sen2agri_job_status['job_status'] =
+            jobStatusVerbose[response['status']]
           sen2agri_job_status['job_assigned'] = response['assigned']
           sen2agri_job_status['job_completed'] = response['completed']
           sen2agri_job_status['job_submitted'] = response['submitted']
@@ -1068,9 +1168,10 @@ class MainContainer extends Component<AppProps, AppState> {
 
           this.setState({
             //@ts-ignore
-            sen2agri_l3a_job: sen2agri_job_status
+            sen2agri_l3a_job: sen2agri_job_status,
           })
-        }).catch((err) => {
+        })
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to check the job')
         })
@@ -1081,10 +1182,11 @@ class MainContainer extends Component<AppProps, AppState> {
     const jobStatusVerbose: JobStatusVerbose = {
       C: 'completed',
       A: 'assigned',
-      S: 'submitted'
+      S: 'submitted',
     }
 
     //@ts-ignore
+
     if (this.state.job_csrf_token === null) {
       this.getCSRFToken(this.checkSen2AgriL3BJobStatus, 'job_manager', [job_id])
     } else {
@@ -1092,12 +1194,15 @@ class MainContainer extends Component<AppProps, AppState> {
       //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
         method: 'GET',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
@@ -1105,11 +1210,12 @@ class MainContainer extends Component<AppProps, AppState> {
           console.log(response)
           //@ts-ignore
           const sen2agri_job_status = this.state.sen2agri_l3b_job
-
           sen2agri_job_status['job_id'] = response['id']
-
-          sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
-          sen2agri_job_status['job_status'] = jobStatusVerbose[response['status']]
+          sen2agri_job_status['job_result'] = response['success']
+            ? 'success'
+            : 'failed'
+          sen2agri_job_status['job_status'] =
+            jobStatusVerbose[response['status']]
           sen2agri_job_status['job_assigned'] = response['assigned']
           sen2agri_job_status['job_completed'] = response['completed']
           sen2agri_job_status['job_submitted'] = response['submitted']
@@ -1118,9 +1224,10 @@ class MainContainer extends Component<AppProps, AppState> {
 
           this.setState({
             //@ts-ignore
-            sen2agri_l3b_job: sen2agri_job_status
+            sen2agri_l3b_job: sen2agri_job_status,
           })
-        }).catch((err) => {
+        })
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to check the job')
         })
@@ -1136,32 +1243,29 @@ class MainContainer extends Component<AppProps, AppState> {
     const selectedTiles = { ...this.state.selectedTiles }
     //@ts-ignore
     const tileDict = { ...this.state.tileDict }
-
     console.log(currentTiles)
-
-    const tilesToSelect = currentTiles.filter((tile) => tile.visible)
-
+    const tilesToSelect = currentTiles.filter(tile => tile.visible)
     console.log(tilesToSelect)
-
     // find the relevant tile info first (to find the date)
+
     //@ts-ignore
     const allSelectedTiles = this.state.allSelectedTiles
     //@ts-ignore
     const currentDate = this.state.currentDate
 
     for (const t of tilesToSelect) {
-      const relevantTile = currentTiles.find((ele) => ele.id == t.id)
-
+      const relevantTile = currentTiles.find(ele => ele.id == t.id)
       console.log(relevantTile)
-
-      const previouslySelectedTiles = selectedTiles[currentDate].map((tile: any) => tile.id)
+      const previouslySelectedTiles = selectedTiles[currentDate].map(
+        (tile: any) => tile.id,
+      )
 
       console.log(previouslySelectedTiles)
       console.log(relevantTile.id)
-
       relevantTile.selected = true
-
-      if (!previouslySelectedTiles.includes(relevantTile.id)) { selectedTiles[currentDate].push(relevantTile) }
+      if (!previouslySelectedTiles.includes(relevantTile.id)) {
+        selectedTiles[currentDate].push(relevantTile)
+      }
 
       tileDict[relevantTile.id].selected = true
     }
@@ -1173,66 +1277,43 @@ class MainContainer extends Component<AppProps, AppState> {
       selectedTiles,
       tileDict,
       currentTiles,
-      allTiles
+      allTiles,
     })
   }
 
   handleSubmitAllJobs = () => {
     console.log('submitting all jobs for selected tiles')
-
-    //   POST request to job_manager API
-    //   {
-    //     "url": "http://localhost:8989/jobs/8a61655d-7c3f-488d-b615-45c1fac96bd8/",
-    //     "id": "8a61655d-7c3f-488d-b615-45c1fac96bd8",
-    //     "submitted": "2019-05-06T23:17:54.016613Z",
-    //     "label": "S2Download L1C_T12UWV_A015525_20180612T181639",
-    //     "command": "not used",
-    //     "job_type": "S2Download",
-    //     "parameters": {
-    //         "options": {
-    //             "tile": "L1C_T12UWV_A015525_20180612T181639",
-    //             "ac": true,
-    //             "ac_res": 10
-    //         }
-    //     },
-    //     "priority": "3",
-    //     "owner": "backup"
-    // }
-    //   requires label, command, job_type, parameters, priority, MUST be authenticated
-
-    // "Authorization": `Basic ${base64.encode(`${login}:${password}`)}`
-
     //@ts-ignore
     const tiles = this.state.selectedTiles
     //@ts-ignore
+
     if (this.state.job_csrf_token === null) {
       const headers = new Headers()
       //@ts-ignore
+
       fetch(`${this.props.settings.job_url}/generate_csrf/`, {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           this.setState({
             //@ts-ignore
-            job_csrf_token: JSON.stringify(response)
+            job_csrf_token: JSON.stringify(response),
           })
-
           setTimeout(() => this.handleSubmitAllJobs(), 200)
         })
-        .catch((err) =>
-          console.log('something blew up')
-        )
+        .catch(err => console.log('something blew up'))
     } else {
       console.log('iterating over tiles to start jobs...')
-      Object.keys(tiles).map((ele) => {
+      Object.keys(tiles).map(ele => {
         console.log('Submitting job')
         console.log(ele)
         console.log(tiles[ele])
+
         if (tiles[ele].length > 0) {
           tiles[ele].map((tile: any) => {
             // if (tile.hasOwnProperty('job_id'))
@@ -1245,27 +1326,32 @@ class MainContainer extends Component<AppProps, AppState> {
                   tile: tile.properties.name,
                   //@ts-ignore
                   ac: this.state.jobSettings.atmosphericCorrection,
-                  ac_res: 10
-                }
+                  ac_res: 10,
+                },
               },
-              priority: '3'
+              priority: '3',
             }
+
             const headers = new Headers()
+
             //@ts-ignore
             headers.append('X-CSRFToken', this.state.job_csrf_token)
             headers.append('Content-Type', 'application/json')
+            headers.append(
+              'Authorization',
+              `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+            )
 
-            headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
             //@ts-ignore
+
             fetch(`${this.props.settings.job_url}/jobs/`, {
               method: 'POST',
               body: JSON.stringify(jobReqBody),
-              headers: headers
+              headers: headers,
             })
               .then(response => response.json())
               .then(response => {
                 console.log('Success:', JSON.stringify(response))
-
                 // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
                 // Todo update each tile with job info (id, status, success, workerid)
                 tile['job_id'] = response['id']
@@ -1274,23 +1360,34 @@ class MainContainer extends Component<AppProps, AppState> {
                 tile['job_assigned'] = null
                 tile['job_completed'] = null
                 tile['job_submitted'] = response['submitted']
+                console.log(
+                  'STARTING PERIODIC JOB CHEKC~!!!!==============================================================================',
+                )
 
-                console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
-                tile['job_check_interval'] = setInterval(() => this.checkJobStatus(tile['job_id'],
-                  tile.properties['name'],
-                  ele), 1000 * 60)
+                tile['job_check_interval'] = setInterval(
+                  () =>
+                    this.checkJobStatus(
+                      tile['job_id'],
+                      tile.properties['name'],
+                      ele,
+                    ),
+                  1000 * 60,
+                )
 
                 tile['times_checked'] = 0
-
                 console.log(tile)
 
                 this.setState({
                   //@ts-ignore
-                  allSelectedTiles: tiles
+                  allSelectedTiles: tiles,
                 })
-              }).catch((err) => {
+              })
+
+              .catch(err => {
                 console.log(err)
-                console.log('something went wrong when trying to submit the job')
+                console.log(
+                  'something went wrong when trying to submit the job',
+                )
               })
           })
         }
@@ -1308,200 +1405,150 @@ class MainContainer extends Component<AppProps, AppState> {
     return index
   }
 
-  handleTileSelect = (tiles: Array<any>) => {
+  handleTileSelect = (tiles: any[]) => {
     console.log('this tile was selected')
-    console.log(tiles)
-    //@ts-ignore
-    const currentDate = this.state.currentDate
-    //@ts-ignore
-    const currentTiles = [...this.state.allTiles[currentDate]]
-    //@ts-ignore
-    const allTiles = { ...this.state.allTiles }
-    //@ts-ignore
-    const selectedTiles = { ...this.state.selectedTiles }
-    //@ts-ignore
-    let selectedTilesInList = [...this.state.selectedTilesInList]
-
     console.log('selectedTiles')
-    console.log(selectedTiles)
-    //@ts-ignore
-    const tileDict = { ...this.state.tileDict }
+    console.log(tiles)
+    const existingTiles = { ...this.props.tiles.byId }
+    console.log(existingTiles)
 
     for (const t of tiles) {
-      const tileCopy = { ...tileDict[t] }
-      console.log(tileCopy)
-
-      tileCopy['selected'] = !tileCopy['selected']
-      tileDict[t] = tileCopy
-
-      const relevantTile = currentTiles.find((ele) => {
-        return ele.id === t
-      })
-
-      relevantTile.selected = !relevantTile.selected
-
-      if (relevantTile.selected) {
-        selectedTiles[currentDate].push(relevantTile)
-      } else {
-        selectedTiles[currentDate] = selectedTiles[currentDate].filter((ele: any) => {
-          return ele.id !== relevantTile.id
-        })
-        if (selectedTilesInList.includes(relevantTile.id)) { selectedTilesInList = selectedTilesInList.filter((id) => id !== relevantTile.id) }
+      let relevantTile: Tile = null
+      for (const [key, tile] of Object.entries(existingTiles)) {
+        if (key === t) {
+          tile.selected = !tile.selected
+          if (!tile.selected) {
+            tile.highlighted = false
+          }
+          this.props.updateTile(tile)
+        }
       }
     }
-
-    allTiles[currentDate] = currentTiles
-
-    this.setState({
-      //@ts-ignore
-      currentDate,
-      tileDict,
-      allTiles,
-      currentTiles,
-      selectedTiles,
-      selectedTilesInList
-    })
   }
 
-  handleTileClickedInList = (event: React.MouseEvent<HTMLElement>, tileId: string) => {
+  handleTileClickedInList = (
+    event: React.MouseEvent<HTMLElement>,
+    tileId: string,
+  ) => {
     // if a tile is clicked in the list
     // currentDate should be changed to this tiles date
     // cyan blue highlight overlay should be added to indicate the most recently clicked tiles
     //@ts-ignore
-    const selectedTiles = [...this.state.selectedTilesInList]
-    //@ts-ignore
-    const fullTile = { ...this.state.tileDict[tileId] }
-    //@ts-ignore
-    const currentDate = this.state.currentDate
-    //@ts-ignore
-    const allTiles = this.state.allTiles
-    const tileDate = moment(fullTile.date).format('YYYYMMDD')
-
+    const relevantTile = { ...this.props.tiles.byId[tileId] }
+    const tileDate = moment(relevantTile.date).format('YYYYMMDD')
     console.log('tile clicked in list')
     console.log(tileId)
     console.log(event.shiftKey)
     console.log(event.ctrlKey)
 
-    let updatedSelectedTiles
+    // TODO: create as a selector function in the Aoi reducer
+
+    let currentAoi: AreaOfInterest
+    const aois = this.props.aois.allIds.map((id: string) => {
+      const aoi = this.props.aois.byId[id]
+
+      //@ts-ignore
+      if (aoi['name'] === this.state.activeAOI) {
+        // TODO: create a SESSION reducer for current user session settings like activeAOI
+        currentAoi = aoi
+      }
+      return this.props.aois.byId[id]
+    })
+
+    // TODO: Selector function for getting currentPlatform and currentDate from a AOI session
+    const currentPlatform = currentAoi.session.currentPlatform
+    let currentDate = currentAoi.session.datesList[currentPlatform].currentDate
+
     if (event.ctrlKey) {
-      if (selectedTiles.includes(tileId)) { updatedSelectedTiles = selectedTiles.filter((id) => id !== tileId) } else { updatedSelectedTiles = [...selectedTiles, tileId] }
+      // If ctrl key is pressed, we simply toggle the relevant tile
+      relevantTile.highlighted = !relevantTile.highlighted
+      this.props.updateTile(relevantTile)
     } else {
-      if (selectedTiles.includes(tileId)) { updatedSelectedTiles = [] } else { updatedSelectedTiles = [tileId] }
+      // if ctrl key is not pressed, we have to iterate over each tile, de-highlight, and finally highlight the relevant tile.
+
+      for (const [key, value] of Object.entries(
+        currentAoi.allTiles[currentPlatform],
+      )) {
+        value.map((id: string) => {
+          console.log('changing the highlight value for')
+          const tile = { ...this.props.tiles.byId[id] }
+          if (relevantTile.id === tile.id) {
+            tile.highlighted = !tile.highlighted
+          } else {
+            tile.highlighted = false
+          }
+          this.props.updateTile(tile)
+        })
+      }
     }
 
-    let newDate
     if (currentDate !== tileDate) {
       console.log('currentDate and tileDate is different')
-      newDate = tileDate
-      updatedSelectedTiles = [tileId]
-    } else {
-      newDate = currentDate
+      currentDate = tileDate
+      const session = { ...currentAoi.session }
+      session.datesList[currentPlatform].currentDate = currentDate
+      this.props.updateSession(currentAoi.id, session)
     }
-
-    this.setState({
-      //@ts-ignore
-      selectedTilesInList: updatedSelectedTiles,
-      currentDate: newDate,
-      currentTiles: [...allTiles[newDate]]
-    })
   }
 
-  removeTileFromSelected = (tileRemoved: any) => {
-    console.log('remove tile was clicked')
-    //@ts-ignore
-    const allTiles = { ...this.state.allTiles }
-    //@ts-ignore
-    const tileDict = { ...this.state.tileDict }
-
-    //@ts-ignore
-    const selectedTiles = { ...this.state.selectedTiles }
-
-    // get the tile date
-    const dateString = moment(tileRemoved.date).format('YYYYMMDD')
-    console.log(dateString)
-
-    selectedTiles[dateString] = selectedTiles[dateString].filter((ele: any) => {
-      return ele.id !== tileRemoved.id
-    })
-
-    allTiles[dateString].map((tile: any) => {
-      if (tile.id === tileRemoved.id) {
-        tile.selected = false
-      }
-      return tile
-    })
-
-    const currentTiles = allTiles[dateString]
-    //@ts-ignore
-    console.log(this.state.selectedTilesInList)
-    //@ts-ignore
-    let currentlySelectedTiles = [...this.state.selectedTilesInList]
-    console.log(currentlySelectedTiles)
-
-    currentlySelectedTiles = currentlySelectedTiles.filter((ele) => {
-      return ele !== tileRemoved.id
-    })
-
-    console.log(currentlySelectedTiles)
-
-    this.setState({
-      //@ts-ignore
-      selectedTiles,
-      currentTiles,
-      selectedTilesInList: currentlySelectedTiles,
-      allTiles
-    })
+  removeTileFromSelected = (tileId: string) => {
+    console.log('Tile removed:')
+    console.log(tileId)
+    const relevantTile: Tile = { ...this.props.tiles.byId[tileId] }
+    relevantTile.selected = !relevantTile.selected
+    this.props.updateTile(relevantTile)
   }
 
   handleUpdateCloudFilter = (cloud: string) => {
-    // console.log(cloud)
-    // //@ts-ignore
-    // if (!this.state.activeAOI) { return }
+    //@ts-ignore
 
-    // console.log('User changed the filter % for cloud')
-    // console.log(cloud)
-    // //@ts-ignore
-    // const allTiles = { ...this.state.allTiles }
-    // //@ts-ignore
-    // const selectedTiles = { ...this.state.selectedTiles }
-    // //@ts-ignore
-    // const tileDict = { ...this.state.tileDict }
-    // //@ts-ignore
-    // const currentTiles = [...allTiles[this.state.currentDate]]
+    if (!this.state.activeAOI) {
+      return
+    }
 
-    // for (const tile of currentTiles) {
-    //   if (parseFloat(tile.properties.cloud_percent) > parseFloat(cloud)) {
-    //     tile.visible = false
-    //     tileDict[tile.id].visible = false
-    //   } else {
-    //     tile.visible = true
-    //     tileDict[tile.id].visible = true
-    //   }
-    // }
-    // //@ts-ignore
-    // const selectedCurrentTiles = [...selectedTiles[this.state.currentDate]]
+    // TODO Make a selector function and assign to props
+    let currentAoi: AreaOfInterest
+    this.props.aois.allIds.map((id: string) => {
+      const aoi = this.props.aois.byId[id]
+      //@ts-ignore
+      if (aoi['name'] === this.state.activeAOI) {
+        // TODO: create a SESSION reducer for current user session settings like activeAOI
+        currentAoi = aoi
+      }
+    })
 
-    // for (const tile of selectedCurrentTiles) {
-    //   tile['visible'] = tileDict[tile['id']].visible
-    //   console.log('updating selected tiles')
-    //   console.log(tile)
-    // }
-    // //@ts-ignore
-    // selectedTiles[this.state.currentDate] = selectedCurrentTiles
+    let newSession = { ...currentAoi.session }
 
-    // this.setState({
-    //   //@ts-ignore
-    //   tileDict,
-    //   selectedTiles,
-    //   //@ts-ignore
-    //   currentTiles: allTiles[this.state.currentDate],
-    //   cloudPercentFilter: cloud
-    // })
+    newSession.cloudPercentFilter = parseFloat(cloud)
+
+    this.props.updateSession(currentAoi.id, newSession)
+
+    const currentPlatform = currentAoi.session.currentPlatform
+    const currentDate =
+      currentAoi.session.datesList[currentPlatform].currentDate
+
+    let currentTiles: Tile[] = []
+
+    currentTiles = currentAoi.allTiles[currentPlatform][currentDate].map(id => {
+      return this.props.tiles.byId[id]
+    })
+
+    for (const tile of currentTiles) {
+      if (tile.properties.cloudPercent > parseFloat(cloud)) {
+        tile.visible = false
+      } else {
+        tile.visible = true
+      }
+      this.props.updateTile(tile)
+    }
   }
 
   deselectCurrentDate = () => {
     //@ts-ignore
-    if (!this.state.activeAOI) { return }
+    if (!this.state.activeAOI) {
+      return
+    }
+
     //@ts-ignore
     const allTiles = { ...this.state.allTiles }
     //@ts-ignore
@@ -1510,10 +1557,10 @@ class MainContainer extends Component<AppProps, AppState> {
     const selectedTiles = { ...this.state.selectedTiles }
     //@ts-ignore
     selectedTiles[this.state.currentDate] = []
+
     console.log(allTiles)
     //@ts-ignore
     const currentTiles = [...allTiles[this.state.currentDate]]
-
     for (const tile of currentTiles) {
       tile.selected = false
       tileDict[tile.id].selected = false
@@ -1525,7 +1572,7 @@ class MainContainer extends Component<AppProps, AppState> {
       //@ts-ignore
       currentTiles: allTiles[this.state.currentDate],
       tileDict,
-      selectedTiles
+      selectedTiles,
     })
   }
 
@@ -1534,8 +1581,9 @@ class MainContainer extends Component<AppProps, AppState> {
     const testObject = {
       //@ts-ignore
       ...this.state.jobSettings,
-      ...newSettings
+      ...newSettings,
     }
+
     console.log('new job settings')
     console.log(testObject)
 
@@ -1544,8 +1592,8 @@ class MainContainer extends Component<AppProps, AppState> {
       jobSettings: {
         //@ts-ignore
         ...this.state.jobSettings,
-        ...newSettings
-      }
+        ...newSettings,
+      },
     })
   }
 
@@ -1556,20 +1604,24 @@ class MainContainer extends Component<AppProps, AppState> {
 
     for (const d in dateList) {
       if (dateList[d].length > 0) {
-        const singleDateList = dateList[d].map((ele: any) => ele.properties.name)
+        const singleDateList = dateList[d].map(
+          (ele: any) => ele.properties.name,
+        )
+
         //@ts-ignore
         tileList[d] = singleDateList
       }
     }
-
     return tileList
   }
 
   saveTileJson = () => {
     console.log('trying to save to json')
+
     const { dialog } = require('electron').remote
     console.log(dialog)
-    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename) => {
+
+    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, filename => {
       if (filename) {
         const tileList = this.getTileList()
         console.log(filename)
@@ -1588,60 +1640,53 @@ class MainContainer extends Component<AppProps, AppState> {
     //@ts-ignore
     if (this.state.job_csrf_token === null) {
       const headers = new Headers()
+
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/generate_csrf/`, {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           this.setState({
             //@ts-ignore
-            job_csrf_token: JSON.stringify(response)
+            job_csrf_token: JSON.stringify(response),
           })
-
           setTimeout(() => this.submitSen2agriL2A, 200)
         })
-        .catch((err) =>
-          console.log('something blew up')
-        )
+        .catch(err => console.log('something blew up'))
     } else {
       const jobReqBody = {
         label: 'Sen2agri L2A JOb',
         command: 'na',
         job_type: 'Sen2Agri_L2A',
         parameters: {
-          imagery_list: tiles
+          imagery_list: tiles,
         },
-        priority: '3'
+        priority: '3',
       }
+
       const headers = new Headers()
       //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/jobs/`, {
         method: 'POST',
         body: JSON.stringify(jobReqBody),
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
-
-          // // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
-          // // Todo update each tile with job info (id, status, success, workerid)
-          // tile['job_id'] = response["id"]
-          // tile['job_result'] = null
-          // tile['job_status'] = 'submitted'
-          // tile['job_assigned'] = null
-          // tile['job_completed'] = null
-          // tile["job_submitted"] = response["submitted"]
           //@ts-ignore
           const job_status = {}
           //@ts-ignore
@@ -1656,18 +1701,24 @@ class MainContainer extends Component<AppProps, AppState> {
           job_status['job_completed'] = null
           //@ts-ignore
           job_status['job_submitted'] = response['submitted']
+          console.log(
+            'STARTING PERIODIC JOB CHEKC~!!!!=================================================================',
+          )
 
-          console.log('STARTING PERIODIC JOB CHEKC~!!!!=================================================================')
           //@ts-ignore
-          job_status['job_check_interval'] = setInterval(() => this.checkSen2AgriL2AJobStatus(job_status['job_id']), 1000 * 60)
+          job_status['job_check_interval'] = setInterval(
+            () => this.checkSen2AgriL2AJobStatus(job_status['job_id']),
+            1000 * 60,
+          )
+
           //@ts-ignore
           job_status['times_checked'] = 0
-
           this.setState({
             //@ts-ignore
-            sen2agri_l2a_job: job_status
+            sen2agri_l2a_job: job_status,
           })
-        }).catch((err) => {
+        })
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to submit the job')
         })
@@ -1678,6 +1729,7 @@ class MainContainer extends Component<AppProps, AppState> {
     console.log('trying to submit sen2agri l3a job')
     // get tile List
     const tiles = this.getTileList()
+
     //@ts-ignore
     if (this.state.job_csrf_token === null) {
       const headers = new Headers()
@@ -1686,21 +1738,18 @@ class MainContainer extends Component<AppProps, AppState> {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           this.setState({
             //@ts-ignore
-            job_csrf_token: JSON.stringify(response)
+            job_csrf_token: JSON.stringify(response),
           })
-
           setTimeout(() => this.submitSen2agriL3A, 200)
         })
-        .catch((err) =>
-          console.log('something blew up')
-        )
+        .catch(err => console.log('something blew up'))
     } else {
       const jobReqBody = {
         label: 'Sen2agri L3A JOb',
@@ -1710,34 +1759,29 @@ class MainContainer extends Component<AppProps, AppState> {
           imagery_list: tiles,
           //@ts-ignore
           aoi_name: this.state.activeAOI,
-          window_size: 30
+          window_size: 30,
         },
-        priority: '3'
+        priority: '3',
       }
       const headers = new Headers()
+
       //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/jobs/`, {
         method: 'POST',
         body: JSON.stringify(jobReqBody),
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
-
-          // // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
-          // // Todo update each tile with job info (id, status, success, workerid)
-          // tile['job_id'] = response["id"]
-          // tile['job_result'] = null
-          // tile['job_status'] = 'submitted'
-          // tile['job_assigned'] = null
-          // tile['job_completed'] = null
-          // tile["job_submitted"] = response["submitted"]
 
           const job_status = {}
           //@ts-ignore
@@ -1753,17 +1797,25 @@ class MainContainer extends Component<AppProps, AppState> {
           //@ts-ignore
           job_status['job_submitted'] = response['submitted']
 
-          console.log('STARTING PERIODIC JOB CHEKC~!!!!==============================================================================')
+          console.log(
+            'STARTING PERIODIC JOB CHEKC~!!!!==============================================================================',
+          )
+
           //@ts-ignore
-          job_status['job_check_interval'] = setInterval(() => this.checkSen2AgriL3AJobStatus(job_status['job_id']), 1000 * 60)
+          job_status['job_check_interval'] = setInterval(
+            () => this.checkSen2AgriL3AJobStatus(job_status['job_id']),
+            1000 * 60,
+          )
+
           //@ts-ignore
           job_status['times_checked'] = 0
 
           this.setState({
             //@ts-ignore
-            sen2agri_l3a_job: job_status
+            sen2agri_l3a_job: job_status,
           })
-        }).catch((err) => {
+        })
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to submit the job')
         })
@@ -1773,6 +1825,7 @@ class MainContainer extends Component<AppProps, AppState> {
   submitSen2agriL3B = () => {
     console.log('trying to submit sen2agri l3b job')
     const tiles = this.getTileList()
+
     //@ts-ignore
     if (this.state.job_csrf_token === null) {
       const headers = new Headers()
@@ -1781,21 +1834,21 @@ class MainContainer extends Component<AppProps, AppState> {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
+
           this.setState({
             //@ts-ignore
-            job_csrf_token: JSON.stringify(response)
+            job_csrf_token: JSON.stringify(response),
           })
 
           setTimeout(() => this.submitSen2agriL3A, 200)
         })
-        .catch((err) =>
-          console.log('something blew up')
-        )
+
+        .catch(err => console.log('something blew up'))
     } else {
       const jobReqBody = {
         label: 'Sen2agri L3B JOb',
@@ -1804,38 +1857,36 @@ class MainContainer extends Component<AppProps, AppState> {
         parameters: {
           imagery_list: tiles,
           //@ts-ignore
-          aoi_name: this.state.activeAOI
+          aoi_name: this.state.activeAOI,
         },
-        priority: '3'
+        priority: '3',
       }
+
       const headers = new Headers()
+
       //@ts-ignore
       headers.append('X-CSRFToken', this.state.job_csrf_token)
       headers.append('Content-Type', 'application/json')
+      headers.append(
+        'Authorization',
+        `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`,
+      )
 
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
       //@ts-ignore
       fetch(`${this.props.settings.job_url}/jobs/`, {
         method: 'POST',
         body: JSON.stringify(jobReqBody),
-        headers: headers
+        headers: headers,
       })
         .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
 
-          // // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
-          // // Todo update each tile with job info (id, status, success, workerid)
-          // tile['job_id'] = response["id"]
-          // tile['job_result'] = null
-          // tile['job_status'] = 'submitted'
-          // tile['job_assigned'] = null
-          // tile['job_completed'] = null
-          // tile["job_submitted"] = response["submitted"]
-
           const job_status = {}
+
           //@ts-ignore
           job_status['job_id'] = response['id']
+
           //@ts-ignore
           job_status['job_result'] = null
           //@ts-ignore
@@ -1847,17 +1898,24 @@ class MainContainer extends Component<AppProps, AppState> {
           //@ts-ignore
           job_status['job_submitted'] = response['submitted']
 
-          console.log('STARTING PERIODIC JOB CHEKC~!!!!===========================================================')
+          console.log(
+            'STARTING PERIODIC JOB CHEKC~!!!!===========================================================',
+          )
+
           //@ts-ignore
-          job_status['job_check_interval'] = setInterval(() => this.checkSen2AgriL3BJobStatus(job_status['job_id']), 1000 * 60)
+          job_status['job_check_interval'] = setInterval(
+            () => this.checkSen2AgriL3BJobStatus(job_status['job_id']),
+            1000 * 60,
+          )
           //@ts-ignore
           job_status['times_checked'] = 0
 
           this.setState({
             //@ts-ignore
-            sen2agri_l3b_job: job_status
+            sen2agri_l3b_job: job_status,
           })
-        }).catch((err) => {
+        })
+        .catch(err => {
           console.log(err)
           console.log('something went wrong when trying to submit the job')
         })
@@ -1868,16 +1926,17 @@ class MainContainer extends Component<AppProps, AppState> {
     if (tiles) {
       const formatted_tiles = []
       console.log('sorting tile by date')
+
       for (const raw_tile of tiles) {
         console.log(raw_tile)
-        const proj = raw_tile.detailed_metadata.find((ele: any) => ele.fieldName === 'EPSG Code').value
+
+        const proj = raw_tile.detailed_metadata.find(
+          (ele: any) => ele.fieldName === 'EPSG Code',
+        ).value
         const start_date = moment(raw_tile.acquisition_start)
         const end_date = moment(raw_tile.acquisition_end)
-
         const mid_date_ts = (start_date.valueOf() + end_date.valueOf()) / 2
-
         const mid_date = moment(mid_date_ts)
-
         const tile = {
           name: raw_tile.name,
           wkt: raw_tile.footprint,
@@ -1886,29 +1945,30 @@ class MainContainer extends Component<AppProps, AppState> {
           date: mid_date,
           cloud: raw_tile['cloud_percent'],
           visible: true,
-          geojson: raw_tile['geojson']
+          geojson: raw_tile['geojson'],
         }
-
         formatted_tiles.push(tile)
       }
 
       const groups = formatted_tiles.reduce((groups, tile) => {
         const date = tile.date.format('YYYYMMDD')
+
         //@ts-ignore
         if (!groups[date]) {
           //@ts-ignore
           groups[date] = []
         }
+
         //@ts-ignore
         groups[date].push(tile)
         return groups
       }, {})
 
-      const groupArrays = Object.keys(groups).map((date) => {
+      const groupArrays = Object.keys(groups).map(date => {
         return {
           date,
           //@ts-ignore
-          tiles: groups[date]
+          tiles: groups[date],
         }
       })
 
@@ -1922,66 +1982,148 @@ class MainContainer extends Component<AppProps, AppState> {
   }
 
   render() {
-    let wkt_footprint = null
-    let wrsOverlay = null
-    // get AOI wkt from the currently active AOI
-    console.log(this.state)
-    //@ts-ignore
-    console.log(this.state.activeAOI)
-    //@ts-ignore
-    if (this.state.activeAOI !== null) {
-      //@ts-ignore
-      const aoi_index = this.getAoiIndex(this.state.activeAOI)
-      console.log(aoi_index)
-      //@ts-ignore
-      wkt_footprint = this.state.aoi_list[aoi_index].wkt_footprint
-      //@ts-ignore
-      wrsOverlay = this.state.aoi_list[aoi_index].wrs_overlay
-      console.log('WRS OVERLAY')
-      console.log(wrsOverlay)
-    }
-    //@ts-ignore
-    const areasOfInterests = this.state.aoi_list
-    console.log(areasOfInterests)
     //@ts-ignore
     const cloudPercent = this.state.cloudPercentFilter
-
+    // TODO: create as a selector function in the Aoi reducer
     let currentAoi: AreaOfInterest
-
-    const aois = this.props.aois.areasOfInterest.allIds.map((id: string) => {
-      const aoi = this.props.aois.areasOfInterest.byId[id]
+    const aois = this.props.aois.allIds.map((id: string) => {
+      const aoi = this.props.aois.byId[id]
 
       //@ts-ignore
-      if (aoi['name'] === this.state.activeAOI) { // TODO: create a SESSION reducer for current user session settings like activeAOI
+      if (aoi['name'] === this.state.activeAOI) {
+        // TODO: create a SESSION reducer for current user session settings like activeAOI
         currentAoi = aoi
       }
-      return this.props.aois.areasOfInterest.byId[id]
+      return this.props.aois.byId[id]
     })
 
-    const selectedTiles = currentAoi ? currentAoi['selectedTiles'] : {}
+    const selectedTiles: SingleDateTileList = {}
+    const highlightedTiles: string[] = []
+    let currentTiles: Tile[] = []
+
+    console.log('CURRENT AOI')
+    console.log(currentAoi)
+
+    let currentPlatform = null
+    let currentDate = null
+
+    if (currentAoi) {
+      currentPlatform = currentAoi.session.currentPlatform
+      currentDate = currentAoi.session.datesList[currentPlatform].currentDate
+
+      console.log(currentDate)
+
+      currentTiles = currentAoi.allTiles[currentPlatform][currentDate].map(
+        id => {
+          return this.props.tiles.byId[id]
+        },
+      )
+
+      console.log(currentTiles)
+
+      for (const [key, value] of Object.entries(
+        currentAoi.allTiles[currentPlatform],
+      )) {
+        const tileArray: Tile[] = []
+        const tileArray2: Tile[] = []
+
+        value.map((id: string) => {
+          if (this.props.tiles.byId[id].selected) {
+            tileArray.push(this.props.tiles.byId[id])
+          }
+          if (this.props.tiles.byId[id].highlighted) {
+            highlightedTiles.push(id)
+          }
+        })
+
+        selectedTiles[key] = tileArray
+      }
+      console.log('selected Tiles')
+      console.log(selectedTiles)
+      console.log('highlighted Tiles')
+      console.log(highlightedTiles)
+    }
+
+    console.log(currentAoi)
 
     return (
-      <div className='mainContainer' ref='mainContainer'>
+      <div className="mainContainer" ref="mainContainer">
         {/*
         // @ts-ignore */}
-        <AddAreaOfInterestModal show={this.state.show} hideModal={this.hideModal} addAreaOfInterest={this.addAreaOfInterest} settings={this.props.settings} />
+        <AddAreaOfInterestModal
+          show={this.state.show}
+          hideModal={this.hideModal}
+          addAreaOfInterest={this.addAreaOfInterest}
+          settings={this.props.settings}
+        />
         {/*
         // @ts-ignore */}
-        <AreaOfInterestList addAreaModal={this.showModal} areasOfInterest={aois} activateAOI={this.activateAOI} activeAOI={this.state.activeAOI} />
-        <div className='centerContainer'>
+        <AreaOfInterestList
+          addAreaModal={this.showModal}
+          areasOfInterest={aois}
+          activateAOI={this.activateAOI}
+          activeAOI={currentAoi ? currentAoi.name : null}
+        />
+
+        <div className="centerContainer">
           {/*
           // @ts-ignore */}
-          <MapViewer tiles={this.state.currentTiles} tilesSelectedInList={this.state.selectedTilesInList} tileSelected={this.handleTileSelect} currentAoiWkt={wkt_footprint} wrsOverlay={wrsOverlay} activeAOI={this.state.activeAOI} currentDate={this.state.currentDate} />
+          <MapViewer
+            tiles={currentTiles}
+            tilesSelectedInList={highlightedTiles}
+            tileSelected={this.handleTileSelect}
+            currentAoiWkt={currentAoi ? currentAoi.wktFootprint : null}
+            wrsOverlay={currentAoi ? currentAoi.wrsOverlay : null}
+            activeAOI={currentAoi ? currentAoi.name : null}
+            currentDate={
+              currentAoi
+                ? currentAoi.session.datesList[currentPlatform].currentDate
+                : null
+            }
+          />
           {/*
           // @ts-ignore */}
-          <FilteringTools selectAll={this.selectAllVisibleTiles} deselectAll={this.deselectCurrentDate} updateCloudFilter={this.handleUpdateCloudFilter} cloudPercentFilter={cloudPercent} />
+          <FilteringTools
+            selectAll={this.selectAllVisibleTiles}
+            deselectAll={this.deselectCurrentDate}
+            updateCloudFilter={this.handleUpdateCloudFilter}
+            cloudPercentFilter={
+              currentAoi ? currentAoi.session.cloudPercentFilter : 100
+            }
+          />
           {/*
           // @ts-ignore */}
-          <TimelineViewer currentDate={this.state.currentDate} allTiles={this.state.allTiles} incrementDate={this.incrementDate} decrementDate={this.decrementDate} />
+          <TimelineViewer
+            currentDate={currentDate}
+            allTiles={this.state.allTiles}
+            incrementDate={this.incrementDate}
+            decrementDate={this.decrementDate}
+          />
         </div>
+
         {/*
         // @ts-ignore */}
-        <TileList settings={this.state.jobSettings} updateSettings={this.updateJobSettings} selectedTiles={selectedTiles} selectedTilesInList={this.state.selectedTilesInList} tileClicked={this.handleTileClickedInList} removeTile={this.removeTileFromSelected} submitAllJobs={this.handleSubmitAllJobs} saveTileJson={this.saveTileJson} submitSen2agriL2A={this.submitSen2agriL2A} enableSen2agriL2A={this.state.enableSen2AgriL2A} submitSen2agriL3A={this.submitSen2agriL3A} enableSen2agriL3A={this.state.enableSen2AgriL3A} submitSen2agriL3B={this.submitSen2agriL3B} enableSen2agriL3B={this.state.enableSen2AgriL3B} sen2agriL2AJob={this.state.sen2agri_l2a_job} sen2agriL3AJob={this.state.sen2agri_l3a_job} sen2agriL3BJob={this.state.sen2agri_l3b_job} toggleTileVisibility={this.toggleVisibility} />
+
+        <TileList
+          settings={this.state.jobSettings}
+          updateSettings={this.updateJobSettings}
+          selectedTiles={selectedTiles}
+          selectedTilesInList={highlightedTiles}
+          tileClicked={this.handleTileClickedInList}
+          removeTile={this.removeTileFromSelected}
+          submitAllJobs={this.handleSubmitAllJobs}
+          saveTileJson={this.saveTileJson}
+          submitSen2agriL2A={this.submitSen2agriL2A}
+          enableSen2agriL2A={this.state.enableSen2AgriL2A}
+          submitSen2agriL3A={this.submitSen2agriL3A}
+          enableSen2agriL3A={this.state.enableSen2AgriL3A}
+          submitSen2agriL3B={this.submitSen2agriL3B}
+          enableSen2agriL3B={this.state.enableSen2AgriL3B}
+          sen2agriL2AJob={this.state.sen2agri_l2a_job}
+          sen2agriL3AJob={this.state.sen2agri_l3a_job}
+          sen2agriL3BJob={this.state.sen2agri_l3b_job}
+          toggleTileVisibility={this.toggleVisibility}
+        />
       </div>
     )
   }
@@ -1989,14 +2131,16 @@ class MainContainer extends Component<AppProps, AppState> {
 
 const mapStateToProps = (state: AppState) => ({
   tiles: state.tile,
-  aois: state.aoi
+  aois: state.aoi,
 })
 
 export default connect(
   mapStateToProps,
   {
     addTile,
+    updateTile,
     addAoi,
-    thunkSendMessage
-  }
-)(MainContainer);
+    updateSession,
+    thunkSendMessage,
+  },
+)(MainContainer)
