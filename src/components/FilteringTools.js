@@ -157,7 +157,7 @@ export default class FilteringTools extends Component {
             rootStyle={sliderStyle}
             onChange={(values) => this.props.updateCloudFilter(values[0])}
             onUpdate={(values) => {
-              setTimeout(this.props.updateCloudFilter(values[0]), 150)
+              setTimeout(this.props.updateCloudFilter(values[0]), 650)
             }}
             values={[this.props.cloudPercentFilter]}
           >

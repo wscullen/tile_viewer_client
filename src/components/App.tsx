@@ -4,9 +4,12 @@ import '../assets/css/App.css'
 
 import * as React from 'react'
 
-import { Provider } from 'react-redux'
+import { MemoryHistory } from 'history'
+import { RouteProps, RouteComponentProps } from 'react-router'
 
-interface Props {}
+interface Props {
+  history: MemoryHistory
+}
 
 interface State {
   settings: SettingsObject
@@ -43,10 +46,7 @@ import {
   faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
-import {
-  faHourglass as farHourglass,
-  faCircle as farCircle,
-} from '@fortawesome/free-regular-svg-icons'
+import { faHourglass as farHourglass, faCircle as farCircle } from '@fortawesome/free-regular-svg-icons'
 
 // @ts-ignore
 library.add(
@@ -72,7 +72,7 @@ library.add(
   farCircle,
   faCog,
   faEye,
-  faEyeSlash
+  faEyeSlash,
 )
 
 import { MemoryRouter as Router, Switch } from 'react-router-dom'
@@ -93,16 +93,15 @@ const renderHomeRoute = () => {
   } else return false
 }
 
-class App extends React.Component<Props, State> {
-  constructor(props: Props) {
+class App extends React.Component<any, State> {
+  constructor(props: any) {
     super(props)
     // Check for saved settigns
     const savedSettings = localStorage.getItem('settings')
     console.log(savedSettings)
 
     this.state = {
-      settings:
-        savedSettings === null ? defaultSettings : JSON.parse(savedSettings),
+      settings: savedSettings === null ? defaultSettings : JSON.parse(savedSettings),
     }
   }
 
@@ -131,7 +130,7 @@ class App extends React.Component<Props, State> {
           <Route
             exact
             path="/"
-            render={(props: Props) => (
+            render={(props: RouteComponentProps) => (
               <MainContainer
                 {...props}
                 settings={this.state.settings}
@@ -143,12 +142,8 @@ class App extends React.Component<Props, State> {
           <Route
             exact
             path="/settings"
-            render={(props: Props) => (
-              <Settings
-                {...props}
-                settings={this.state.settings}
-                updateSettings={this.updateSettings}
-              />
+            render={(props: RouteComponentProps) => (
+              <Settings {...props} settings={this.state.settings} updateSettings={this.updateSettings} />
             )}
           />
         </Switch>

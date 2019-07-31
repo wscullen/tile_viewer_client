@@ -1,185 +1,212 @@
 .tileList {
-    border-left: 1px solid lightgrey;
-
-    width: 500px;
-    max-height: 100%;
-    overflow-y: hidden;
+  border-left: 1px solid lightgrey;
+  width: 500px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .listOfTiles {
-    list-style: none;
-    padding-left: 0px;
-    z-index: -9999;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    height: 100%;
-    min-width: 400px;
+  list-style: none;
+  padding-left: 0px;
+  min-width: 400px;
+  flex-grow: 10;
+  display: flex;
+  overflow: auto;
+  background: white;
 }
 
-.listOfTiles > ul {
-    list-style: none;
-    padding-left: 0px;
-    z-index: -9999;
+.listWrapper > ul {
+  list-style: none;
+  padding-left: 0px;
+  width: 100%;
+}
+
+.listWrapper {
+  z-index: 1;
+  width: 100%;
+  height: auto;
 }
 
 .verified {
-    color: green;
-    font-size: 20px;
+  color: green;
+  font-size: 20px;
 }
 
 .notVerified {
-    color: red;
-    font-size: 20px;
+  color: red;
+  font-size: 20px;
 }
 
 .tileList > .header {
-    padding: 4px;
+  padding: 4px;
 
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 
-    background: #eee;
-    border-bottom: 1px #bbb solid;
-    box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
-    position: sticky;
-    top: 0px;
-    width: 100%;
-    z-index: 1;
+  background: #eee;
+  border-bottom: 1px #bbb solid;
+  box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
+  position: sticky;
+  top: 0px;
+  min-height: 40px;
+  max-height: 40px;
+  height: 40px;
+
+  flex-shrink: 0;
+  width: 100%;
+  z-index: 50;
 }
 
 .buttonSection {
-    z-index: 2;
-    height: 100%;
-}
-
-.my-dropdown-slidedown {
-    z-index: -1;
-    position: sticky;
-    top: 40px;
+  z-index: 2;
+  height: 100%;
 }
 
 .myButton {
-    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));
-    background:-moz-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-    background:-webkit-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-    background:-o-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-    background:-ms-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-    background:linear-gradient(to bottom, #44c767 5%, #5cbf2a 100%);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
-    background-color:#44c767;
-    -moz-border-radius:3px;
-    -webkit-border-radius:3px;
-    border-radius:3px;
-    border:1px solid #18ab29;
-    display:inline-block;
-    cursor:pointer;
-    color:#ffffff;
-    font-family: 'Source Sans Pro', sans-serif;
-    font-weight: 600;
-    font-size: 15px;
-    padding:5px 10px;
-    margin-right:2px;
-    text-decoration:none;
-    outline: none;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));
+  background: -moz-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: -webkit-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: -o-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: -ms-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: linear-gradient(to bottom, #44c767 5%, #5cbf2a 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+  background-color: #44c767;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  border: 1px solid #18ab29;
+  display: inline-block;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 5px 10px;
+  margin-right: 2px;
+  text-decoration: none;
+  outline: none;
 }
 
 .myButton:hover {
-    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
-    background:-moz-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-    background:-webkit-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-    background:-o-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-    background:-ms-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-    background:linear-gradient(to bottom, #5cbf2a 5%, #44c767 100%);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
-    background-color:#5cbf2a;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
+  background: -moz-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: -webkit-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: -o-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: -ms-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: linear-gradient(to bottom, #5cbf2a 5%, #44c767 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+  background-color: #5cbf2a;
 }
 
 .myButton:active {
-    position: relative;
-    top: 1px;
+  position: relative;
+  top: 1px;
 }
 
-.dateSection  {
-    padding: 1px 4px;
-    font-weight: 700;
-    font-size: 14px;
-    position: sticky;
-    top: 0;
-    background: #fff;
+.dateSection {
+  padding: 1px 4px;
+  font-weight: 700;
+  font-size: 14px;
+  position: sticky;
+  top: 0;
+  background: #fff;
 }
 
 .tileActionIndicator {
-    color: #000;
-    padding: 0px 4px;
-    text-decoration:none;
-    outline: none;
-    background: none;
-    border: none;
+  color: #000;
+  padding: 0px 4px;
+  text-decoration: none;
+  outline: none;
+  background: none;
+  border: none;
 }
 
 .disabledIcon {
-    color: rgba(200, 200, 200, 20);
+  color: rgba(200, 200, 200, 20);
 }
 
 .grey {
-    color:  rgba(100, 100, 100, 100);
+  color: rgba(100, 100, 100, 100);
 }
 
 .settingsButton {
-    background:linear-gradient(to bottom, #c7c9c8 5%, #a3a3a3 100%);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
-    -moz-border-radius:3px;
-    -webkit-border-radius:3px;
-    border-radius:3px;
-    border:1px solid #858585;
-    display:inline-block;
-    cursor:pointer;
-    color:#000;
-    font-family:Arial;
-    font-size:15px;
-    padding:5px 10px;
-    text-decoration:none;
-    outline: none;
-    margin-right: 3px;
-    min-height: 31px;
+  background: linear-gradient(to bottom, #c7c9c8 5%, #a3a3a3 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  border: 1px solid #858585;
+  display: inline-block;
+  cursor: pointer;
+  color: #000;
+  font-family: Arial;
+  font-size: 15px;
+  padding: 5px 10px;
+  text-decoration: none;
+  outline: none;
+  margin-right: 3px;
+  min-height: 31px;
 }
 
 .settingsButton:hover {
-    background:linear-gradient(to bottom, #9ea898 5%, #888b89 100%);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+  background: linear-gradient(to bottom, #9ea898 5%, #888b89 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
 }
 
 .settingsButton:active {
-    position: relative;
-    top: 1px;
+  position: relative;
+  top: 1px;
 }
 
 .settingsButton[disabled] {
-    color: #848484;
-    background:linear-gradient(to bottom, #c1c2c0 5%, #cdd4cf 100%);
-    cursor: default;
+  color: #848484;
+  background: linear-gradient(to bottom, #c1c2c0 5%, #cdd4cf 100%);
+  cursor: default;
 }
 
 .settingsButton:active[disabled] {
-    position: relative;
-    top: 0px;
+  position: relative;
+  top: 0px;
 }
 
-.tileOptionPanel {
-    background-color: #ddd;
-    padding: 6px;
-    z-index: -1;
-    box-shadow: inset 0px 1px 3px rgba(100, 100, 100, 0.3);
-}
-
-.tileOptionPanel ul {
-    list-style: none;
-    padding-left: 0px;
+.optionsWrapper ul {
+  list-style: none;
+  padding-left: 0px;
 }
 
 .menuItem {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
+}
+
+.optionsWrapper {
+  background-color: #ddd;
+  box-shadow: inset 0px 1px 3px rgba(100, 100, 100, 0.3);
+  /* border: #ddd solid 5px; */
+  white-space: nowrap;
+  padding: 5px;
+}
+
+.flexed {
+  /* The border seems to cause drawing artifacts on transition. Probably a browser bug. */
+  /* border: 1px solid black; */
+
+  /* transition: min-height 0.65s ease-in-out, opacity 0.5s, padding 0s; */
+  transition: height 500ms ease-in-out;
+  height: 165px;
+}
+
+.removed {
+  /* Setting this to zero breaks the transition */
+  /* overflow: hidden; */
+  transition: height 500ms ease-in-out, padding 1ms 0.45s linear;
+  height: 0px;
+  padding: 0px;
+  /* overflow: hidden; */
+  /* transition: min-height 0.65s ease-in-out, opacity 0.5s, padding 0s;
+  transition: height 0.65s, padding 0s;
+  transition: min-height 0.65s; */
 }

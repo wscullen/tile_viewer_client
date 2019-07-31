@@ -10,6 +10,7 @@ import { chatReducer } from './chat/reducers'
 
 import { tileReducer } from './tile/reducers'
 import { aoiReducer } from './aoi/reducers'
+import { sessionReducer } from './session/reducers'
 
 const persistConfig = {
   key: 'root',
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   chat: chatReducer,
   tile: tileReducer,
   aoi: aoiReducer,
+  session: sessionReducer,
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

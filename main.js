@@ -29,7 +29,11 @@ let mainWindow
 // Keep a reference for dev mode
 let dev = false
 
-if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
+if (
+  process.defaultApp ||
+  /[\\/]electron-prebuilt[\\/]/.test(process.execPath) ||
+  /[\\/]electron[\\/]/.test(process.execPath)
+) {
   dev = true
 }
 
@@ -60,15 +64,17 @@ function createWindow() {
           click: (menuItem, currentWindow) => {
             currentWindow.webContents.send('menu-item', {
               menuItem,
-              currentWindow
+              currentWindow,
             })
-          }
-        }, {
+          },
+        },
+        {
           label: 'Exit',
-          click: () => app.quit()
-        }
-      ]
-    }, {
+          click: () => app.quit(),
+        },
+      ],
+    },
+    {
       label: 'Dev',
       submenu: [
         {
@@ -77,33 +83,33 @@ function createWindow() {
             console.log(menuItem)
             currentWindow.webContents.send('menu-item', {
               menuItem,
-              currentWindow
+              currentWindow,
             })
-          }
+          },
         },
         {
           label: 'Reload',
           click: (menuItem, currentWindow) => {
             console.log(menuItem)
             currentWindow.webContents.reload()
-          }
+          },
         },
         {
           label: 'Hard Reload',
           click: (menuItem, currentWindow) => {
             console.log(menuItem)
             currentWindow.webContents.reloadIgnoringCache()
-          }
+          },
         },
         {
           label: 'Toggle Dev Tools',
           click: (menuItem, currentWindow) => {
             console.log(menuItem)
             currentWindow.toggleDevTools()
-          }
-        }
-      ]
-    }
+          },
+        },
+      ],
+    },
   ])
   Menu.setApplicationMenu(menu)
 
@@ -112,9 +118,9 @@ function createWindow() {
     width: 1250,
     height: 768,
     minWidth: 1000,
-    minHeight: 700,
+    minHeight: 768,
     show: false,
-    icon: path.join(resources, '96x96.png')
+    icon: path.join(resources, '96x96.png'),
   })
 
   if (dev) {
@@ -123,26 +129,34 @@ function createWindow() {
     let reduxDevToolsPath
 
     if (process.platform === 'win32') {
-      reactDevToolsPath = path.join(os.homedir(), 'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
-      reduxDevToolsPath = path.join(os.homedir(), 'AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
+      reactDevToolsPath = path.join(
+        os.homedir(),
+        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0',
+      )
+      reduxDevToolsPath = path.join(
+        os.homedir(),
+        'AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0',
+      )
     } else if (process.platform === 'linux') {
       // Ubuntu dev machine
-      reactDevToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
-      reduxDevToolsPath = path.join(os.homedir(), '.config/chromium/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
+      reactDevToolsPath = path.join(
+        os.homedir(),
+        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0',
+      )
+      reduxDevToolsPath = path.join(
+        os.homedir(),
+        '.config/chromium/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0',
+      )
     }
     console.log(reactDevToolsPath)
     console.log(reduxDevToolsPath)
 
     if (fs.existsSync(reactDevToolsPath)) {
-      BrowserWindow.addDevToolsExtension(
-        reactDevToolsPath
-      )
+      BrowserWindow.addDevToolsExtension(reactDevToolsPath)
     }
 
     if (fs.existsSync(reduxDevToolsPath)) {
-      BrowserWindow.addDevToolsExtension(
-        reduxDevToolsPath
-      )
+      BrowserWindow.addDevToolsExtension(reduxDevToolsPath)
     }
   }
   // and load the index.html of the app.
@@ -153,13 +167,13 @@ function createWindow() {
       protocol: 'http:',
       host: 'localhost:8080',
       pathname: 'index.html',
-      slashes: true
+      slashes: true,
     })
   } else {
     indexPath = url.format({
       protocol: 'file:',
       pathname: path.join(__dirname, 'dist', 'index.html'),
-      slashes: true
+      slashes: true,
     })
   }
 
@@ -181,7 +195,7 @@ function createWindow() {
   })
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
+  mainWindow.on('closed', function() {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -223,9 +237,8 @@ function createDefaultWindow() {
     icon: path.join(resources, '96x96.png'),
     width: 400,
     height: 200,
-    resizable: false
-  }
-  )
+    resizable: false,
+  })
 
   // win.setMenuBarVisibility(false)
   // win.webContents.openDevTools();
@@ -238,22 +251,22 @@ function createDefaultWindow() {
 autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('Checking for update...')
 })
-autoUpdater.on('update-available', (info) => {
+autoUpdater.on('update-available', info => {
   sendStatusToWindow('Update available.')
 })
-autoUpdater.on('update-not-available', (info) => {
+autoUpdater.on('update-not-available', info => {
   sendStatusToWindow('Update not available.')
 })
-autoUpdater.on('error', (err) => {
+autoUpdater.on('error', err => {
   sendStatusToWindow('Error in auto-updater. ' + err)
 })
-autoUpdater.on('download-progress', (progressObj) => {
+autoUpdater.on('download-progress', progressObj => {
   let log_message = 'Download speed: ' + progressObj.bytesPerSecond
   log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
   log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
   sendStatusToWindow(log_message)
 })
-autoUpdater.on('update-downloaded', (info) => {
+autoUpdater.on('update-downloaded', info => {
   sendStatusToWindow('Update downloaded')
 })
 

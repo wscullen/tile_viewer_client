@@ -24,10 +24,11 @@ export function aoiReducer(
       };
     }
     case UPDATE_SESSION: {
+      console.log(action.payload)
       const areasOfInterest = { ...state }
       const areaOfInterest = areasOfInterest.byId[action.payload.id]
       areaOfInterest.session = { ...action.payload.session }
-      
+
       return {
         ...areasOfInterest
       };
