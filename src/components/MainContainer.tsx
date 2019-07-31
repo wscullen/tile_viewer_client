@@ -1313,17 +1313,15 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
     return index
   }
 
-  handleTileSelect = (tiles: any[]) => {
-    console.log('this tile was selected')
-    console.log('selectedTiles')
+  public handleTileSelect = (tiles: string[]): void => {
+    console.log('Tile was selected')
     console.log(tiles)
     const existingTiles = { ...this.props.tiles.byId }
     console.log(existingTiles)
 
-    for (const t of tiles) {
-      const relevantTile: Tile = null
-      for (const [key, tile] of Object.entries(existingTiles)) {
-        if (key === t) {
+    for (const [key, tile] of Object.entries(existingTiles)) {
+      for (const t of tiles) {
+        if (key === t && tile.visible) {
           tile.selected = !tile.selected
           if (!tile.selected) {
             tile.highlighted = false

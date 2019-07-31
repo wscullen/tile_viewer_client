@@ -807,25 +807,7 @@ export default class MapViewer extends Component {
     console.log(event);
     console.log("Mapped was clicked");
     console.log(this.state.featuresHovered);
-
-    this.updateStyle(this.state.featuresHovered);
-    console.log(this.state);
     this.props.tileSelected(this.state.featuresHovered);
-
-    // // create WKT writer
-    // var wktWriter = new WKT();
-
-    // // derive map coordinate (references map from Wrapper Component state)
-    // var clickedCoordinate = this.state.map.getCoordinateFromPixel(event.pixel);
-
-    // // create Point geometry from clicked coordinate
-    // var clickedPointGeom = new Point( clickedCoordinate );
-
-    // // write Point geometry to WKT with wktWriter
-    // var clickedPointWkt = wktWriter.writeGeometry( clickedPointGeom );
-
-    // // place Flux Action call to notify Store map coordinate was clicked
-    // Actions.setRoutingCoord( clickedPointWkt );
   }
 
   render() {
