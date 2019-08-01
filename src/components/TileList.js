@@ -217,7 +217,7 @@ export default class TileList extends Component {
 
                 if (this.props.selectedTiles[d].length > 0) {
                   const headerEle = (
-                    <li className={dateSectionHeaderClassname} key={d}>
+                    <li className={dateSectionHeaderClassname} onClick={() => this.props.dateClicked(moment(d).format('YYYYMMDD'))} key={d}>
                       {moment(d).format('MMMM DD YYYY')}
                     </li>
                   )

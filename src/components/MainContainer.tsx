@@ -491,83 +491,105 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
     }
   }
 
-  incrementDate = () => {
+  public incrementDate = (initDate?: string): void => {
     console.log('increment date button pressed')
     // @ts-ignore
-    if (!this.state.activeAOI) {
+    if (!this.props.session.currentAoi) {
       return
     }
 
-    let currentAoi: AreaOfInterest
+    const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
+    const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+    const dateList = session.datesList[currentPlatform].dates
+    let currentDate = ''
 
-    const aois = this.props.aois.allIds.map((id: string) => {
-      const aoi = this.props.aois.byId[id]
-      // @ts-ignore
-      if (aoi.name === this.state.activeAOI) {
-        // TODO: create a SESSION reducer for current user session settings like activeAOI
-        currentAoi = aoi
-      }
-
-      return this.props.aois.byId[id]
-    })
-
-    const currentPlatform = currentAoi.session.currentPlatform
-    const dateList = currentAoi.session.datesList[currentPlatform].dates
-    const currentDate = currentAoi.session.datesList[currentPlatform].currentDate
+    if (initDate) {
+      currentDate = initDate
+    } else {
+      currentDate = session.datesList[currentPlatform].currentDate
+    }
 
     const indexOfCurrentDate = dateList.indexOf(currentDate)
-
-    const session = { ...currentAoi.session }
 
     if (indexOfCurrentDate !== dateList.length - 1) {
       const newIndex = indexOfCurrentDate + 1
       const newDate = dateList[newIndex]
-      console.log('incrementDATE!')
-      // @ts-ignore
-      const allTilesIds: string[] = currentAoi.allTiles[currentAoi.session.currentPlatform][newDate]
-      console.log(allTilesIds)
-      const allTiles = allTilesIds.map(id => {
-        return this.props.tiles.byId[id]
-      })
       session.datesList[currentPlatform].currentDate = newDate
       this.handleUpdateCloudFilter(session.cloudPercentFilter.toString())
-      this.props.updateSession(currentAoi.id, session)
+
+      let allNotVisible = true
+      for (const id of currentAoi.allTiles[currentPlatform][newDate]) {
+        if (this.props.tiles.byId[id].visible) {
+          allNotVisible = false
+          break
+        }
+      }
+
+      if (allNotVisible) {
+        console.log('recuring into incrementDate')
+        this.incrementDate(newDate)
+      } else {
+        console.log('updating session and cloud filter')
+        this.props.updateSession(currentAoi.id, session)
+      }
     }
   }
 
-  decrementDate = () => {
+  public decrementDate = (initDate?: string): void => {
     console.log('decrement date button pressed')
-
     // @ts-ignore
-    if (!this.state.activeAOI) {
+    if (!this.props.session.currentAoi) {
       return
     }
 
-    let currentAoi: AreaOfInterest
-
-    const aois = this.props.aois.allIds.map((id: string) => {
-      const aoi = this.props.aois.byId[id]
-      // @ts-ignore
-      if (aoi.name === this.state.activeAOI) {
-        // TODO: create a SESSION reducer for current user session settings like activeAOI
-        currentAoi = aoi
-      }
-      return this.props.aois.byId[id]
-    })
-
-    const currentPlatform = currentAoi.session.currentPlatform
-    const dateList = currentAoi.session.datesList[currentPlatform].dates
-    const currentDate = currentAoi.session.datesList[currentPlatform].currentDate
-    const indexOfCurrentDate = dateList.indexOf(currentDate)
+    const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
     const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+    const dateList = session.datesList[currentPlatform].dates
+    let currentDate = ''
+
+    if (initDate) {
+      currentDate = initDate
+    } else {
+      currentDate = session.datesList[currentPlatform].currentDate
+    }
+
+    const indexOfCurrentDate = dateList.indexOf(currentDate)
 
     if (indexOfCurrentDate !== 0) {
       const newIndex = indexOfCurrentDate - 1
       const newDate = dateList[newIndex]
-      console.log('decrementDATE!')
       session.datesList[currentPlatform].currentDate = newDate
       this.handleUpdateCloudFilter(session.cloudPercentFilter.toString())
-      this.props.updateSession(currentAoi.id, session)
+
+      let allNotVisible = true
+      for (const id of currentAoi.allTiles[currentPlatform][newDate]) {
+        if (this.props.tiles.byId[id].visible) {
+          allNotVisible = false
+          break
+        }
+      }
+
+      if (allNotVisible) {
+        console.log('recuring into decrement')
+        this.decrementDate(newDate)
+      } else {
+        console.log('updating session and cloud filter')
+        this.props.updateSession(currentAoi.id, session)
+      }
+    }
+  }
+
+  public setDate = (initDate: string): void => {
+    const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
+    const currentPlatform = currentAoi.session.currentPlatform
+    const dateList = currentAoi.session.datesList[currentPlatform].dates
+    const session = { ...currentAoi.session }
+
+    if (dateList.includes(initDate)) {
+      session.datesList[currentPlatform].currentDate = initDate
+      this.props.updateSession(this.props.session.currentAoi, session)
     }
   }
 
@@ -1982,6 +2004,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
           selectedTiles={selectedTiles}
           selectedTilesInList={highlightedTiles}
           tileClicked={this.handleTileClickedInList}
+          dateClicked={this.setDate}
           removeTile={this.removeTileFromSelected}
           submitAllJobs={this.handleSubmitAllJobs}
           saveTileJson={this.saveTileJson}

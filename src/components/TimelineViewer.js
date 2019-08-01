@@ -15,10 +15,10 @@ function TimelineViewer (props) {
       <h3>Timeline Viewer</h3>
       <p>{props.currentDate}</p>
       <div className='controls'>
-        <button className='decrementDate button' onClick={props.decrementDate} disabled={decrementDisabled}>
+        <button className='decrementDate button' onClick={() => props.decrementDate()} disabled={decrementDisabled}>
           <FontAwesomeIcon icon='arrow-left' />
         </button>
-        <button className='incrementDate button' onClick={props.incrementDate} disabled={incrementDisabled}>
+        <button className='incrementDate button' onClick={() => props.incrementDate()} disabled={incrementDisabled}>
           <FontAwesomeIcon icon='arrow-right' />
         </button>
       </div>
