@@ -35,7 +35,8 @@
 	padding: 5px 10px;
     text-decoration:none;
     outline: none;
-    float: right;
+    bottom: -100px;
+  margin-top: 25px;
 }
 .createButton:hover {
 	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
@@ -74,4 +75,12 @@
 	margin-left: auto;
 	margin-right: auto;
 	width: 100px;
+}
+
+.modalContent {
+  width: 80%;
+  height: auto;
+  position: fixed;
+  left: 50%;
+  top: 20%;
 }

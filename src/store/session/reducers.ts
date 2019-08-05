@@ -2,6 +2,7 @@ import { MainSessionState, UPDATE_MAIN_SESSION, SessionActionTypes } from './typ
 
 const initialState: MainSessionState = {
   currentAoi: '',
+  activeTab: 0,
 }
 
 export function sessionReducer(state = initialState, action: SessionActionTypes): MainSessionState {

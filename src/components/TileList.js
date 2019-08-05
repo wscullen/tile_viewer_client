@@ -155,7 +155,7 @@ export default class TileList extends Component {
     return (
       <div className="tileList">
         <div className="header">
-          <h3 className="sectionLabel">Tile List</h3>
+          <h5 className="sectionLabel title is-5">Tile List</h5>
           <div className="buttonSection">
             <button className="settingsButton" onClick={this.toggle}>
               <FontAwesomeIcon icon="cog" />
@@ -166,48 +166,50 @@ export default class TileList extends Component {
           </div>
         </div>
         <div className={optionsHeaderClass}>
-          <h4>Job Options</h4>
-          <ul>
-            <li>
-              <input
-                onChange={e => this.updateSettings('atmosphericCorrection', e)}
-                id={this.id}
-                type="checkbox"
-                checked={this.props.settings.atmosphericCorrection}
-              />
-              <label htmlFor={this.id}>Atmospheric Correction (Sen2Cor/LaSRC)</label>
-            </li>
-            <li>
-              <button onClick={this.props.saveTileJson}>Save Tile List as JSON</button>
-            </li>
-          </ul>
-          <h4>Sen2Agri</h4>
-          <ul>
-            <li>
-              <div className="menuItem">
-                <button onClick={this.props.submitSen2agriL2A} disabled={!this.props.enableSen2agriL2A}>
-                  Generate Atmos. Corrected (L2A)
-                </button>
-                {this.job_verified_icon_l2a()}
-              </div>
-            </li>
-            <li>
-              <div className="menuItem">
-                <button onClick={this.props.submitSen2agriL3A} disabled={!this.props.enableSen2agriL3A}>
-                  Generate Cloudfree Composites (L3A)
-                </button>
-                {this.job_verified_icon_l3a()}
-              </div>
-            </li>
-            <li>
-              <div className="menuItem">
-                <button onClick={this.props.submitSen2agriL3B} disabled={!this.props.enableSen2agriL3B}>
-                  Generate LAI/NDVI For Each Date (L3B)
-                </button>
-                {this.job_verified_icon_l3b()}
-              </div>
-            </li>
-          </ul>
+          <div className="optionsContent">
+            <h4>Job Options</h4>
+            <ul>
+              <li>
+                <input
+                  onChange={e => this.updateSettings('atmosphericCorrection', e)}
+                  id={this.id}
+                  type="checkbox"
+                  checked={this.props.settings.atmosphericCorrection}
+                />
+                <label htmlFor={this.id}>Atmospheric Correction (Sen2Cor/LaSRC)</label>
+              </li>
+              <li>
+                <button onClick={this.props.saveTileJson}>Save Tile List as JSON</button>
+              </li>
+            </ul>
+            <h4>Sen2Agri</h4>
+            <ul>
+              <li>
+                <div className="menuItem">
+                  <button onClick={this.props.submitSen2agriL2A} disabled={!this.props.enableSen2agriL2A}>
+                    Generate Atmos. Corrected (L2A)
+                  </button>
+                  {this.job_verified_icon_l2a()}
+                </div>
+              </li>
+              <li>
+                <div className="menuItem">
+                  <button onClick={this.props.submitSen2agriL3A} disabled={!this.props.enableSen2agriL3A}>
+                    Generate Cloudfree Composites (L3A)
+                  </button>
+                  {this.job_verified_icon_l3a()}
+                </div>
+              </li>
+              <li>
+                <div className="menuItem">
+                  <button onClick={this.props.submitSen2agriL3B} disabled={!this.props.enableSen2agriL3B}>
+                    Generate LAI/NDVI For Each Date (L3B)
+                  </button>
+                  {this.job_verified_icon_l3b()}
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
         <div className="listOfTiles">
           <div className="listWrapper">
@@ -217,7 +219,11 @@ export default class TileList extends Component {
 
                 if (this.props.selectedTiles[d].length > 0) {
                   const headerEle = (
-                    <li className={dateSectionHeaderClassname} onClick={() => this.props.dateClicked(moment(d).format('YYYYMMDD'))} key={d}>
+                    <li
+                      className={dateSectionHeaderClassname}
+                      onClick={() => this.props.dateClicked(moment(d).format('YYYYMMDD'))}
+                      key={d}
+                    >
                       {moment(d).format('MMMM DD YYYY')}
                     </li>
                   )
@@ -229,6 +235,7 @@ export default class TileList extends Component {
                     if (this.props.selectedTilesInList.includes(tile.id)) {
                       clsName = 'tileListItem activeSelection'
                     }
+
                     if (counter % 2 === 0) {
                       clsName += ' altBackground'
                     }

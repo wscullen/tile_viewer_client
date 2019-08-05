@@ -1,7 +1,9 @@
 import '../assets/css/MainContainer.css'
 import '../assets/css/CenterContainer.css'
 
-import React, { Component } from 'react'
+import '../assets/css/App.scss'
+
+import React, { Component, ReactElement } from 'react'
 import { connect } from 'react-redux'
 import moment from 'moment'
 
@@ -59,6 +61,8 @@ const resourcesPath = path.join(remote.app.getPath('userData'), 'localstorage.js
 console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
+import { getAoiNames } from '../store/aoi/reducers'
+
 interface SingleDateTileList {
   [index: string]: Tile[]
 }
@@ -80,6 +84,11 @@ interface AppProps {
   tiles: TileState
   thunkSendMessage: any
   history: History
+  aoiNames: string[]
+}
+
+interface SelectorFunctions {
+  aoiNames: string[]
 }
 
 interface JobObject {
@@ -120,6 +129,7 @@ interface DefaultAppState {
   sen2agri_l2a_job: Record<string, any>
   sen2agri_l3a_job: Record<string, any>
   sen2agri_l3b_job: Record<string, any>
+  initMap: boolean
 }
 
 const defaultState: DefaultAppState = {
@@ -142,9 +152,10 @@ const defaultState: DefaultAppState = {
   sen2agri_l2a_job: {},
   sen2agri_l3a_job: {},
   sen2agri_l3b_job: {},
+  initMap: false
 }
 
-class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
+class MainContainer extends Component<AppProps, AppState & DefaultAppState & SelectorFunctions> {
   constructor(props: AppProps) {
     super(props)
 
@@ -211,6 +222,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
         }
       })
     })
+  }
+
+  public removeAoi = (aoiName: string): void => {
+    console.log(aoiName)
   }
 
   cleanUpBeforeClose = () => {
@@ -438,6 +453,30 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
         }
       },
     )
+  }
+
+  public handleTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
+    const target = event.currentTarget as HTMLUListElement
+    console.log(target.id)
+    console.log(target)
+    console.log(event.currentTarget)
+    console.log('======================+')
+    console.log('trying to update active tab')
+    const session = { ...this.props.session }
+    const prevTab = session.activeTab
+    session.activeTab = parseInt(target.id)
+    this.props.updateMainSession(session)
+
+    if (session.activeTab === 0 && prevTab !== 0) {
+      setTimeout(() => {
+        console.log('Activating after tab switch')
+        this.setState({
+          initMap: true
+        })
+        this.activateAOI(this.props.aois.byId[session.currentAoi].name)
+      }, 1000)
+
+    }
   }
 
   resetState = () => {
@@ -860,6 +899,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
     let areaOfInterest: AreaOfInterest
 
     Object.keys(areasOfInterest).map((id: string) => {
+      console.log(aoi_name)
+      console.log(areasOfInterest[id].name)
       if (areasOfInterest[id].name === aoi_name) {
         areaOfInterest = areasOfInterest[id]
       }
@@ -900,7 +941,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
       ? activeAOI.cloudPercentFilter
       : this.state.cloudPercentFilter
 
-      const currentMainSession = { ...this.props.session}
+    const currentMainSession = { ...this.props.session }
     currentMainSession.currentAoi = areaOfInterest.id
 
     this.props.updateMainSession(currentMainSession)
@@ -916,6 +957,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
       currentDate,
       aoi_list,
       cloudPercentFilter,
+      initMap: false
     })
   }
 
@@ -1885,37 +1927,95 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
     return { datesArray: [], datesObject: {} }
   }
 
-  render() {
-    // @ts-ignore
-    const cloudPercent = this.state.cloudPercentFilter
-    // TODO: create as a selector function in the Aoi reducer
-    let currentAoi: AreaOfInterest
-    const aois = this.props.aois.allIds.map((id: string) => {
-      const aoi = this.props.aois.byId[id]
+  public mainTabSwitcher = (
+    currentAoi: AreaOfInterest,
+    currentTiles: Tile[],
+    selectedTiles: SingleDateTileList,
+    highlightedTiles: string[],
+    currentPlatform: string,
+    currentDate: string,
+  ): ReactElement => {
+    if (this.props.session.activeTab === 0) {
+      return (
+        <div className="contentContainer">
+          <div className="mapContainer">
+            <MapViewer
+              tiles={currentTiles}
+              tilesSelectedInList={highlightedTiles}
+              tileSelected={this.handleTileSelect}
+              currentAoiWkt={currentAoi ? currentAoi.wktFootprint : null}
+              wrsOverlay={currentAoi ? currentAoi.wrsOverlay : null}
+              activeAOI={currentAoi ? currentAoi.name : null}
+              currentDate={currentAoi ? currentAoi.session.datesList[currentPlatform].currentDate : null}
+              initializeMap={this.state.initMap}
+            />
+            <FilteringTools
+              selectAll={this.selectAllVisibleTiles}
+              deselectAll={this.deselectAllForCurrentDate}
+              updateCloudFilter={this.handleUpdateCloudFilter}
+              cloudPercentFilter={currentAoi ? currentAoi.session.cloudPercentFilter : 100}
+            />
+            <TimelineViewer
+              currentDate={currentDate}
+              allTiles={this.state.allTiles}
+              incrementDate={this.incrementDate}
+              decrementDate={this.decrementDate}
+            />
+          </div>
+          <TileList
+            settings={this.state.jobSettings}
+            updateSettings={this.updateJobSettings}
+            selectedTiles={selectedTiles}
+            selectedTilesInList={highlightedTiles}
+            tileClicked={this.handleTileClickedInList}
+            dateClicked={this.setDate}
+            removeTile={this.removeTileFromSelected}
+            submitAllJobs={this.handleSubmitAllJobs}
+            saveTileJson={this.saveTileJson}
+            submitSen2agriL2A={this.submitSen2agriL2A}
+            enableSen2agriL2A={this.state.enableSen2AgriL2A}
+            submitSen2agriL3A={this.submitSen2agriL3A}
+            enableSen2agriL3A={this.state.enableSen2AgriL3A}
+            submitSen2agriL3B={this.submitSen2agriL3B}
+            enableSen2agriL3B={this.state.enableSen2AgriL3B}
+            sen2agriL2AJob={this.state.sen2agri_l2a_job}
+            sen2agriL3AJob={this.state.sen2agri_l3a_job}
+            sen2agriL3BJob={this.state.sen2agri_l3b_job}
+            toggleTileVisibility={this.toggleVisibility}
+          />
+        </div>
+      )
+    } else if (this.props.session.activeTab === 1) {
+      return (
+        <div>
+          <h2>Jobs</h2>
+        </div>
+      )
+    } else if (this.props.session.activeTab === 2) {
+      return (
+        <div>
+          <h2>Details</h2>
+        </div>
+      )
+    }
+  }
 
-      // @ts-ignore
-      if (aoi.name === this.state.activeAOI) {
-        // TODO: create a SESSION reducer for current user session settings like activeAOI
-        currentAoi = aoi
-      }
-      return this.props.aois.byId[id]
-    })
+  render() {
+    const aois = Object.values(this.props.aois.byId)
+    let currentAoi: AreaOfInterest
+
+    if (this.props.session.currentAoi !== '') currentAoi = this.props.aois.byId[this.props.session.currentAoi]
 
     const selectedTiles: SingleDateTileList = {}
     const highlightedTiles: string[] = []
     let currentTiles: Tile[] = []
-
-    console.log('CURRENT AOI')
-    console.log(currentAoi)
-
-    let currentPlatform = null
-    let currentDate = null
+    let currentPlatform = ''
+    let currentDate = ''
 
     if (currentAoi) {
-      currentPlatform = currentAoi.session.currentPlatform
+      const session = { ...currentAoi.session }
+      currentPlatform = session.currentPlatform
       currentDate = currentAoi.session.datesList[currentPlatform].currentDate
-
-      console.log(currentDate)
 
       currentTiles = currentAoi.allTiles[currentPlatform][currentDate].map(id => {
         return this.props.tiles.byId[id]
@@ -1926,7 +2026,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
       for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
         const tileArray: Tile[] = []
         const tileArray2: Tile[] = []
-
         value.map((id: string) => {
           if (this.props.tiles.byId[id].selected) {
             tileArray.push(this.props.tiles.byId[id])
@@ -1935,26 +2034,18 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
             highlightedTiles.push(id)
           }
         })
-
         selectedTiles[key] = tileArray
       }
-      console.log('selected Tiles')
-      console.log(selectedTiles)
-      console.log('highlighted Tiles')
-      console.log(highlightedTiles)
     }
-
-    console.log(currentAoi)
 
     return (
       <div className="mainContainer" ref="mainContainer">
-        {/*
-        // @ts-ignore */}
         <AddAreaOfInterestModal
           show={this.state.show}
           hideModal={this.hideModal}
           addAreaOfInterest={this.addAreaOfInterest}
           settings={this.props.settings}
+          aoiNames={this.props.aoiNames}
         />
         {/*
         // @ts-ignore */}
@@ -1963,62 +2054,20 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
           areasOfInterest={aois}
           activateAOI={this.activateAOI}
           activeAOI={currentAoi ? currentAoi.name : null}
+          removeAoi={this.removeAoi}
+          activeTab={this.props.session.activeTab}
+          handleTabChange={this.handleTabChange}
         />
-
-        <div className="centerContainer">
-          {/*
-          // @ts-ignore */}
-          <MapViewer
-            tiles={currentTiles}
-            tilesSelectedInList={highlightedTiles}
-            tileSelected={this.handleTileSelect}
-            currentAoiWkt={currentAoi ? currentAoi.wktFootprint : null}
-            wrsOverlay={currentAoi ? currentAoi.wrsOverlay : null}
-            activeAOI={currentAoi ? currentAoi.name : null}
-            currentDate={currentAoi ? currentAoi.session.datesList[currentPlatform].currentDate : null}
-          />
-          {/*
-          // @ts-ignore */}
-          <FilteringTools
-            selectAll={this.selectAllVisibleTiles}
-            deselectAll={this.deselectAllForCurrentDate}
-            updateCloudFilter={this.handleUpdateCloudFilter}
-            cloudPercentFilter={currentAoi ? currentAoi.session.cloudPercentFilter : 100}
-          />
-          {/*
-          // @ts-ignore */}
-          <TimelineViewer
-            currentDate={currentDate}
-            allTiles={this.state.allTiles}
-            incrementDate={this.incrementDate}
-            decrementDate={this.decrementDate}
-          />
+        <div className="rightContainer">
+          {this.mainTabSwitcher(
+            currentAoi,
+            currentTiles,
+            selectedTiles,
+            highlightedTiles,
+            currentPlatform,
+            currentDate,
+          )}
         </div>
-
-        {/*
-        // @ts-ignore */}
-
-        <TileList
-          settings={this.state.jobSettings}
-          updateSettings={this.updateJobSettings}
-          selectedTiles={selectedTiles}
-          selectedTilesInList={highlightedTiles}
-          tileClicked={this.handleTileClickedInList}
-          dateClicked={this.setDate}
-          removeTile={this.removeTileFromSelected}
-          submitAllJobs={this.handleSubmitAllJobs}
-          saveTileJson={this.saveTileJson}
-          submitSen2agriL2A={this.submitSen2agriL2A}
-          enableSen2agriL2A={this.state.enableSen2AgriL2A}
-          submitSen2agriL3A={this.submitSen2agriL3A}
-          enableSen2agriL3A={this.state.enableSen2AgriL3A}
-          submitSen2agriL3B={this.submitSen2agriL3B}
-          enableSen2agriL3B={this.state.enableSen2AgriL3B}
-          sen2agriL2AJob={this.state.sen2agri_l2a_job}
-          sen2agriL3AJob={this.state.sen2agri_l3a_job}
-          sen2agriL3BJob={this.state.sen2agri_l3b_job}
-          toggleTileVisibility={this.toggleVisibility}
-        />
       </div>
     )
   }
@@ -2027,7 +2076,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState> {
 const mapStateToProps = (state: AppState) => ({
   tiles: state.tile,
   aois: state.aoi,
-  session: state.session
+  session: state.session,
+  aoiNames: getAoiNames(state.aoi),
 })
 
 export default connect(

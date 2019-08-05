@@ -19,7 +19,7 @@
 }
 
 .close-button:hover {
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);	
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
 }
 
 .close-button:active {
@@ -29,4 +29,17 @@
 
 .fa-close-window {
 	color: black;
+}
+
+h4 {
+	margin-bottom: 0px;
+	margin-top: 3px;
+}
+
+h2 {
+  margin-bottom: 15px;
+}
+
+label {
+  margin: 0px;
 }

@@ -9,12 +9,14 @@ const Modal = ({ handleClose, show, children }) => {
 
   return (
     <div className={showHideClassName}>
-      <section className="modal-main">
-        {children}
-        <button className="close-button" onClick={handleClose}>
-          <FontAwesomeIcon className="fa-icon-black" icon="window-close" />
-        </button>
-      </section>
+      <div className="modalContent">
+        <section className="modal-main">
+          {children}
+          <button className="close-button" onClick={handleClose}>
+            <FontAwesomeIcon className="fa-icon-black" icon="window-close" />
+          </button>
+        </section>
+      </div>
     </div>
   )
 }

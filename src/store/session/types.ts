@@ -1,5 +1,12 @@
+enum NavigationTabs {
+  Map,
+  Jobs,
+  Details,
+}
+
 export interface MainSessionState {
   currentAoi: string
+  activeTab: NavigationTabs
 }
 
 export const UPDATE_MAIN_SESSION = 'UPDATE_MAIN_SESSION'

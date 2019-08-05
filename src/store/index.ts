@@ -33,10 +33,7 @@ export default function configureStore() {
   const middlewares = [thunkMiddleware]
   const middleWareEnhancer = applyMiddleware(...middlewares)
 
-  const store = createStore(
-    persistedReducer,
-    composeWithDevTools(middleWareEnhancer)
-  )
+  const store = createStore(persistedReducer, composeWithDevTools(middleWareEnhancer))
 
   const persistor = persistStore(store)
 

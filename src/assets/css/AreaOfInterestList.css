@@ -1,19 +1,16 @@
 .areaOfInterestList {
     border-right: 1px solid lightgrey;
     /* margin: 2px; */
-	width: 250px;
-	
+	width: 300px;
+}
 
+h5.sectionLabel.title.is-5 {
+  margin: 0px;
 }
 
 .areaOfInterestList > .header {
-    padding: 4px;
-
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-
+    flex-direction: column;
     background: #eee;
     border-bottom: 1px #bbb solid;
     font-weight: 300;
@@ -22,11 +19,23 @@
     top: 0px;
     width: 100%;
     z-index: 1;
-
 }
 
-.addAreaButton {
+.areaOfInterestList > .header > .topRow {
+  padding: 4px;
 
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.areaOfInterestList > .header > .bottomRow {
+    align-self: center;
+    justify-self: center;
+    width: 100%;
+    padding: 4px;
 }
 
 .myButton {
@@ -75,13 +84,70 @@
 	background: #eee;
 }
 
-.aoiListItem {
+li .aoiListItem {
 	padding: 4px 8px;
 	/* border-bottom: 1px coral solid; */
 	border: 2px #eee solid;
-	font-weight: 600;
+  font-weight: 600;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
-.activeAOI {
+.aoiListItem.altBackground {
+  background: #dededf;
+  border: 2px #dededf solid;
+}
+
+.aoiListItem.activeAOI {
 	border: 2px cyan solid;
+}
+
+.aoiActionButton {
+  cursor: pointer;
+  color: #000;
+  padding: 0px 4px;
+
+  text-decoration:none;
+  outline: none;
+  background: none;
+  border: none;
+}
+
+
+.aoiActionButton:hover {
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+}
+
+.aoiActionButton:active {
+  position: relative;
+  top: 1px;
+}
+
+.aoiDeleteButtons {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.aoiDeleteButtons {
+  /* flex-grow: 1; */
+  transition: all 250ms linear;
+}
+
+.cancelButton {
+  width: 50%;
+  margin: 0px 2px;
+}
+
+.deleteButton {
+  width: 50%;
+  margin: 0px 2px;
+}
+
+.deleteWarning {
+  margin-bottom: 0px;
+  font-size: 1.3em;
+  font-weight: 600;
 }

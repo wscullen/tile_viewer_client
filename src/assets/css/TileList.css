@@ -1,9 +1,11 @@
 .tileList {
   border-left: 1px solid lightgrey;
-  width: 500px;
+  min-width: 500px;
+  margin: 0px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow:hidden;
 }
 
 .listOfTiles {
@@ -51,9 +53,6 @@
   box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
   position: sticky;
   top: 0px;
-  min-height: 40px;
-  max-height: 40px;
-  height: 40px;
 
   flex-shrink: 0;
   width: 100%;
@@ -63,6 +62,10 @@
 .buttonSection {
   z-index: 2;
   height: 100%;
+}
+
+button {
+  outline: none;
 }
 
 .myButton {
@@ -177,17 +180,27 @@
   padding-left: 0px;
 }
 
+h5.sectionLabel.title.is-5 {
+  margin: 0px;
+}
+
 .menuItem {
   display: flex;
   flex-direction: row;
 }
 
 .optionsWrapper {
+  max-height: 250px;
+  transition: max-height 750ms ease-in-out, padding 1ms 0.45s linear;
+}
+
+.optionsContent {
   background-color: #ddd;
   box-shadow: inset 0px 1px 3px rgba(100, 100, 100, 0.3);
   /* border: #ddd solid 5px; */
   white-space: nowrap;
   padding: 5px;
+  height: auto;
 }
 
 .flexed {
@@ -195,15 +208,13 @@
   /* border: 1px solid black; */
 
   /* transition: min-height 0.65s ease-in-out, opacity 0.5s, padding 0s; */
-  transition: height 500ms ease-in-out;
-  height: 165px;
 }
 
 .removed {
   /* Setting this to zero breaks the transition */
   /* overflow: hidden; */
-  transition: height 500ms ease-in-out, padding 1ms 0.45s linear;
-  height: 0px;
+  transition: max-height 750ms ease-in-out, padding 1ms 0.45s linear;
+  max-height: 0px;
   padding: 0px;
   /* overflow: hidden; */
   /* transition: min-height 0.65s ease-in-out, opacity 0.5s, padding 0s;

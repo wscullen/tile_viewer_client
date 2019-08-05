@@ -34,8 +34,9 @@ const propTypes = {
     'onFocusChange',
     'startDateId',
     'endDateId',
-    'settings'
-  ])
+    'settings',
+    'aoiNames',
+  ]),
 }
 
 const defaultProps = {
@@ -78,9 +79,9 @@ const defaultProps = {
   // navigation related props
   navPrev: null,
   navNext: null,
-  onPrevMonthClick() { },
-  onNextMonthClick() { },
-  onClose() { },
+  onPrevMonthClick() {},
+  onNextMonthClick() {},
+  onClose() {},
 
   // day presentation and interaction related props
   renderCalendarDay: undefined,
@@ -97,8 +98,7 @@ const defaultProps = {
   monthFormat: 'MMMM YYYY',
   phrases: DateRangePickerPhrases,
 
-  stateDateWrapper: date => date
-
+  stateDateWrapper: date => date,
 }
 
 class AddAreaOfInterestModal extends React.Component {
@@ -124,7 +124,9 @@ class AddAreaOfInterestModal extends React.Component {
       loading: false,
       showResult: false,
       areaCreated: false,
-      name: ''
+      name: '',
+      formValid: false,
+      nameErrorMessage: '',
     }
 
     this.fileInput = React.createRef()
@@ -135,15 +137,15 @@ class AddAreaOfInterestModal extends React.Component {
     const { stateDateWrapper } = this.props
     this.setState({
       startDate: startDate && stateDateWrapper(startDate),
-      endDate: endDate && stateDateWrapper(endDate)
+      endDate: endDate && stateDateWrapper(endDate),
     })
   }
 
-  onFocusChange = (focusedInput) => {
+  onFocusChange = focusedInput => {
     this.setState({ focusedInput })
   }
 
-  platformSelected = (event) => {
+  platformSelected = event => {
     const platformName = event.target.name
     const platforms = [...this.state.platforms]
     const platformIndex = platforms.indexOf(platformName)
@@ -155,29 +157,29 @@ class AddAreaOfInterestModal extends React.Component {
     }
 
     this.setState({
-      platforms
+      platforms,
     })
   }
 
-  filesSelected = (event) => {
+  filesSelected = event => {
     console.log(event)
     this.setState({
-      files: Array.from(this.fileInput.current.files)
+      files: Array.from(this.fileInput.current.files),
     })
   }
 
-  nameUpdated = (event) => {
+  nameUpdated = event => {
     console.log(event)
     this.setState({
-      name: event.target.value
+      name: event.target.value,
     })
   }
 
   showSelectedFiles = () => {
     return (
-      <ul className='fileList'>
+      <ul className="fileList">
         {this.state.files.map((ele, index) => {
-          return (<li key={index}>{ele.name}</li>)
+          return <li key={index}>{ele.name}</li>
         })}
       </ul>
     )
@@ -201,13 +203,13 @@ class AddAreaOfInterestModal extends React.Component {
     this.setState({
       loading: true,
       showResult: true,
-      message: 'Request is being processed by the server (this can take a while)...'
+      message: 'Request is being processed by the server (this can take a while)...',
     })
 
     fetch(`${this.props.settings.s2d2_url}/submit_aoi/`, {
       method: 'POST',
       body: formData,
-      headers: headers
+      headers: headers,
     })
       .then(response => response.json())
       .then(response => {
@@ -224,13 +226,13 @@ class AddAreaOfInterestModal extends React.Component {
           name: this.state.name,
           startDate: this.state.startDate,
           endDate: this.state.endDate,
-          shapefile: this.state.files.filter((ele) => path.extname(ele.name) === '.shp'),
+          shapefile: this.state.files.filter(ele => path.extname(ele.name) === '.shp'),
           wkt_footprint: data['wkt_footprint'],
           mgrs_list: data['mgrs_list'],
           wrs_list: data['wrs_list'],
           raw_tile_list: data['tile_results'],
           wrs_overlay: data['wrs_geojson'],
-          sensor_list: data['sensor_list']
+          sensor_list: data['sensor_list'],
         }
         this.props.addAreaOfInterest(aoi)
         console.log(aoi)
@@ -245,7 +247,7 @@ class AddAreaOfInterestModal extends React.Component {
           loading: false,
           areaCreated: true,
           message: 'Area created successfully!',
-          files: []
+          files: [],
         })
       })
       .catch(error => {
@@ -256,7 +258,7 @@ class AddAreaOfInterestModal extends React.Component {
           platform: 's2_sr',
           loading: false,
           areaCreated: false,
-          message: 'Something went wrong, unable to create area!'
+          message: 'Something went wrong, unable to create area!',
         })
       })
     // done submitting, set submitting to false
@@ -264,9 +266,7 @@ class AddAreaOfInterestModal extends React.Component {
 
   displayLoadingMessage = () => {
     if (this.state.message !== '') {
-      return (
-        <h5>{this.state.message}</h5>
-      )
+      return <h5>{this.state.message}</h5>
     }
   }
 
@@ -274,14 +274,36 @@ class AddAreaOfInterestModal extends React.Component {
     if (this.state.areaCreated === true) {
       this.setState({
         showResult: false,
-        message: ''
+        message: '',
       })
     }
 
     this.props.hideModal()
   }
 
-  handleSubmit = (event) => {
+  validateName = name => {
+    console.log(name)
+    let valid = true
+
+    if (this.props.aoiNames.includes(name)) {
+      valid = false
+      this.setState({
+        nameErrorMessage: 'Name already taken.',
+      })
+    }
+
+    if (name.length < 5) {
+      valid = false
+      console.log('name too short')
+      this.setState({
+        nameErrorMessage: 'Name too short.',
+      })
+    }
+
+    return valid
+  }
+
+  handleSubmit = event => {
     event.preventDefault()
     // process form submission here
     console.log(event)
@@ -290,12 +312,22 @@ class AddAreaOfInterestModal extends React.Component {
     //   this.fileInput.current.files[0].name
     // }`
 
+    const nameValid = this.validateName(this.state.name)
+
+    if (!nameValid) {
+      return
+    }
+
     console.log(this.state.platform)
     console.log(this.state.startDate)
     console.log(this.state.endDate)
     for (const f of this.fileInput.current.files) {
       console.log(f.name)
     }
+
+    this.setState({
+      nameErrorMessage: '',
+    })
 
     const headers = new Headers()
 
@@ -304,12 +336,13 @@ class AddAreaOfInterestModal extends React.Component {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
-        headers: headers
-      }).then(response => response.json())
+        headers: headers,
+      })
+        .then(response => response.json())
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           this.setState({
-            csrf_token: JSON.stringify(response)
+            csrf_token: JSON.stringify(response),
           })
 
           this.submitAreaOfInterest()
@@ -335,10 +368,13 @@ class AddAreaOfInterestModal extends React.Component {
       'hideModal',
       'show',
       'addAreaOfInterest',
-      'settings'
+      'settings',
+      'aoiNames',
     ])
 
-    const showHideClassName = this.state.showResult ? 'loadingIndicators display-inline' : 'loadingIndicators display-none'
+    const showHideClassName = this.state.showResult
+      ? 'loadingIndicators display-inline'
+      : 'loadingIndicators display-none'
 
     const landsat8Selected = this.state.platforms.indexOf('landsat8') !== -1
     const sentinel2Selected = this.state.platforms.indexOf('sentinel2') !== -1
@@ -346,12 +382,18 @@ class AddAreaOfInterestModal extends React.Component {
     return (
       <Modal show={this.props.show} handleClose={this.modalCleanup}>
         <h2>Area of Interest Constraints</h2>
-        <br />
 
         <form onSubmit={this.handleSubmit} ref={this.form}>
-          <label htmlFor='aoi_name'>Name</label>
-          <br />
-          <input id='aoi_name' className='aoi_name' type='text' name='aoi_name' value={this.state.name} onChange={this.nameUpdated} />
+          <h4>Name</h4>
+          <input
+            id="aoi_name"
+            className="aoi_name"
+            type="text"
+            name="aoi_name"
+            value={this.state.name}
+            onChange={this.nameUpdated}
+          />
+          {this.state.nameErrorMessage}
           <h4>Date Range</h4>
           <DateRangePicker
             {...props}
@@ -367,31 +409,39 @@ class AddAreaOfInterestModal extends React.Component {
           <br />
           <h4>Select Shapefile (and associated files) for AOI Extent</h4>
 
-          <input type='file' name='shapefiles' ref={this.fileInput} multiple onChange={this.filesSelected} />
+          <input type="file" name="shapefiles" ref={this.fileInput} multiple onChange={this.filesSelected} />
           {this.showSelectedFiles()}
 
           <h4>Platforms</h4>
           <div>
-            <input type='checkbox' id='landsat8' name='landsat8' checked={landsat8Selected} onChange={this.platformSelected} />
-            <label htmlFor='landsat8'>Landsat 8</label>
+            <input
+              type="checkbox"
+              id="landsat8"
+              name="landsat8"
+              checked={landsat8Selected}
+              onChange={this.platformSelected}
+            />
+            <label htmlFor="landsat8">Landsat 8</label>
           </div>
           <div>
-            <input type='checkbox' id='sentinel2' name='sentinel2' checked={sentinel2Selected} onChange={this.platformSelected} />
-            <label htmlFor='sentinel2'>Sentinel 2</label>
+            <input
+              type="checkbox"
+              id="sentinel2"
+              name="sentinel2"
+              checked={sentinel2Selected}
+              onChange={this.platformSelected}
+            />
+            <label htmlFor="sentinel2">Sentinel 2</label>
           </div>
-          <button className='createButton' type='submit' disabled={this.state.loading}>Create Area of Interest</button>
+          <button className="createButton" type="submit" disabled={this.state.loading}>
+            Create Area of Interest
+          </button>
         </form>
         <div className={showHideClassName}>
-          <SyncLoader
-            sizeUnit={'px'}
-            margin={'2px'}
-            size={15}
-            color={'lightgrey'}
-            loading={this.state.loading} />
+          <SyncLoader sizeUnit={'px'} margin={'2px'} size={15} color={'lightgrey'} loading={this.state.loading} />
           <br />
           {this.displayLoadingMessage()}
         </div>
-
       </Modal>
     )
   }
