@@ -24,7 +24,7 @@ import {
 import { MainSessionState } from '../store/session/types'
 import { updateMainSession } from '../store/session/actions'
 
-import { addAoi, updateSession } from '../store/aoi/actions'
+import { addAoi, removeAoi, updateSession } from '../store/aoi/actions'
 
 import { thunkSendMessage } from '../thunks'
 
@@ -77,6 +77,7 @@ interface AppProps {
   addTile: typeof addTile
   updateTile: typeof updateTile
   addAoi: typeof addAoi
+  removeAoi: typeof removeAoi
   updateSession: typeof updateSession
   updateMainSession: typeof updateMainSession
   aois: AreaOfInterestState
@@ -152,7 +153,7 @@ const defaultState: DefaultAppState = {
   sen2agri_l2a_job: {},
   sen2agri_l3a_job: {},
   sen2agri_l3b_job: {},
-  initMap: false
+  initMap: false,
 }
 
 class MainContainer extends Component<AppProps, AppState & DefaultAppState & SelectorFunctions> {
@@ -226,6 +227,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
   public removeAoi = (aoiName: string): void => {
     console.log(aoiName)
+    console.log('removing aoi...')
+
+    if (this.props.session.currentAoi === aoiName) {
+      const session = { ...this.props.session }
+      session.currentAoi = ''
+
+      this.props.updateMainSession(session)
+    }
+
+    this.props.removeAoi(aoiName)
   }
 
   cleanUpBeforeClose = () => {
@@ -470,10 +481,9 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     if (session.activeTab === 0 && prevTab !== 0) {
       setTimeout(() => {
         console.log('Activating after tab switch')
-          if (session.currentAoi !== '') {
-            this.setState({
-              initMap: true
-            })
+
+        let initMap
+        if (session.currentAoi !== null) {
             this.activateAOI(this.props.aois.byId[session.currentAoi].name)
           }
         }, 1000)
@@ -2087,6 +2097,7 @@ export default connect(
     addTile,
     updateTile,
     addAoi,
+    removeAoi,
     updateSession,
     updateMainSession,
     thunkSendMessage,

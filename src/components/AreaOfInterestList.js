@@ -117,9 +117,7 @@ export default class AreaOfInterestList extends React.Component {
                   <PopoverBody className="aoiDeletePopover">
                     <p className="deleteWarning">Permanently delete this area of interest?</p>
                     <div className="aoiDeleteButtons">
-                      <Button
-                        outline
-                        color="info"
+                      <button
                         className="cancelButton"
                         onClick={event => {
                           console.log('cancel clicked')
@@ -130,10 +128,8 @@ export default class AreaOfInterestList extends React.Component {
                         }}
                       >
                         Cancel
-                      </Button>
-                      <Button
-                        outline
-                        color="danger"
+                      </button>
+                      <button
                         className="deleteButton"
                         onClick={event => {
                           console.log('trying to remove aoi, inside aoi list')
@@ -143,8 +139,8 @@ export default class AreaOfInterestList extends React.Component {
                           this.props.removeAoi(ele.name)
                         }}
                       >
-                        DELETE
-                      </Button>
+                        Delete
+                      </button>
                     </div>
                   </PopoverBody>
                 </Popover>

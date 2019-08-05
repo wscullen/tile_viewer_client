@@ -139,6 +139,7 @@ export default class MapViewer extends Component {
       },
       () => {
         if (this.props.activeAOI) {
+          this.initMap()
           this.updateSelectedOverlay()
           this.updateAllStyle()
           this.updateMap()
@@ -264,6 +265,50 @@ export default class MapViewer extends Component {
       })
     }
 
+    console.log('inside component will update')
+    console.log(prevProps.activeAOI)
+    console.log(this.props.activeAOI)
+    console.log(prevProps.activeAOI)
+    console.log(this.props.activeAOI)
+    console.log('updating AOI info')
+
+    if (this.props.activeAOI === null) {
+      this.clearMap()
+    }
+
+    if (this.props.activeAOI !== null && prevProps.activeAOI !== this.props.activeAOI) {
+      this.initMap()
+    }
+
+    if (prevProps.tilesSelectedInList !== this.props.tilesSelectedInList) {
+      this.updateSelectedOverlay()
+    }
+
+    this.updateAllStyle()
+
+    if (prevProps.currentDate !== this.props.currentDate || prevProps.activeAOI !== this.props.activeAOI) {
+      console.log('updating map....')
+      this.updateMap()
+    }
+  }
+
+  clearMap = () => {
+    const map = this.state.map
+
+    map.getLayers().forEach(ele => {
+      console.log(ele)
+      console.log(ele.get('name'))
+      if (
+        ele.get('name') === 'currentAoiFootprint' ||
+        ele.get('name') === 'tileFootprint' ||
+        ele.get('name') === 'wrsOverlay'
+      ) {
+        ele.getSource().clear()
+      }
+    })
+  }
+
+  initMap = () => {
     const aoi_style = new Style({
       stroke: new Stroke({
         color: '#e11',
@@ -297,17 +342,8 @@ export default class MapViewer extends Component {
       })
       return wrsOverlayStyle
     }
-
-    console.log('inside component will update')
-    console.log(prevProps.activeAOI)
-    console.log(this.props.activeAOI)
-    console.log(prevProps.activeAOI)
-    console.log(this.props.activeAOI)
-
-    console.log('updating AOI info')
     const map = this.state.map
     let aoiFootprintLayer
-    let tileFootprintLayer
     let wrsOverlayLayer
 
     map.getLayers().forEach(ele => {
@@ -322,97 +358,78 @@ export default class MapViewer extends Component {
       }
     })
 
-    console.log(this.props.activeAOI)
-    if (
-      (this.props.activeAOI !== null && prevProps.activeAOI !== this.props.activeAOI) ||
-      (this.props.activeAOI !== null && this.props.initializeMap)
-    ) {
-      console.log('Trying to add AOI footprint ')
-      var format = new WKT()
-      var feature = format.readFeature(this.props.currentAoiWkt, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
+    console.log('Trying to add AOI footprint ')
+    var format = new WKT()
+    var feature = format.readFeature(this.props.currentAoiWkt, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: 'EPSG:3857',
+    })
+
+    // TODO: In the future, try to update the existing layer source, instead of removing it
+    if (aoiFootprintLayer) {
+      console.log('aoi footprint layer exists, updating')
+      aoiFootprintLayer.getSource().clear()
+      aoiFootprintLayer.getSource().addFeature(feature)
+    } else {
+      console.log('aoi footprint does not exist, create')
+
+      aoiFootprintLayer = new VectorLayer({
+        source: new VectorSource({
+          features: [feature],
+        }),
+        name: 'currentAoiFootprint',
+        style: aoi_style,
       })
 
-      // TODO: In the future, try to update the existing layer source, instead of removing it
-      if (aoiFootprintLayer) {
-        console.log('aoi footprint layer exists, updating')
-        aoiFootprintLayer.getSource().clear()
-        aoiFootprintLayer.getSource().addFeature(feature)
-      } else {
-        console.log('aoi footprint does not exist, create')
+      map.addLayer(aoiFootprintLayer)
 
-        aoiFootprintLayer = new VectorLayer({
+      const extent = feature.getGeometry().getExtent()
+      console.log(extent)
+      aoiFootprintLayer.setZIndex(9999)
+
+      this.state.map.getView().fit(extent, { duration: 1500 })
+    }
+
+    if (this.props.wrsOverlay) {
+      console.log('Trying to add WRS overlay')
+      const featureList = []
+
+      for (const feature of this.props.wrsOverlay.features) {
+        const geojsonFormat = new GeoJSON()
+        const geojsonFeature = geojsonFormat.readFeature(feature, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857',
+        })
+        featureList.push(geojsonFeature)
+      }
+
+      // TODO: In the future, try to update the existing layer source, instead of removing it
+      if (wrsOverlayLayer) {
+        console.log('wrs overlay layer exists, updating')
+        wrsOverlayLayer.getSource().clear()
+        for (const feature of featureList) {
+          wrsOverlayLayer.getSource().addFeature(feature)
+        }
+      } else {
+        console.log('wrs overlay does not exist, create')
+
+        wrsOverlayLayer = new VectorLayer({
           source: new VectorSource({
-            features: [feature],
+            features: featureList,
           }),
-          name: 'currentAoiFootprint',
-          style: aoi_style,
+          name: 'wrsOverlay',
+          style: getOverlayStyle,
         })
 
-        map.addLayer(aoiFootprintLayer)
-
-        const extent = feature.getGeometry().getExtent()
-        console.log(extent)
-        aoiFootprintLayer.setZIndex(9999)
-
-        this.state.map.getView().fit(extent, { duration: 1500 })
+        map.addLayer(wrsOverlayLayer)
       }
 
-      if (this.props.wrsOverlay) {
-        console.log('Trying to add WRS overlay')
-        const featureList = []
+      const extent = feature.getGeometry().getExtent()
+      console.log(extent)
+      aoiFootprintLayer.setZIndex(9999)
+      wrsOverlayLayer.setZIndex(99999)
 
-        for (const feature of this.props.wrsOverlay.features) {
-          const geojsonFormat = new GeoJSON()
-          const geojsonFeature = geojsonFormat.readFeature(feature, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
-          })
-          featureList.push(geojsonFeature)
-        }
-
-        // TODO: In the future, try to update the existing layer source, instead of removing it
-        if (wrsOverlayLayer) {
-          console.log('wrs overlay layer exists, updating')
-          wrsOverlayLayer.getSource().clear()
-          for (const feature of featureList) {
-            wrsOverlayLayer.getSource().addFeature(feature)
-          }
-        } else {
-          console.log('wrs overlay does not exist, create')
-
-          wrsOverlayLayer = new VectorLayer({
-            source: new VectorSource({
-              features: featureList,
-            }),
-            name: 'wrsOverlay',
-            style: getOverlayStyle,
-          })
-
-          map.addLayer(wrsOverlayLayer)
-        }
-
-        const extent = feature.getGeometry().getExtent()
-        console.log(extent)
-        aoiFootprintLayer.setZIndex(9999)
-        wrsOverlayLayer.setZIndex(99999)
-
-        this.state.map.getView().fit(extent, { duration: 1500 })
-      }
-    }
-    console.log(prevProps)
-    console.log(this.props)
-
-    if (prevProps.tilesSelectedInList !== this.props.tilesSelectedInList) {
-      this.updateSelectedOverlay()
-    }
-
-    this.updateAllStyle()
-
-    if (prevProps.currentDate !== this.props.currentDate || prevProps.activeAOI !== this.props.activeAOI) {
-      console.log('updating map....')
-      this.updateMap()
+      this.state.map.getView().fit(extent, { duration: 1500 })
     }
   }
 

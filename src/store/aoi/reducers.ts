@@ -1,4 +1,4 @@
-import { AreaOfInterestState, ADD_AOI, UPDATE_SESSION, AoiActionTypes } from './types'
+import { AreaOfInterestState, ADD_AOI, REMOVE_AOI, UPDATE_SESSION, AoiActionTypes } from './types'
 
 const initialState: AreaOfInterestState = {
   byId: {},
@@ -29,6 +29,24 @@ export function aoiReducer(state = initialState, action: AoiActionTypes): AreaOf
       const areasOfInterest = { ...state }
       const areaOfInterest = areasOfInterest.byId[action.payload.id]
       areaOfInterest.session = { ...action.payload.session }
+
+      return {
+        ...areasOfInterest,
+      }
+    }
+    case REMOVE_AOI: {
+      console.log(action.payload)
+      const areasOfInterest = { ...state }
+
+      let aoiId
+      for (let [key, val] of Object.entries(areasOfInterest.byId)) {
+        if (val.name === action.payload) {
+          aoiId = key
+        }
+      }
+
+      delete areasOfInterest.byId[aoiId]
+      areasOfInterest.allIds.splice(areasOfInterest.allIds.indexOf(aoiId), 1)
 
       return {
         ...areasOfInterest,

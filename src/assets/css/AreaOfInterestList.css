@@ -38,43 +38,6 @@ h5.sectionLabel.title.is-5 {
     padding: 4px;
 }
 
-.myButton {
-	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));
-	background:-moz-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:-webkit-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:-o-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:-ms-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:linear-gradient(to bottom, #44c767 5%, #5cbf2a 100%);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
-	background-color:#44c767;
-	-moz-border-radius:3px;
-	-webkit-border-radius:3px;
-	border-radius:3px;
-	border:1px solid #18ab29;
-	display:inline-block;
-	cursor:pointer;
-	color:#ffffff;
-	font-family:Arial;
-	font-size:15px;
-	padding:5px 10px;
-    text-decoration:none;
-    outline: none;
-}
-.myButton:hover {
-	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
-	background:-moz-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:-webkit-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:-o-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:-ms-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:linear-gradient(to bottom, #5cbf2a 5%, #44c767 100%);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
-	background-color:#5cbf2a;
-}
-.myButton:active {
-	position: relative;
-	top: 1px;
-}
-
 .areaOfInterestList ul {
 	list-style: none;
 	padding-left: 0px;
@@ -149,5 +112,62 @@ li .aoiListItem {
 .deleteWarning {
   margin-bottom: 0px;
   font-size: 1.3em;
-  font-weight: 600;
+  white-space: nowrap;
+}
+.popover {
+  max-width: 400px;
+}
+.aoiDeletePopover {
+
+}
+
+.deleteButton {
+	background:linear-gradient(to bottom, #eb4034 5%, #d4392f 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+	background-color:#eb4034;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+	border:1px solid #d4392f;
+	display:inline-block;
+	cursor:pointer;
+  color:#ffffff;
+  	font-size:15px;
+	padding:5px 10px;
+    text-decoration:none;
+    outline: none;
+}
+.deleteButton:hover {
+
+	background:linear-gradient(to bottom, #d4392f 5%, #eb4034 100%);
+	background-color:#eb4034;
+}
+.deleteButton:active {
+	position: relative;
+	top: 1px;
+}
+
+
+.cancelButton {
+	background:linear-gradient(to bottom, #e8e1e1 5%, #d1c9c9 100%);
+	background-color:#e8e1e1;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+	border:1px solid #d1c9c9;
+	display:inline-block;
+	cursor:pointer;
+  color:#000;
+  	font-size:15px;
+	padding:5px 10px;
+    text-decoration:none;
+    outline: none;
+}
+.cancelButton:hover {
+
+	background:linear-gradient(to bottom, #d1c9c9 5%, #e8e1e1 100%);
+}
+.cancelButton:active {
+	position: relative;
+	top: 1px;
 }
