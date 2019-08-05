@@ -323,8 +323,10 @@ export default class MapViewer extends Component {
     })
 
     console.log(this.props.activeAOI)
-
-    if (prevProps.activeAOI !== this.props.activeAOI || this.props.initializeMap) {
+    if (
+      (this.props.activeAOI !== null && prevProps.activeAOI !== this.props.activeAOI) ||
+      (this.props.activeAOI !== null && this.props.initializeMap)
+    ) {
       console.log('Trying to add AOI footprint ')
       var format = new WKT()
       var feature = format.readFeature(this.props.currentAoiWkt, {

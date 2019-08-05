@@ -470,13 +470,14 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     if (session.activeTab === 0 && prevTab !== 0) {
       setTimeout(() => {
         console.log('Activating after tab switch')
-        this.setState({
-          initMap: true
-        })
-        this.activateAOI(this.props.aois.byId[session.currentAoi].name)
-      }, 1000)
-
-    }
+          if (session.currentAoi !== '') {
+            this.setState({
+              initMap: true
+            })
+            this.activateAOI(this.props.aois.byId[session.currentAoi].name)
+          }
+        }, 1000)
+      }
   }
 
   resetState = () => {
