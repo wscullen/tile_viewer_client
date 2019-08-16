@@ -96,7 +96,7 @@ export default class AreaOfInterestList extends React.Component {
             return (
               <li id={'listItem' + idx} key={ele.name} name={ele.name}>
                 <div className={aoiClassName} onClick={() => this.props.activateAOI(ele.name)}>
-                  <div>{ele.name}</div>
+                  <div className="aoiName">{ele.name}</div>
                   <div>
                     <button
                       className="aoiActionButton removeAction"

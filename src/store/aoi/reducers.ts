@@ -1,4 +1,8 @@
-import { AreaOfInterestState, ADD_AOI, REMOVE_AOI, UPDATE_SESSION, AoiActionTypes } from './types'
+import { AreaOfInterest, AreaOfInterestState, ADD_AOI, REMOVE_AOI, UPDATE_SESSION, AoiActionTypes } from './types'
+
+import { TileListByDate, Tile } from '../tile/types'
+
+import { AppState } from '../index'
 
 const initialState: AreaOfInterestState = {
   byId: {},
@@ -12,6 +16,72 @@ export function getAoiNames(state = initialState): string[] {
     aoiNames.push(val.name)
   }
   return aoiNames
+}
+
+
+// const aois = Object.values(this.props.aois.byId)
+//     let currentAoi: AreaOfInterest
+
+//     if (this.props.session.currentAoi !== '') currentAoi = this.props.aois.byId[this.props.session.currentAoi]
+
+//     const selectedTiles: TileListByDate = {}
+//     const highlightedTiles: string[] = []
+//     let currentTiles: Tile[] = []
+//     let currentPlatform = ''
+//     let currentDate = ''
+
+//     if (currentAoi) {
+//       const session = { ...currentAoi.session }
+//       currentPlatform = session.currentPlatform
+//       currentDate = currentAoi.session.datesList[currentPlatform].currentDate
+
+//       currentTiles = currentAoi.allTiles[currentPlatform][currentDate].map(id => {
+//         return this.props.tiles.byId[id]
+//       })
+
+//       console.log(currentTiles)
+
+//       for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+//         const tileArray: Tile[] = []
+//         const tileArray2: Tile[] = []
+//         value.map((id: string) => {
+//           if (this.props.tiles.byId[id].selected) {
+//             tileArray.push(this.props.tiles.byId[id])
+//           }
+
+//         })
+//         selectedTiles[key] = tileArray
+//       }
+//     }
+
+// interface TileStatus
+
+
+export function getSelectedTiles(state: AppState): TileListByDate {
+  let currentAoi: AreaOfInterest
+
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const selectedTiles: TileListByDate = {}
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+
+    for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+      const tileArray: Tile[] = []
+      value.map((id: string): void => {
+        if (state.tile.byId[id].selected) {
+          tileArray.push(state.tile.byId[id])
+        }
+      })
+      selectedTiles[key] = tileArray
+    }
+  }
+
+  return selectedTiles
 }
 
 export function aoiReducer(state = initialState, action: AoiActionTypes): AreaOfInterestState {

@@ -1,8 +1,8 @@
-import { createStore, combineReducers, applyMiddleware } from 'redux'
+import { createStore, combineReducers, applyMiddleware, Store } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import { composeWithDevTools } from 'redux-devtools-extension'
 
-import { persistStore, persistReducer } from 'redux-persist'
+import { persistStore, persistReducer, Persistor } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 
 import { systemReducer } from './system/reducers'
@@ -11,6 +11,7 @@ import { chatReducer } from './chat/reducers'
 import { tileReducer } from './tile/reducers'
 import { aoiReducer } from './aoi/reducers'
 import { sessionReducer } from './session/reducers'
+import { jobReducer } from './job/reducers'
 
 const persistConfig = {
   key: 'root',
@@ -23,13 +24,19 @@ const rootReducer = combineReducers({
   tile: tileReducer,
   aoi: aoiReducer,
   session: sessionReducer,
+  job: jobReducer,
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
 
 export type AppState = ReturnType<typeof rootReducer>
 
-export default function configureStore() {
+interface ReduxPersistObject {
+  store: Store
+  persistor: Persistor
+}
+
+export default function configureStore(): ReduxPersistObject {
   const middlewares = [thunkMiddleware]
   const middleWareEnhancer = applyMiddleware(...middlewares)
 

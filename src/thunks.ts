@@ -6,7 +6,9 @@ import { AppState } from "./store/index";
 export const thunkSendMessage = (
   message: string
 ): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any) => {
-  const asyncResp = await exampleAPI();
+  let asyncResp
+  await exampleAPI().then(result => asyncResp = result );
+
   dispatch(
     sendMessage({
       message,
@@ -16,6 +18,12 @@ export const thunkSendMessage = (
   );
 };
 
-function exampleAPI() {
-  return Promise.resolve("Async Chat Bot");
+function exampleAPI(): Promise<string> {
+  return new Promise((resolve, reject): void => {
+    setTimeout(() => {
+      resolve('Success')
+    }, 2000)
+  })
+
+  // return Promise.resolve("Async Chat Bot");
 }

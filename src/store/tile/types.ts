@@ -33,6 +33,10 @@ export interface Tile extends Feature {
   jobs: Array<string>;
 }
 
+export interface TileListByDate {
+  [index: string]: Tile[]
+}
+
 export interface StateById {
   byId: Record<string, Tile>;
   allIds: Array<string>;

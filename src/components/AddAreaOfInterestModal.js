@@ -127,6 +127,7 @@ class AddAreaOfInterestModal extends React.Component {
       name: '',
       formValid: false,
       nameErrorMessage: '',
+      csrfToken: null,
     }
 
     this.fileInput = React.createRef()
@@ -198,7 +199,9 @@ class AddAreaOfInterestModal extends React.Component {
     }
 
     const headers = new Headers()
-    headers.append('X-CSRFToken', this.state.csrf_token)
+
+    console.log(this.state.csrfToken)
+    headers.append('X-CSRFToken', this.state.csrfToken)
     // Used for loading status indicators, disable submit button
     this.setState({
       loading: true,
@@ -206,7 +209,7 @@ class AddAreaOfInterestModal extends React.Component {
       message: 'Request is being processed by the server (this can take a while)...',
     })
 
-    fetch(`${this.props.settings.s2d2_url}/submit_aoi/`, {
+    fetch(`${this.props.settings.s2d2Url}/submit_aoi/`, {
       method: 'POST',
       body: formData,
       headers: headers,
@@ -252,10 +255,8 @@ class AddAreaOfInterestModal extends React.Component {
       })
       .catch(error => {
         console.error('Error:', error)
+
         this.setState({
-          startDate: this.props.initialStartDate,
-          endDate: this.props.initialEndDate,
-          platform: 's2_sr',
           loading: false,
           areaCreated: false,
           message: 'Something went wrong, unable to create area!',
@@ -331,8 +332,9 @@ class AddAreaOfInterestModal extends React.Component {
 
     const headers = new Headers()
 
-    if (this.state.csrf_token === null) {
-      fetch(`${this.props.settings.s2d2_url}/generate_csrf/`, {
+    if (this.state.csrfToken === null) {
+      console.log('fetching csrf token')
+      fetch(`${this.props.settings.s2d2Url}/generate_csrf/`, {
         method: 'GET',
         mode: 'cors',
         cache: 'default',
@@ -342,7 +344,7 @@ class AddAreaOfInterestModal extends React.Component {
         .then(response => {
           console.log('Success:', JSON.stringify(response))
           this.setState({
-            csrf_token: JSON.stringify(response),
+            csrfToken: JSON.stringify(response),
           })
 
           this.submitAreaOfInterest()

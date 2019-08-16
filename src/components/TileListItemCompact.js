@@ -10,17 +10,30 @@ export default function TileListItemCompact (props) {
 
   let jobProgressIcon = ['far', 'hourglass']
   let jobProgressClass = 'tileActionIndicator disabledIcon'
+  let downloadButtonClass = 'tileActionButton '
+  let retryButtonClass = 'tileActionButton '
 
-  if (props.tile.job_status === 'submitted') {
-    jobProgressIcon = ['fas', 'hourglass-start']
-    jobProgressClass = 'tileActionIndicator grey'
-  } else if (props.tile.job_status === 'assigned') {
-    jobProgressIcon = ['fas', 'hourglass-half']
-    jobProgressClass = 'tileActionIndicator '
-  } else if (props.tile.job_status === 'completed') {
-    jobProgressIcon = ['fas', 'hourglass-end']
-    jobProgressClass = 'tileActionIndicator '
+  console.log(props.job)
+  if (props.job) {
+
+    if (props.job.status === 0) {
+      jobProgressIcon = ['fas', 'hourglass-start']
+      jobProgressClass = 'tileActionIndicator grey'
+    } else if (props.job.status === 1) {
+      jobProgressIcon = ['fas', 'hourglass-half']
+      jobProgressClass = 'tileActionIndicator '
+    } else if (props.job.status === 2) {
+      jobProgressIcon = ['fas', 'hourglass-end']
+      jobProgressClass = 'tileActionIndicator '
+    }
+
+    if (props.job.success === true) { jobProgressClass += 'jobSuccess' } else if (props.job.success === false && props.job.status === 2) { jobProgressClass += 'jobFailed' }
+
+    if (props.job.status !== 2 && props.job.result !== true) { downloadButtonClass += 'disabledIcon' }
+
+    if (props.job.success === false) { retryButtonClass += 'disabledIcon' }
   }
+
 
   let toggleVisIcon = ['fas', 'eye']
   let toggleVisClass = 'tileActionButton visibleIcon'
@@ -32,15 +45,6 @@ export default function TileListItemCompact (props) {
     toggleVisIcon = ['fas', 'eye-slash']
     toggleVisClass = 'tileActionButton nonvisibleIcon'
   }
-
-  if (props.tile.job_result === 'success') { jobProgressClass += 'jobSuccess' } else if (props.tile.job_result === 'failed' && props.tile.job_status === 'completed') { jobProgressClass += 'jobFailed' }
-
-  let downloadButtonClass = 'tileActionButton '
-  if (props.tile.job_status !== 'completed' || props.job_result !== 'success') { downloadButtonClass += 'disabledIcon' }
-
-  let retryButtonClass = 'tileActionButton '
-
-  if (props.tile.job_result !== 'failed') { retryButtonClass += 'disabledIcon' }
 
   return (
     <div className='tileListItemCompact'>

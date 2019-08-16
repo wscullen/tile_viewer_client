@@ -8,6 +8,11 @@ h5.sectionLabel.title.is-5 {
   margin: 0px;
 }
 
+.aoiName {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .areaOfInterestList > .header {
     display: flex;
     flex-direction: column;
@@ -44,7 +49,8 @@ h5.sectionLabel.title.is-5 {
 }
 
 .areaOfInterestList li {
-	background: #eee;
+  background: #eee;
+  max-height: 36px;
 }
 
 li .aoiListItem {

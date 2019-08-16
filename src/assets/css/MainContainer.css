@@ -74,8 +74,8 @@ section.modal-main {
   background: white;
   width: 80%;
   min-width: 425px;
-  height: auto;
-
+  /* max-height: 75vh;
+  overflow: auto; */
   position:relative;
   left:-50%;
   top: -20%;

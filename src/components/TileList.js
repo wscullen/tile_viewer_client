@@ -9,12 +9,22 @@ import AnimateHeight from 'react-animate-height'
 
 import TileListItemCompact from './TileListItemCompact'
 
+import { connect } from 'react-redux'
+
+import { AppState } from '../store/'
+
+import { JobState, Job } from '../store/job/types'
+
+// interface AppProps {
+//   jobs: JobState
+// }
+
 const defaultState = {
   optionsHide: true,
   height: 0,
 }
 
-export default class TileList extends Component {
+class TileList extends Component {
   constructor(props) {
     super(props)
 
@@ -151,11 +161,20 @@ export default class TileList extends Component {
 
     let optionsHeaderClass = 'optionsWrapper'
     optionsHeaderClass += this.state.optionsHide ? ' removed' : ' flexed'
+    let currentPlatform = ''
+
+    if (this.props.currentPlatform) {
+      if (this.props.currentPlatform === 'sentinel2') {
+        currentPlatform = 'Sentinel 2'
+      } else if (this.props.currentPlatform === 'landsat8') {
+        currentPlatform = 'Landsat 8'
+      }
+    }
 
     return (
       <div className="tileList">
         <div className="header">
-          <h5 className="sectionLabel title is-5">Tile List</h5>
+          <h5 className="sectionLabel title is-5">Tile List - {currentPlatform}</h5>
           <div className="buttonSection">
             <button className="settingsButton" onClick={this.toggle}>
               <FontAwesomeIcon icon="cog" />
@@ -242,6 +261,18 @@ export default class TileList extends Component {
 
                     counter++
 
+                    let job
+
+                    if (tile.jobs.length > 0) {
+                      console.log('tile has jobs')
+                      const lastJobId = tile.jobs[tile.jobs.length - 1]
+
+                      job = this.props.jobs.byId[lastJobId]
+
+                      console.log('most recent job for tile')
+                      console.log(job)
+                    }
+
                     const tileEle = (
                       <li
                         className={clsName}
@@ -251,6 +282,7 @@ export default class TileList extends Component {
                       >
                         <TileListItemCompact
                           tile={tile}
+                          job={job}
                           removeTile={this.props.removeTile}
                           toggleVisibility={this.props.toggleTileVisibility}
                         />
@@ -268,3 +300,14 @@ export default class TileList extends Component {
     )
   }
 }
+
+const mapStateToProps = (state) => ({
+  jobs: state.job,
+})
+
+export default connect(
+  mapStateToProps,
+  {
+
+  },
+)(TileList)

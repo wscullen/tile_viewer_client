@@ -286,7 +286,11 @@ export default class MapViewer extends Component {
 
     this.updateAllStyle()
 
-    if (prevProps.currentDate !== this.props.currentDate || prevProps.activeAOI !== this.props.activeAOI) {
+    if (
+      prevProps.currentDate !== this.props.currentDate ||
+      prevProps.activeAOI !== this.props.activeAOI ||
+      prevProps.currentPlatform !== this.props.currentPlatform
+    ) {
       console.log('updating map....')
       this.updateMap()
     }
@@ -467,6 +471,7 @@ export default class MapViewer extends Component {
     console.log('getting STYLE')
 
     if (feature_type === 'tile') {
+      let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 1
       style = new Style({
         stroke: new Stroke({
           color: 'rgba(230,34,99,0.5)',
@@ -484,7 +489,7 @@ export default class MapViewer extends Component {
             color: '#fff',
             width: 2,
           }),
-          text: feature.get('name').split('_')[1],
+          text: feature.get('name').split('_')[tileIndex],
         }),
       })
     } else if (feature_type === 'selected-in-list') {
@@ -510,6 +515,7 @@ export default class MapViewer extends Component {
       })
     } else if (feature_type === 'selected') {
       console.log('SELECTED STYLE')
+      let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 1
       style = new Style({
         stroke: new Stroke({
           color: '#5f5',
@@ -527,7 +533,7 @@ export default class MapViewer extends Component {
             color: '#fff',
             width: 2,
           }),
-          text: feature.get('name').split('_')[1],
+          text: feature.get('name').split('_')[tileIndex],
         }),
       })
     } else if (feature_type === 'highlight') {

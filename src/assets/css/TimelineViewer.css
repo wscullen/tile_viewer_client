@@ -23,11 +23,11 @@
 	font-size:15px;
 	padding:5px 10px;
     text-decoration:none;
-    outline: none;
-    margin: 4px;
+	outline: none;
+	margin-right: 2px;
 }
 .timelineViewer .controls .button:hover {
-	
+
 	background:linear-gradient(to bottom, #9ea898 5%, #888b89 100%);
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
 }
@@ -46,4 +46,61 @@
 .timelineViewer .controls .button:active[disabled] {
 	position: relative;
 	top: 0px;
+}
+
+.timelineViewer > .header {
+	padding: 4px;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+
+	background: #eee;
+	border-bottom: 1px #bbb solid;
+	box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
+	position: sticky;
+	top: 0px;
+
+	flex-shrink: 0;
+	width: 100%;
+	z-index: 50;
+  }
+
+  .buttonSection {
+	z-index: 2;
+	height: 100%;
+  }
+
+  .controlsSection {
+	  display: flex;
+	  flex-direction: row;
+	  justify-content: space-between;
+	  align-content: center;
+	  flex-grow: 2;
+  }
+
+  .controlsSection h5.sectionLabel.title.is-5 {
+
+	  margin-bottom: 0px;
+	  align-self: center;
+	  margin-right: 5px;
+  }
+
+.platformSelect {
+	margin-right: 5px;
+}
+
+.platformSelectSection {
+
+	display: flex;
+	width: 60%;
+	justify-content: flex-end;
+}
+
+.dateSelectSection {
+	display: flex;
+	width: 40%;
+	justify-content: flex-end;
+
 }
