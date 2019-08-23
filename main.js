@@ -141,7 +141,7 @@ function createWindow() {
       // Ubuntu dev machine
       reactDevToolsPath = path.join(
         os.homedir(),
-        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0',
+        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.5_0',
       )
       reduxDevToolsPath = path.join(
         os.homedir(),

@@ -1455,6 +1455,11 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('new job settings')
     console.log(testObject)
 
+    const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
+    currentAoiSession.settings = newSettings
+    
+    this.props.updateSession(this.props.session.currentAoi, currentAoiSession)
+
     this.setState({
       // @ts-ignore
       jobSettings: {
@@ -1874,6 +1879,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     currentDate: string,
   ): ReactElement => {
     let allPlatforms: string[] = []
+
+    console.log(this.props)
     if (currentAoi) {
       allPlatforms = Object.keys(this.props.aois.byId[this.props.session.currentAoi].session.datesList)
     }
@@ -1912,7 +1919,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             />
           </div>
           <TileList
-            settings={this.state.jobSettings}
+            settings={currentAoi ? currentAoi.session.settings : {}}
             updateSettings={this.updateJobSettings}
             selectedTiles={selectedTiles}
             selectedTilesInList={highlightedTiles}
