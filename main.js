@@ -131,7 +131,7 @@ function createWindow() {
     if (process.platform === 'win32') {
       reactDevToolsPath = path.join(
         os.homedir(),
-        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0',
+        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.5_0',
       )
       reduxDevToolsPath = path.join(
         os.homedir(),
