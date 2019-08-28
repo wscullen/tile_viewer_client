@@ -285,6 +285,7 @@ class TileList extends Component {
                           job={job}
                           removeTile={this.props.removeTile}
                           toggleVisibility={this.props.toggleTileVisibility}
+                          resubmitLastJob={this.props.resubmitLastJob}
                         />
                       </li>
                     )

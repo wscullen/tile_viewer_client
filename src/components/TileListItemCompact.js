@@ -63,6 +63,7 @@ export default function TileListItemCompact (props) {
       <div className='tileListItemActions'>
         <button className={retryButtonClass} onClick={(event) => {
           console.log('re submit a job')
+          props.resubmitLastJob(props.tile)
           // props.removeTile(props.tile)
           event.stopPropagation()
         }}>

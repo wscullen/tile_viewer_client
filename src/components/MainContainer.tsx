@@ -63,6 +63,7 @@ console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
 import { getAoiNames, getSelectedTiles } from '../store/aoi/reducers'
+import { configureRequestOptionsFromUrl } from 'builder-util-runtime';
 
 interface SingleDateTileList {
   [index: string]: Tile[]
@@ -83,6 +84,7 @@ interface AppProps {
   updateMainSession: typeof updateMainSession
   aois: AreaOfInterestState
   session: MainSessionState
+  jobs: JobState
   tiles: TileState
   thunkAddJob: any
   thunkUpdateCsrfTokens: any
@@ -214,10 +216,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       this.activateAOI(this.props.aois.byId[this.props.session.currentAoi].name)
     }
 
-    if (this.props.session.currentAoi !== '') {
-      console.log('Resuming job status checks')
-      this.props.thunkResumeCheckingJobsForAoi(this.props.session.currentAoi)
-    }
   }
 
   componentWillUnmount() {
@@ -245,7 +243,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log(aoiName)
     console.log('removing aoi...')
 
-    if (this.props.aois.byId[this.props.session.currentAoi].name === aoiName) {
+    if (this.props.session.currentAoi && this.props.aois.byId[this.props.session.currentAoi].name === aoiName) {
       const session = { ...this.props.session }
       session.currentAoi = null
 
@@ -262,224 +260,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
   saveToLocalStorage = () => {
     console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
-
-    // // @ts-ignore
-    // console.log(this.state.aoi_list)
-    // // @ts-ignore
-    // const { activeAOI, selectedTiles, aoi_list, currentDate, tileDict, jobDict } = this.state
-
-    // console.log(currentDate)
-    // console.log('aoi_list')
-    // console.log(aoi_list)
-
-    // // @ts-ignore
-    // const {
-    //   enableSen2AgriL2A,
-    //   enableSen2AgriL3A,
-    //   enableSen2AgriL3B,
-    //   sen2agri_l2a_job,
-    //   sen2agri_l3a_job,
-    //   sen2agri_l3b_job,
-    // } = this.state
-
-    // const currentAOIList = [...aoi_list]
-
-    // // Initialize jobDict
-
-    // aoi_list.map((aoi: Record<string, any>) => {
-    //   // @ts-ignore
-    //   if (!jobDict.hasOwnProperty(aoi.name)) {
-    //     // @ts-ignore
-    //     jobDict[aoi.name] = {
-    //       sentinel2: {},
-    //       landsat8: {},
-    //     }
-    //   }
-    // })
-
-    // if (activeAOI !== null) {
-    //   // Save the selcted tiles for later
-
-    //   console.log(activeAOI)
-    //   const aoi_index = this.getAoiIndex(activeAOI)
-    //   const currentAOIObj = { ...currentAOIList[aoi_index] }
-
-    //   for (const d of Object.keys(selectedTiles)) {
-    //     selectedTiles[d].map((tile: Record<string, any>) => {
-    //       // @ts-ignore
-
-    //       jobDict[activeAOI].sentinel2[tile.id] = {
-    //         // @ts-ignore
-    //         job_id: tile.job_id,
-    //         // @ts-ignore
-    //         job_result: tile.job_result,
-    //         // @ts-ignore
-    //         job_status: tile.job_status,
-    //         // @ts-ignore
-    //         job_assigned: tile.job_assigned,
-    //         // @ts-ignore
-    //         job_completed: tile.job_completed,
-    //         // @ts-ignore
-    //         job_submitted: tile.job_submitted,
-    //         // @ts-ignore
-    //         job_result_message: tile.job_result_message,
-    //         // @ts-ignore
-    //         times_checked: tile.times_checked,
-    //       }
-    //     })
-    //   }
-
-    //   // Do a sensor specific check here (landsat, sentinel2)
-    //   currentAOIObj.selectedTiles = {}
-
-    //   // @ts-ignore
-    //   currentAOIObj.cloudPercentFilter = this.state.cloudPercentFilter
-
-    //   for (const d of Object.keys(selectedTiles)) {
-    //     currentAOIObj['selectedTiles'][d] = selectedTiles[d].map((tile: any) => tile.id)
-    //   }
-
-    //   console.log('activeAOI is:')
-    //   localStorage.setItem('active_aoi', activeAOI)
-    //   currentAOIObj.currentDate = currentDate
-    //   currentAOIList[aoi_index] = currentAOIObj
-    // }
-
-    // console.log('current settings!!!!!!!!!!!!!!!S')
-    // console.log(this.props.settings)
-    // localStorage.setItem('settings', JSON.stringify(this.props.settings))
-    // console.log('stringified settings successfully')
-    // console.log(currentAOIList)
-
-    // const jsonData = {
-    //   aoi_list: currentAOIList,
-    //   tileDict,
-    //   jobDict,
-    //   enableSen2AgriL2A,
-    //   enableSen2AgriL3A,
-    //   enableSen2AgriL3B,
-    //   sen2agri_l2a_job,
-    //   sen2agri_l3a_job,
-    //   sen2agri_l3b_job,
-    // }
-    // console.log(jsonData)
-    // // Used to try and detect circular references
-    // // console.log(inspect(currentAoiList,  { showHidden: true, depth: null }))
-    // fs.writeFileSync(resourcesPath, JSON.stringify(jsonData))
-    // console.log('stringified AOI list successfully')
   }
 
   loadFromLocalStorage = () => {
-    console.log('<<<<<<<<-------------------------------------- LOADING FROM LOCAL STORAGE')
 
-    // let activeAOI = localStorage.getItem('active_aoi') === null ? null : localStorage.getItem('active_aoi')
-
-    // let dataString
-    // let data
-
-    // if (fs.existsSync(resourcesPath)) {
-    //   console.log('reading from file')
-    //   dataString = fs.readFileSync(resourcesPath, 'utf8')
-    //   data = JSON.parse(dataString)
-    // }
-
-    // console.log(data)
-
-    // if (data === undefined) {
-    //   data = {
-    //     aoi_list: [],
-    //     tileDict: {},
-    //     jobDict: {},
-    //   }
-    // }
-
-    // const aoi_list = data.aoi_list
-    // const tileDict = data.tileDict
-    // const jobDict = data.jobDict
-
-    // const {
-    //   enableSen2AgriL2A,
-    //   enableSen2AgriL3A,
-    //   enableSen2AgriL3B,
-    //   sen2agri_l2a_job,
-    //   sen2agri_l3a_job,
-    //   sen2agri_l3b_job,
-    // } = data
-
-    // let cloudPercentFilter = 100
-    // console.log(aoi_list)
-
-    // if (aoi_list.length === 0) {
-    //   activeAOI = null
-    // }
-
-    // console.log('previously active AOI')
-    // console.log(activeAOI)
-    // const populatedSelectedTiles = {}
-
-    // if (activeAOI !== null) {
-    //   let currentAOI = {}
-    //   aoi_list.forEach((ele: any) => {
-    //     console.log(ele.name)
-    //     console.log(activeAOI)
-
-    //     if (ele.name === activeAOI) {
-    //       currentAOI = ele
-    //     }
-    //   })
-
-    //   console.log(currentAOI)
-    //   // @ts-ignore
-    //   const tiles = currentAOI.tiles
-    //   // @ts-ignore
-    //   cloudPercentFilter = currentAOI.cloudPercentFilter
-    //   console.log('build selected tiles object for tile list component')
-    //   console.log(tiles)
-    //   // @ts-ignore
-    //   const selectedTiles = currentAOI.selectedTiles
-    //   console.log(selectedTiles)
-
-    //   for (const d of Object.keys(selectedTiles)) {
-    //     console.log(d)
-    //     console.log(selectedTiles[d])
-    //     // @ts-ignore
-    //     populatedSelectedTiles[d] = []
-    //     selectedTiles[d].map((id: string) => {
-    //       // @ts-ignore
-    //       populatedSelectedTiles[d].push({
-    //         ...tileDict[id],
-    //         ...jobDict[activeAOI].sentinel2[id],
-    //       })
-    //     })
-    //   }
-    // }
-
-    // console.log(jobDict)
-
-    // this.setState(
-    //   {
-    //     // @ts-ignore
-    //     activeAOI,
-    //     aoi_list,
-    //     selectedTiles: populatedSelectedTiles,
-    //     allTiles: {},
-    //     tileDict,
-    //     cloudPercentFilter,
-    //     enableSen2AgriL2A,
-    //     enableSen2AgriL3A,
-    //     enableSen2AgriL3B,
-    //     sen2agri_l2a_job,
-    //     sen2agri_l3a_job,
-    //     sen2agri_l3b_job,
-    //   },
-    //   () => {
-    //     if (activeAOI !== null) {
-    //       this.activateAOI(activeAOI)
-    //       console.log('Trying to resume checking job_status')
-    //       this.resumeCheckingJobStatus()
-    //     }
-    //   },
-    // )
   }
 
   public handleTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
@@ -1457,7 +1241,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
     currentAoiSession.settings = newSettings
-    
+
     this.props.updateSession(this.props.session.currentAoi, currentAoiSession)
 
     this.setState({
@@ -1814,6 +1598,41 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     this.props.updateSession(this.props.session.currentAoi, aoiSession)
   }
 
+  public resubmitLastJob = (tile: Tile): void => {
+    console.log('Trying to submit most recent job for this tile again.')
+
+    // steps, from the tile, get the last entry in the jobId list
+    // look up job info, recreate job,
+    // submit again.
+
+    console.log(tile)
+
+    // "assignedDate": "",
+    //         "checkedCount": 0,
+    //         "completedDate": "",
+    //         "id": "",
+    //         "setIntervalId": 0,
+    //         "status": 0,
+    //         "submittedDate": "",
+    //         "success": false,
+    //         "type": "tile",
+    //         "workerId": "",
+    //         "tileId": tile.id,
+    //         "resultMessage": ""
+
+    const jobId = tile.jobs[tile.jobs.length - 1]
+    const job = this.props.jobs.byId[jobId]
+
+    job.assignedDate = ''
+    job.completedDate = ''
+    job.submittedDate = ''
+    job.success = false
+    job.workerId = ''
+    job.resultMessage = ''
+
+    this.props.thunkAddJob(job)
+  }
+
   sortTilesByDate = (tiles: any) => {
     if (tiles) {
       const formatted_tiles = []
@@ -1939,6 +1758,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             sen2agriL3AJob={this.state.sen2agri_l3a_job}
             sen2agriL3BJob={this.state.sen2agri_l3b_job}
             toggleTileVisibility={this.toggleVisibility}
+            resubmitLastJob={this.resubmitLastJob}
           />
         </div>
       )
