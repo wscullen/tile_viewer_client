@@ -18,6 +18,7 @@ import {
   TileList as TileListInterface,
   Session,
   CurrentDates,
+  DateObject,
 } from '../store/aoi/types'
 
 import { MainSessionState } from '../store/session/types'
@@ -53,6 +54,7 @@ import { History } from 'history'
 const fs = require('fs') // or directly
 
 // To use it, simply call
+const { clipboard } = require('electron')
 
 const remote = require('electron').remote
 const path = require('path')
@@ -63,7 +65,6 @@ console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
 import { getAoiNames, getSelectedTiles } from '../store/aoi/reducers'
-import { configureRequestOptionsFromUrl } from 'builder-util-runtime';
 
 interface SingleDateTileList {
   [index: string]: Tile[]
@@ -1254,29 +1255,37 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     })
   }
 
-  getTileList = () => {
-    const tileList = {}
-    // @ts-ignore
-    const dateList = this.state.selectedTiles
+  public getTileList = (): TileListInterface => {
+    const tileList: TileListInterface = {}
+    const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
 
-    for (const d in dateList) {
-      if (dateList[d].length > 0) {
-        const singleDateList = dateList[d].map((ele: any) => ele.properties.name)
+    if (currentAoi) {
+      for (let platform of currentAoi.sensorList) {
+        const selectedTiles: DateObject = {}
 
-        // @ts-ignore
-        tileList[d] = singleDateList
+        for (const [key, value] of Object.entries(currentAoi.allTiles[platform])) {
+          const tileArray: string[] = []
+          value.map((id: string): void => {
+            if (this.props.tiles.byId[id].selected) {
+              tileArray.push(this.props.tiles.byId[id].properties.name)
+            }
+          })
+          selectedTiles[key] = tileArray
+        }
+        tileList[platform] = selectedTiles
       }
     }
+
     return tileList
   }
 
-  saveTileJson = () => {
+  public saveTileJson = (): void => {
     console.log('trying to save to json')
 
     const { dialog } = require('electron').remote
     console.log(dialog)
 
-    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, filename => {
+    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename): void => {
       if (filename) {
         const tileList = this.getTileList()
         console.log(filename)
@@ -1285,6 +1294,26 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         console.log('stringified AOI list successfully')
       }
     })
+  }
+
+  public copyCurrentTilesToClipboard = (): void => {
+    console.log('copying space separated list of tiles to clipboard')
+    const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
+
+    if (currentAoi) {
+      const tileClipboardList: string[] = []
+      const tileList = this.getTileList()
+      const currentPlatform = currentAoi.session.currentPlatform
+
+      for (const [key, value] of Object.entries(tileList[currentPlatform])) {
+        value.map((name: string): void => {
+          tileClipboardList.push(name)
+        })
+      }
+
+      const clipboardString = tileClipboardList.join(' ')
+      clipboard.writeText(clipboardString)
+    }
   }
 
   submitSen2agriL2A = () => {
@@ -1747,6 +1776,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             removeTile={this.removeTileFromSelected}
             submitAllJobs={this.handleSubmitAllJobs}
             saveTileJson={this.saveTileJson}
+            copyCurrentTilesToClipboard={this.copyCurrentTilesToClipboard}
             currentPlatform={currentPlatform}
             submitSen2agriL2A={this.submitSen2agriL2A}
             enableSen2agriL2A={this.state.enableSen2AgriL2A}

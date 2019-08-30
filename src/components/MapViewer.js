@@ -216,12 +216,13 @@ export default class MapViewer extends Component {
       img.onload = () => {
         console.log('is img onload callback ever run??!')
         console.log(img)
+        tile.properties.currentPreviewUrl = tile.properties.lowresPreviewUrl
         resolve({ img, tile })
       }
 
       img.onerror = () => {
         console.log('problem loading image')
-        tile.properties.lowresPreviewUrl = imgNotFound
+        tile.properties.currentPreviewUrl = imgNotFound
         resolve({ img, tile })
       }
       console.log(tile.properties.lowresPreviewUrl)
@@ -629,10 +630,10 @@ export default class MapViewer extends Component {
           console.log(tile)
           let opacity = 0.9
 
-          console.log(tile.properties.lowres_preview_url)
+          console.log(tile.properties.currentPreviewUrl)
           console.log(img.width, img.height)
 
-          if (tile.properties.lowresPreviewUrl === imgNotFound) {
+          if (tile.properties.currentPreviewUrl === imgNotFound) {
             img = {
               width: 221,
               height: 210,
@@ -647,7 +648,7 @@ export default class MapViewer extends Component {
 
           const s2image_layer = new ImageLayer({
             source: new Static({
-              url: tile.properties.lowresPreviewUrl,
+              url: tile.properties.currentPreviewUrl,
               crossOrigin: '',
               imageSize: [img.width, img.height],
               projection: 'EPSG:' + tile.properties.proj,

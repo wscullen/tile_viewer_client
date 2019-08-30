@@ -88,6 +88,14 @@ function createWindow() {
           },
         },
         {
+          label: 'Clear Cache',
+          click: (menuItem, currentWindow) => {
+            currentWindow.webContents.session.clearCache(() => {
+              console.log('cache cleared')
+            })
+          },
+        },
+        {
           label: 'Reload',
           click: (menuItem, currentWindow) => {
             console.log(menuItem)

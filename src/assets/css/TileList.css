@@ -190,7 +190,7 @@ h5.sectionLabel.title.is-5 {
 }
 
 .optionsWrapper {
-  max-height: 250px;
+  max-height: 350px;
   transition: max-height 750ms ease-in-out, padding 1ms 0.45s linear;
 }
 
