@@ -10,13 +10,6 @@ const url = require('url')
 // For communication between windows or between window and electron process
 // const { ipcMain } = require('electron')
 
-ipcMain.on('asynchronous-message', (event, arg) => {
-  console.log(arg) // prints "ping"
-  if (arg.type === 'update') {
-    console.log(arg.payload)
-  }
-  // event.reply('asynchronous-reply', 'pong')
-})
 
 const log = require('electron-log')
 const { autoUpdater } = require('electron-updater')
@@ -56,16 +49,31 @@ if (dev) {
   console.log(resources)
 }
 
+
+ipcMain.on('updaterMessage', (event, arg) => {
+  console.log(arg) // prints "ping"
+  if (arg.type === 'updateControl') {
+    if (arg.payload === 'download') {
+      autoUpdater.downloadUpdate()
+    } else if (arg.payload === 'installAndRestart') {
+      autoUpdater.quitAndInstall()
+    }
+  }
+  // event.reply('asynchronous-reply', 'pong')
+})
+
 function createUpdaterWindow() {
   if (updaterWindow === null) {
     updaterWindow = new BrowserWindow({
       icon: path.join(resources, '96x96.png'),
-      width: 400,
-      height: 200,
+      width: 800,
+      height: 800,
       resizable: false,
       show: false,
       title: 'Updater',
     })
+
+    updaterWindow.toggleDevTools()
   }
 
   // win.setMenuBarVisibility(false)
@@ -73,26 +81,22 @@ function createUpdaterWindow() {
   updaterWindow.on('closed', () => {
     updaterWindow = null
   })
-
+  //   .AppUpdater ⇐ EventEmitter
+  // .checkForUpdates() ⇒ Promise<UpdateCheckResult>
+  // .checkForUpdatesAndNotify() ⇒ Promise< | UpdateCheckResult>
+  // .downloadUpdate(cancellationToken) ⇒ Promise<any>
+  // .getFeedURL() ⇒ undefined | null | String
+  // .setFeedURL(options)
+  // .quitAndInstall(isSilent, isForceRunAfter)
   updaterWindow.webContents.on('did-finish-load', function() {
     // setTimeout(() => updaterWindow.show(), 650)
     updaterWindow.show()
-    const updatePromise = autoUpdater.checkForUpdates()
-    console.log(updatePromise)
+    autoUpdater.autoDownload = false
+    autoUpdater.checkForUpdates()
 
     const currentVersion = app.getVersion()
     sendVersionToWindow(currentVersion)
 
-    updatePromise
-      .then((result) => {
-        console.log('update finished checking')
-        console.log(result)
-
-
-      })
-      .catch((e) => {
-        console.log(e)
-      })
   })
 
   updaterWindow.on('page-title-updated', (evt) => {
@@ -355,11 +359,15 @@ autoUpdater.on('download-progress', progressObj => {
   let log_message = 'Download speed: ' + progressObj.bytesPerSecond
   log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
   log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
-  sendStatusToWindow(log_message)
+  sendStatusToWindow('Downloading...')
+  updaterWindow.webContents.send('updaterMessage', {
+    'type': 'downloadProgress',
+    'payload': JSON.stringify(progressObj)
+  })
 })
 
 autoUpdater.on('update-downloaded', info => {
-  sendStatusToWindow('Update downloaded')
+  sendStatusToWindow('Update downloaded.')
 })
 
 // app.on('ready', function() {

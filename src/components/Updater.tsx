@@ -28,8 +28,9 @@ interface DefaultState {
   updateAvailable: boolean
   currentVersion: string
   availableVersion: string
+  downloadedSize: number
   totalDownloadSize: number
-  downloadProgress: number
+  downloadProgressPercent: number
   currentMessage: string
 }
 
@@ -37,8 +38,9 @@ const defaultState = {
   updateAvailable: false,
   currentVersion: "",
   availableVersion: "",
+  downloadedSize: -1,
   totalDownloadSize: -1,
-  downloadProgress: -1,
+  downloadProgressPercent: -1,
   currentMessage: "",
 }
 
@@ -61,7 +63,7 @@ class Updater extends Component<AppProps, AppState & DefaultState> {
         })
       } else if (arg.type === 'statusMessage') {
         const updateAvailable = arg.payload === 'Update available.'
-
+        console.log(updateAvailable)
         this.setState({
           currentMessage: arg.payload,
           updateAvailable
@@ -71,6 +73,21 @@ class Updater extends Component<AppProps, AppState & DefaultState> {
           availableVersion: 'v' + arg.payload
         })
       }
+
+      else if (arg.type === 'downloadProgress') {
+        const progressObj = JSON.parse(arg.payload)
+        console.log(progressObj)
+
+        this.setState({
+          downloadProgressPercent: progressObj.percent,
+          downloadedSize: progressObj.transferred,
+          totalDownloadSize: progressObj.total
+        })
+      }
+
+      // log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
+      // log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
+      // sendStatusToWindow('Downloading...')
 
 
     })
@@ -97,10 +114,36 @@ class Updater extends Component<AppProps, AppState & DefaultState> {
     }
   }
 
+  startDownload = () => {
+    ipcRenderer.send('updaterMessage', {
+      type: 'updateControl',
+      payload: 'download'
+    })
+  }
+
+  installAndRestart = () => {
+    ipcRenderer.send('updaterMessage', {
+      type: 'updateControl',
+      payload: 'installAndRestart'
+    })
+  }
+
+
   renderDynamicContent = () => {
-    if (this.state.updateAvailable) {
+    if (this.state.currentMessage === 'Update available.') {
       return (
-        <button>Update</button>
+        <button onClick={() => this.startDownload()}>Download Update</button>
+      )
+    } else if (this.state.currentMessage === 'Downloading...') {
+      return (
+        <div>
+          <progress className="progress" value={this.state.downloadProgressPercent} max="100"></progress>({(this.state.downloadedSize/1048576).toPrecision(2)}/{(this.state.totalDownloadSize/1048576).toPrecision(2)})
+        </div>
+      )
+    }
+    else if (this.state.currentMessage === 'Update downloaded.') {
+      return (
+        <button onClick={() => this.installAndRestart()}>Install Update and Restart</button>
       )
     }
   }
@@ -115,7 +158,7 @@ class Updater extends Component<AppProps, AppState & DefaultState> {
             <h5>Available Version:</h5>
             <p>{this.state.availableVersion}</p>
             <p>{this.state.currentMessage}</p>
-            <p>{this.renderDynamicContent}</p>
+            <p>{this.renderDynamicContent()}</p>
           </div>
         </div>
       )
