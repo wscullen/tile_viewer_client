@@ -8,6 +8,7 @@ builds/
 dist/
 node_modules/
 *.compiled.*
+dev-app-update.yml
 
 # Folder config file #
 ######################

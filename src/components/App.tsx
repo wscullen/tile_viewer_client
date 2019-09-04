@@ -4,7 +4,7 @@ import '../assets/css/App.css'
 
 import * as React from 'react'
 
-import { MemoryHistory } from 'history'
+import { History } from 'history'
 import { RouteProps, RouteComponentProps } from 'react-router'
 
 import { connect } from 'react-redux'
@@ -14,7 +14,7 @@ import { MainSessionState, SessionSettings } from '../store/session/types'
 import { updateMainSession } from '../store/session/actions'
 
 interface Props {
-  history: MemoryHistory
+  history: History
 }
 
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -78,11 +78,13 @@ library.add(
   faToolbox,
 )
 
-import { MemoryRouter as Router, Switch } from 'react-router-dom'
-import { Route } from 'react-router-dom'
+import {  Switch } from 'react-router-dom'
+import { Route, HashRouter } from 'react-router-dom'
 
 import MainContainer from './MainContainer'
 import Settings from './Settings'
+import Updater from './Updater'
+
 
 const defaultSettings: SessionSettings = {
   jobManagerUrl: 'http://hal678772.agr.gc.ca:9090',
@@ -120,9 +122,21 @@ class App extends React.Component<any, any> {
 
   public render() {
     return (
-      <Router>
+      <HashRouter>
         <Switch>
           <Route
+            path="/settings"
+            render={(props: RouteComponentProps) => (
+              <Settings {...props} settings={this.props.session.settings} updateSettings={this.updateSettings} />
+            )}
+          />
+          <Route
+            path="/updater"
+            render={(props: RouteComponentProps) => (
+              <Updater {...props} settings={this.props.session.settings} updateSettings={this.updateSettings}/>
+            )}
+          />
+                <Route
             exact
             path="/"
             render={(props: RouteComponentProps) => (
@@ -134,15 +148,8 @@ class App extends React.Component<any, any> {
               />
             )}
           />
-          <Route
-            exact
-            path="/settings"
-            render={(props: RouteComponentProps) => (
-              <Settings {...props} settings={this.props.session.settings} updateSettings={this.updateSettings} />
-            )}
-          />
         </Switch>
-      </Router>
+      </HashRouter>
     )
   }
 }

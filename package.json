@@ -1,6 +1,6 @@
 {
   "name": "tile-viewer",
-  "version": "v0.1.2-beta",
+  "version": "v0.1.2-beta.2",
   "description": "Allow easy selection of optical satellite imagery, integration with batch downloader and atmospheric correction.",
   "license": "MIT",
   "private": false,

@@ -10,12 +10,13 @@ const url = require('url')
 // For communication between windows or between window and electron process
 // const { ipcMain } = require('electron')
 
-// ipcMain.on('asynchronous-message', (event, arg) => {
-//   console.log(arg) // prints "ping"
-//   if (arg === 'exit')
-//     app.quit()
-//   // event.reply('asynchronous-reply', 'pong')
-// })
+ipcMain.on('asynchronous-message', (event, arg) => {
+  console.log(arg) // prints "ping"
+  if (arg.type === 'update') {
+    console.log(arg.payload)
+  }
+  // event.reply('asynchronous-reply', 'pong')
+})
 
 const log = require('electron-log')
 const { autoUpdater } = require('electron-updater')
@@ -25,6 +26,7 @@ const fs = require('fs')
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+let updaterWindow = null
 
 // Keep a reference for dev mode
 let dev = false
@@ -54,7 +56,86 @@ if (dev) {
   console.log(resources)
 }
 
+function createUpdaterWindow() {
+  if (updaterWindow === null) {
+    updaterWindow = new BrowserWindow({
+      icon: path.join(resources, '96x96.png'),
+      width: 400,
+      height: 200,
+      resizable: false,
+      show: false,
+      title: 'Updater',
+    })
+  }
+
+  // win.setMenuBarVisibility(false)
+  // win.webContents.openDevTools();
+  updaterWindow.on('closed', () => {
+    updaterWindow = null
+  })
+
+  updaterWindow.webContents.on('did-finish-load', function() {
+    // setTimeout(() => updaterWindow.show(), 650)
+    updaterWindow.show()
+    const updatePromise = autoUpdater.checkForUpdates()
+    console.log(updatePromise)
+
+    const currentVersion = app.getVersion()
+    sendVersionToWindow(currentVersion)
+
+    updatePromise
+      .then((result) => {
+        console.log('update finished checking')
+        console.log(result)
+
+
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+  })
+
+  updaterWindow.on('page-title-updated', (evt) => {
+    evt.preventDefault()
+  })
+}
+
 function createWindow() {
+  // and load the index.html of the app.
+  let indexPath
+  let updaterPath
+
+  if (dev && process.argv.indexOf('--noDevServer') === -1) {
+    indexPath = url.format({
+      protocol: 'http:',
+      hash: '/',
+      host: 'localhost:8080',
+      pathname: '/',
+      slashes: true,
+    })
+
+    updaterPath = url.format({
+      protocol: 'http:',
+      hash: '/updater',
+      host: 'localhost:8080',
+      pathname: 'index.html',
+      slashes: true,
+    })
+  } else {
+    indexPath = url.format({
+      protocol: 'file:',
+      hash: '/',
+      pathname: path.join(__dirname, 'dist', 'index.html'),
+      slashes: true,
+    })
+
+    updaterPath = url.format({
+      protocol: 'file:',
+      hash: '/updater',
+      pathname: path.join(__dirname, 'dist', 'index.html'),
+      slashes: true,
+    })
+  }
   var menu = Menu.buildFromTemplate([
     {
       label: 'File',
@@ -66,6 +147,13 @@ function createWindow() {
               menuItem,
               currentWindow,
             })
+          },
+        },
+        {
+          label: 'Check For Updates',
+          click: () => {
+            createUpdaterWindow()
+            updaterWindow.loadURL(updaterPath)
           },
         },
         {
@@ -119,7 +207,7 @@ function createWindow() {
       ],
     },
   ])
-  Menu.setApplicationMenu(menu)
+  Menu.setApplicationMenu(null)
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -129,7 +217,10 @@ function createWindow() {
     minHeight: 768,
     show: false,
     icon: path.join(resources, '96x96.png'),
+    title: 'Tile Viewer',
   })
+
+  mainWindow.setMenu(menu)
 
   if (dev) {
     console.log(os.homedir())
@@ -139,7 +230,7 @@ function createWindow() {
     if (process.platform === 'win32') {
       reactDevToolsPath = path.join(
         os.homedir(),
-        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.5_0',
+        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.6_0',
       )
       reduxDevToolsPath = path.join(
         os.homedir(),
@@ -149,7 +240,7 @@ function createWindow() {
       // Ubuntu dev machine
       reactDevToolsPath = path.join(
         os.homedir(),
-        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.5_0',
+        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.6_0',
       )
       reduxDevToolsPath = path.join(
         os.homedir(),
@@ -167,29 +258,18 @@ function createWindow() {
       BrowserWindow.addDevToolsExtension(reduxDevToolsPath)
     }
   }
-  // and load the index.html of the app.
-  let indexPath
 
-  if (dev && process.argv.indexOf('--noDevServer') === -1) {
-    indexPath = url.format({
-      protocol: 'http:',
-      host: 'localhost:8080',
-      pathname: 'index.html',
-      slashes: true,
-    })
-  } else {
-    indexPath = url.format({
-      protocol: 'file:',
-      pathname: path.join(__dirname, 'dist', 'index.html'),
-      slashes: true,
-    })
-  }
-
-  createDefaultWindow()
-
-  autoUpdater.checkForUpdatesAndNotify()
+  console.log(updaterPath)
 
   mainWindow.loadURL(indexPath)
+
+  // Emitted when the window is closed.
+  mainWindow.on('closed', function() {
+    // Dereference the window object, usually you would store windows
+    // in an array if your app supports multi windows, this is the time
+    // when you should delete the corresponding element.
+    mainWindow = null
+  })
 
   // Don't show until we are ready and loaded
   mainWindow.once('ready-to-show', () => {
@@ -199,15 +279,11 @@ function createWindow() {
 
       mainWindow.webContents.openDevTools()
     }
-    mainWindow.show()
-  })
 
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function() {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
+    mainWindow.show()
+    createUpdaterWindow()
+    updaterWindow.loadURL(updaterPath)
+
   })
 }
 
@@ -233,37 +309,44 @@ app.on('activate', () => {
   }
 })
 
-let win
 
 function sendStatusToWindow(text) {
   log.info(text)
-  win.webContents.send('message', text)
+  updaterWindow.webContents.send('updaterMessage', {
+    'type': 'statusMessage',
+    'payload': text
+  })
 }
 
-function createDefaultWindow() {
-  win = new BrowserWindow({
-    icon: path.join(resources, '96x96.png'),
-    width: 400,
-    height: 200,
-    resizable: false,
+function sendVersionToWindow(version) {
+  log.info(version)
+  updaterWindow.webContents.send('updaterMessage', {
+    'type': 'versionMessage',
+    'payload': version
   })
-
-  // win.setMenuBarVisibility(false)
-  // win.webContents.openDevTools();
-  win.on('closed', () => {
-    win = null
-  })
-  win.loadURL(`file://${__dirname}/version.html#${app.getVersion()}`)
-  return win
 }
+
+function askUserToUpdate() {
+  log.info('Update available, asking user to update')
+  win.webContents.send('message', 'showUpdatePrompt###')
+}
+
 autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('Checking for update...')
 })
 autoUpdater.on('update-available', info => {
   sendStatusToWindow('Update available.')
+  updaterWindow.webContents.send('updaterMessage', {
+    'type': 'availableVersionMessage',
+    'payload': info.version
+  })
 })
 autoUpdater.on('update-not-available', info => {
   sendStatusToWindow('Update not available.')
+  updaterWindow.webContents.send('updaterMessage', {
+    'type': 'availableVersionMessage',
+    'payload': info.version
+  })
 })
 autoUpdater.on('error', err => {
   sendStatusToWindow('Error in auto-updater. ' + err)
@@ -274,6 +357,7 @@ autoUpdater.on('download-progress', progressObj => {
   log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
   sendStatusToWindow(log_message)
 })
+
 autoUpdater.on('update-downloaded', info => {
   sendStatusToWindow('Update downloaded')
 })
