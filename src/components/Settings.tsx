@@ -4,7 +4,7 @@ import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { MainSessionState, Token, SessionSettings } from '../store/session/types'
-import { getCSRFToken } from '../store/session/thunks'
+import { getCSRFToken, getApiVersion } from '../store/session/thunks'
 import { updateMainSession } from '../store/session/actions'
 import { connect } from 'react-redux'
 import { AppState } from '../store/'
@@ -24,12 +24,19 @@ interface DefaultState {
   jobManagerUrl: string
   s2d2Url: string
   s2d2Verified: boolean
+  tileViewerVersion: string
+  s2d2Version: string
   jobManagerVerified: boolean
+  version: string
 }
+
+declare var VERSION: string
+
 
 const defaultState = {
-
+  tileViewerVersion: VERSION,
 }
+
 
 class Settings extends Component<AppProps, AppState & DefaultState> {
   constructor (props: AppProps) {
@@ -37,6 +44,7 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
     console.log('settings constructor running')
 
     this.state = {
+      ...defaultState,
       ...this.state,
       jobManagerUrl: props.settings.jobManagerUrl,
       s2d2Url: props.settings.s2d2Url,
@@ -80,6 +88,8 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
       console.log('check CSRF result')
       console.log(result)
 
+      const apiversion = await getApiVersion(this.state.s2d2Url)
+
       const session = { ...this.props.session }
       console.log(session)
 
@@ -90,7 +100,8 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
         this.props.updateMainSession(session)
 
         this.setState({
-          s2d2Verified: true
+          s2d2Verified: true,
+          s2d2Version: JSON.parse(apiversion).version
         })
       } else {
         session.csrfTokens.s2d2.key = ""
@@ -129,6 +140,7 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
           if (this.state.s2d2Verified) {
             return (<div className='verified flexItem2'>
               <FontAwesomeIcon icon={'check'} />
+              <span>{'   API version:' + this.state.s2d2Version}</span>
             </div>)
           } else {
             return (<div className='notVerified flexItem2'>
@@ -173,6 +185,7 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
           <div className='main'>
             <div className='settings'>
               <h1>Settings</h1> <br />
+              <h5>{this.state.tileViewerVersion}</h5>
               <label htmlFor='job_url'>Job Manager API Url</label> <br />
               <div className='settingsEntry'>
                 <input id='job_url' className='job_url' size={50} type='text' value={this.state.jobManagerUrl} onChange={this.updatejobManagerUrl} />

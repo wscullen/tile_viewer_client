@@ -81,6 +81,9 @@ module.exports = {
       'process.env.NODE_ENV': JSON.stringify('production'),
     }),
     new MinifyPlugin(),
+    new webpack.DefinePlugin({
+      VERSION: JSON.stringify(require("./package.json").version)
+    }),
   ],
   stats: {
     colors: true,

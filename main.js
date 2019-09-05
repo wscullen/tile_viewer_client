@@ -66,14 +66,15 @@ function createUpdaterWindow() {
   if (updaterWindow === null) {
     updaterWindow = new BrowserWindow({
       icon: path.join(resources, '96x96.png'),
-      width: 800,
-      height: 800,
+      width: 400,
+      height: 200,
       resizable: false,
       show: false,
       title: 'Updater',
     })
 
-    updaterWindow.toggleDevTools()
+    // updaterWindow.toggleDevTools()
+
   }
 
   // win.setMenuBarVisibility(false)

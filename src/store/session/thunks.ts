@@ -57,3 +57,25 @@ export async function getCSRFToken(apiRootUrl: string): Promise<string> {
 
   return result
 }
+
+export async function getApiVersion(apiRootUrl: string): Promise<string> {
+  const headers = new Headers()
+
+  const result = await fetch(`${apiRootUrl}/version/`, {
+    method: 'GET',
+    mode: 'cors',
+    cache: 'default',
+    headers,
+  })
+    .then(response => response.json())
+    .then(response => {
+      console.log('Success:', JSON.stringify(response))
+      return JSON.stringify(response)
+    })
+    .catch(err => {
+      console.log('Something blew up while verifying the API')
+      return ''
+    })
+
+  return result
+}

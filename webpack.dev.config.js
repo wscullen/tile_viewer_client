@@ -81,6 +81,9 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: 'css/[name].bundle.css',
     }),
+    new webpack.DefinePlugin({
+      VERSION: JSON.stringify(require("./package.json").version)
+    }),
   ],
   devtool: 'inline-source-map',
   devServer: {
