@@ -174,7 +174,7 @@ class TileList extends Component {
     return (
       <div className="tileList">
         <div className="header">
-          <h5 className="sectionLabel title is-5">Tile List - {currentPlatform}</h5>
+          <h5 className="sectionLabel title is-5">Tile List {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
           <div className="buttonSection">
             <button className="settingsButton" onClick={this.toggle}>
               <FontAwesomeIcon icon="cog" />
@@ -305,13 +305,11 @@ class TileList extends Component {
   }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
   jobs: state.job,
 })
 
 export default connect(
   mapStateToProps,
-  {
-
-  },
+  {},
 )(TileList)

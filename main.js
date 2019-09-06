@@ -10,7 +10,6 @@ const url = require('url')
 // For communication between windows or between window and electron process
 // const { ipcMain } = require('electron')
 
-
 const log = require('electron-log')
 const { autoUpdater } = require('electron-updater')
 
@@ -49,7 +48,6 @@ if (dev) {
   console.log(resources)
 }
 
-
 ipcMain.on('updaterMessage', (event, arg) => {
   console.log(arg) // prints "ping"
   if (arg.type === 'updateControl') {
@@ -74,7 +72,6 @@ function createUpdaterWindow() {
     })
 
     // updaterWindow.toggleDevTools()
-
   }
 
   // win.setMenuBarVisibility(false)
@@ -97,10 +94,9 @@ function createUpdaterWindow() {
 
     const currentVersion = app.getVersion()
     sendVersionToWindow(currentVersion)
-
   })
 
-  updaterWindow.on('page-title-updated', (evt) => {
+  updaterWindow.on('page-title-updated', evt => {
     evt.preventDefault()
   })
 }
@@ -218,7 +214,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1250,
     height: 768,
-    minWidth: 1000,
+    minWidth: 1250,
     minHeight: 768,
     show: false,
     icon: path.join(resources, '96x96.png'),
@@ -288,7 +284,6 @@ function createWindow() {
     mainWindow.show()
     createUpdaterWindow()
     updaterWindow.loadURL(updaterPath)
-
   })
 }
 
@@ -314,20 +309,19 @@ app.on('activate', () => {
   }
 })
 
-
 function sendStatusToWindow(text) {
   log.info(text)
   updaterWindow.webContents.send('updaterMessage', {
-    'type': 'statusMessage',
-    'payload': text
+    type: 'statusMessage',
+    payload: text,
   })
 }
 
 function sendVersionToWindow(version) {
   log.info(version)
   updaterWindow.webContents.send('updaterMessage', {
-    'type': 'versionMessage',
-    'payload': version
+    type: 'versionMessage',
+    payload: version,
   })
 }
 
@@ -342,15 +336,15 @@ autoUpdater.on('checking-for-update', () => {
 autoUpdater.on('update-available', info => {
   sendStatusToWindow('Update available.')
   updaterWindow.webContents.send('updaterMessage', {
-    'type': 'availableVersionMessage',
-    'payload': info.version
+    type: 'availableVersionMessage',
+    payload: info.version,
   })
 })
 autoUpdater.on('update-not-available', info => {
   sendStatusToWindow('Update not available.')
   updaterWindow.webContents.send('updaterMessage', {
-    'type': 'availableVersionMessage',
-    'payload': info.version
+    type: 'availableVersionMessage',
+    payload: info.version,
   })
 })
 autoUpdater.on('error', err => {
@@ -362,8 +356,8 @@ autoUpdater.on('download-progress', progressObj => {
   log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
   sendStatusToWindow('Downloading...')
   updaterWindow.webContents.send('updaterMessage', {
-    'type': 'downloadProgress',
-    'payload': JSON.stringify(progressObj)
+    type: 'downloadProgress',
+    payload: JSON.stringify(progressObj),
   })
 })
 

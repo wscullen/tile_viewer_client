@@ -1,6 +1,6 @@
 .tileList {
   border-left: 1px solid lightgrey;
-  min-width: 500px;
+  min-width: 450px;
   margin: 0px;
   height: 100%;
   display: flex;

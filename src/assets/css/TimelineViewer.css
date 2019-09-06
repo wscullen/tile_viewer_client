@@ -80,8 +80,7 @@
 	  display: flex;
 	  flex-direction: row;
 	  align-content: center;
-
-	  width: 60%;
+	justify-content: flex-end;
   }
 
   .controlsSection h5.sectionLabel.title.is-5 {
@@ -90,6 +89,7 @@
 	  align-self: center;
 	  margin-right: 5px;
 	  text-align: right;
+	  white-space: nowrap;
   }
 
 .platformSelect {

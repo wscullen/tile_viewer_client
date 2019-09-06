@@ -197,7 +197,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     console.log(`default state is ${this.state}`)
     console.log(this.state)
-
   }
 
   componentDidMount() {
@@ -216,7 +215,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     if (this.props.session.currentAoi) {
       this.activateAOI(this.props.aois.byId[this.props.session.currentAoi].name)
     }
-
   }
 
   componentWillUnmount() {
@@ -263,9 +261,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
   }
 
-  loadFromLocalStorage = () => {
-
-  }
+  loadFromLocalStorage = () => {}
 
   public handleTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
     const target = event.currentTarget as HTMLUListElement
@@ -284,11 +280,11 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         console.log('Activating after tab switch')
 
         let initMap
-        if (session.currentAoi !== "") {
-            this.activateAOI(this.props.aois.byId[session.currentAoi].name)
-          }
-        }, 1000)
-      }
+        if (session.currentAoi !== '') {
+          this.activateAOI(this.props.aois.byId[session.currentAoi].name)
+        }
+      }, 1000)
+    }
   }
 
   resetState = () => {
@@ -662,7 +658,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   activateAOI = (aoi_name: string) => {
-
     console.log('Resuming job status checks')
     this.props.thunkResumeCheckingJobsForAoi(this.props.session.currentAoi)
 
@@ -767,7 +762,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       currentDate,
       aoi_list,
       cloudPercentFilter,
-      initMap: false
+      initMap: false,
     })
   }
 
@@ -1054,23 +1049,22 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
       if (tiles[ele].length > 0) {
         tiles[ele].map((tile: Tile) => {
-
           console.log(tile)
 
-          const newJob : Job = {
-            "aoiId": this.props.session.currentAoi,
-            "assignedDate": "",
-            "checkedCount": 0,
-            "completedDate": "",
-            "id": "",
-            "setIntervalId": 0,
-            "status": 0,
-            "submittedDate": "",
-            "success": false,
-            "type": "tile",
-            "workerId": "",
-            "tileId": tile.id,
-            "resultMessage": ""
+          const newJob: Job = {
+            aoiId: this.props.session.currentAoi,
+            assignedDate: '',
+            checkedCount: 0,
+            completedDate: '',
+            id: '',
+            setIntervalId: 0,
+            status: 0,
+            submittedDate: '',
+            success: false,
+            type: 'tile',
+            workerId: '',
+            tileId: tile.id,
+            resultMessage: '',
           }
 
           console.log('starting thunk')
@@ -1255,7 +1249,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     })
   }
 
-  public getTileList = (): TileListInterface => {
+  public getTileList = (removeEmptyDates: boolean = false): TileListInterface => {
     const tileList: TileListInterface = {}
     const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
 
@@ -1270,7 +1264,13 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               tileArray.push(this.props.tiles.byId[id].properties.name)
             }
           })
-          selectedTiles[key] = tileArray
+          if (removeEmptyDates) {
+            if (tileArray.length !== 0) {
+              selectedTiles[key] = tileArray
+            }
+          } else {
+            selectedTiles[key] = tileArray
+          }
         }
         tileList[platform] = selectedTiles
       }
@@ -1287,9 +1287,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename): void => {
       if (filename) {
-        const tileList = this.getTileList()
+        const tileList = this.getTileList(true)
         console.log(filename)
         console.log(tileList)
+
         fs.writeFileSync(filename, JSON.stringify(tileList))
         console.log('stringified AOI list successfully')
       }
@@ -1302,7 +1303,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (currentAoi) {
       const tileClipboardList: string[] = []
-      const tileList = this.getTileList()
+      const tileList = this.getTileList(true)
       const currentPlatform = currentAoi.session.currentPlatform
 
       for (const [key, value] of Object.entries(tileList[currentPlatform])) {
@@ -1886,7 +1887,7 @@ const mapStateToProps = (state: AppState) => ({
   session: state.session,
   jobs: state.job,
   aoiNames: getAoiNames(state.aoi),
-  selectedTiles: getSelectedTiles(state)
+  selectedTiles: getSelectedTiles(state),
 })
 
 export default connect(
