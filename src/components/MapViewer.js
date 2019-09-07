@@ -472,7 +472,7 @@ export default class MapViewer extends Component {
     console.log('getting STYLE')
 
     if (feature_type === 'tile') {
-      let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 1
+      let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 5
       style = new Style({
         stroke: new Stroke({
           color: 'rgba(230,34,99,0.5)',
@@ -516,7 +516,7 @@ export default class MapViewer extends Component {
       })
     } else if (feature_type === 'selected') {
       console.log('SELECTED STYLE')
-      let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 1
+      let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 5
       style = new Style({
         stroke: new Stroke({
           color: '#5f5',
