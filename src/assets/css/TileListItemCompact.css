@@ -79,3 +79,8 @@
 .activeSelection {
     border: 2px cyan solid;
 }
+
+.sentinel2TileName {
+    /* font-size: 0.75em;
+    font-weight: 600; */
+}

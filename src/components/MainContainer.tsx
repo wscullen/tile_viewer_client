@@ -64,7 +64,7 @@ const resourcesPath = path.join(remote.app.getPath('userData'), 'localstorage.js
 console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
-import { getAoiNames, getSelectedTiles } from '../store/aoi/reducers'
+import { getAoiNames, getSelectedTiles, getHighlightedTiles } from '../store/aoi/reducers'
 
 interface SingleDateTileList {
   [index: string]: Tile[]
@@ -93,6 +93,7 @@ interface AppProps {
   history: History
   aoiNames: string[]
   selectedTiles: TileListByDate
+  highlightedTiles: string[]
 }
 
 interface SelectorFunctions {
@@ -825,7 +826,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               if (tiles[ele].length > 0) {
                 tiles[ele].map((t: any) => {
                   // @ts-ignore
-
                   if (t['job_status'] !== jobStatusVerbose[response['status']] && t['job_result'] !== 'success') {
                     allJobsDone = false
                   }
@@ -1249,7 +1249,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     })
   }
 
-  public getTileList = (removeEmptyDates: boolean = false): TileListInterface => {
+  public getTileList = (
+    removeEmptyDates: boolean = false,
+    onlyHighlightedTiles: boolean = false,
+  ): TileListInterface => {
     const tileList: TileListInterface = {}
     const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
 
@@ -1260,8 +1263,14 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         for (const [key, value] of Object.entries(currentAoi.allTiles[platform])) {
           const tileArray: string[] = []
           value.map((id: string): void => {
-            if (this.props.tiles.byId[id].selected) {
-              tileArray.push(this.props.tiles.byId[id].properties.name)
+            if (onlyHighlightedTiles) {
+              if (this.props.tiles.byId[id].selected && this.props.tiles.byId[id].highlighted) {
+                tileArray.push(this.props.tiles.byId[id].properties.name)
+              }
+            } else {
+              if (this.props.tiles.byId[id].selected) {
+                tileArray.push(this.props.tiles.byId[id].properties.name)
+              }
             }
           })
           if (removeEmptyDates) {
@@ -1303,8 +1312,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (currentAoi) {
       const tileClipboardList: string[] = []
-      const tileList = this.getTileList(true)
+
       const currentPlatform = currentAoi.session.currentPlatform
+
+      const tilesHighlighted = this.props.highlightedTiles.length !== 0
+      let tileList
+      if (tilesHighlighted) {
+        tileList = this.getTileList(true, true)
+      } else {
+        tileList = this.getTileList(true)
+      }
 
       for (const [key, value] of Object.entries(tileList[currentPlatform])) {
         value.map((name: string): void => {
@@ -1814,8 +1831,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (this.props.session.currentAoi !== '') currentAoi = this.props.aois.byId[this.props.session.currentAoi]
 
-    const selectedTiles: SingleDateTileList = {}
-    const highlightedTiles: string[] = []
+    let selectedTiles: SingleDateTileList = {}
+    let highlightedTiles: string[] = []
     let currentTiles: Tile[] = []
     let currentPlatform = ''
     let currentDate = ''
@@ -1831,19 +1848,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
       console.log(currentTiles)
 
-      for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
-        const tileArray: Tile[] = []
-        const tileArray2: Tile[] = []
-        value.map((id: string) => {
-          if (this.props.tiles.byId[id].selected) {
-            tileArray.push(this.props.tiles.byId[id])
-          }
-          if (this.props.tiles.byId[id].highlighted) {
-            highlightedTiles.push(id)
-          }
-        })
-        selectedTiles[key] = tileArray
-      }
+      selectedTiles = this.props.selectedTiles
+      highlightedTiles = this.props.highlightedTiles
     }
 
     return (
@@ -1888,6 +1894,7 @@ const mapStateToProps = (state: AppState) => ({
   jobs: state.job,
   aoiNames: getAoiNames(state.aoi),
   selectedTiles: getSelectedTiles(state),
+  highlightedTiles: getHighlightedTiles(state),
 })
 
 export default connect(

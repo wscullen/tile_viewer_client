@@ -18,7 +18,6 @@ export function getAoiNames(state = initialState): string[] {
   return aoiNames
 }
 
-
 // const aois = Object.values(this.props.aois.byId)
 //     let currentAoi: AreaOfInterest
 
@@ -56,7 +55,6 @@ export function getAoiNames(state = initialState): string[] {
 
 // interface TileStatus
 
-
 export function getSelectedTiles(state: AppState): TileListByDate {
   let currentAoi: AreaOfInterest
 
@@ -82,6 +80,32 @@ export function getSelectedTiles(state: AppState): TileListByDate {
   }
 
   return selectedTiles
+}
+
+export function getHighlightedTiles(state: AppState): string[] {
+  let currentAoi: AreaOfInterest
+
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const highlightedTiles: string[] = []
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+
+    for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+      const tileArray: Tile[] = []
+      value.map((id: string): void => {
+        if (state.tile.byId[id].highlighted) {
+          highlightedTiles.push(id)
+        }
+      })
+    }
+  }
+
+  return highlightedTiles
 }
 
 export function aoiReducer(state = initialState, action: AoiActionTypes): AreaOfInterestState {

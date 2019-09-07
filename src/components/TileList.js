@@ -201,7 +201,11 @@ class TileList extends Component {
                 <button onClick={this.props.saveTileJson}>Save Tile List as JSON</button>
               </li>
               <li>
-                <button onClick={this.props.copyCurrentTilesToClipboard}>Copy Current Tiles to Clipboard</button>
+                <button onClick={this.props.copyCurrentTilesToClipboard}>
+                  {this.props.selectedTilesInList.length === 0
+                    ? 'Copy Current Platform Tiles to Clipboard'
+                    : 'Copy HIGHLIGHTED Current Platform Tiles to Clipboard'}
+                </button>
               </li>
             </ul>
             <h4>Sen2Agri</h4>
