@@ -186,9 +186,9 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
                     <abbr title={displayName}>{displayName.slice(8, 22)}</abbr>
                   </td>
                   <td>{JobStatus[job.status]}</td>
-                  <td>{job.submittedDate !== '' ? moment(job.submittedDate).format('MMM DD YYYY - HH:MM:ss') : ''}</td>
-                  <td>{job.assignedDate !== '' ? moment(job.assignedDate).format('MMM DD YYYY - HH:MM:ss') : ''}</td>
-                  <td>{job.completedDate !== '' ? moment(job.completedDate).format('MMM DD YYYY - HH:MM:ss') : ''}</td>
+                  <td>{job.submittedDate !== '' ? moment(job.submittedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
+                  <td>{job.assignedDate !== '' ? moment(job.assignedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
+                  <td>{job.completedDate !== '' ? moment(job.completedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
                   <td>{this.jobSuccessIcon(job.success, job.status)}</td>
                   <td>
                     <button

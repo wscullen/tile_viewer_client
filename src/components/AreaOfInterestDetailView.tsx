@@ -115,7 +115,7 @@ class AreaOfInterestDetailView extends Component<AppProps, AppState & DefaultApp
         <h4>Name:</h4>
         <p>{aoi ? aoi.name : ''}</p>
         <h4>Created:</h4>
-        <p>{aoi ? moment(aoi.dateCreated).format('MMMM DD YYYY - HH:MM') : ''}</p>
+        <p>{aoi ? moment(aoi.dateCreated).format('MMMM DD YYYY - HH:mm') : ''}</p>
         <h4>Contraint Info:</h4>
         <h5>Season Start:</h5>
         <p>{aoi ? moment(aoi.startDate).format('MMMM DD YYYY') : ''}</p>
