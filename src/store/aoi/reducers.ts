@@ -1,4 +1,12 @@
-import { AreaOfInterest, AreaOfInterestState, ADD_AOI, REMOVE_AOI, UPDATE_SESSION, AoiActionTypes } from './types'
+import {
+  AreaOfInterest,
+  AreaOfInterestState,
+  ADD_AOI,
+  REMOVE_AOI,
+  UPDATE_AOI,
+  UPDATE_SESSION,
+  AoiActionTypes,
+} from './types'
 
 import { TileListByDate, Tile } from '../tile/types'
 
@@ -114,6 +122,16 @@ export function aoiReducer(state = initialState, action: AoiActionTypes): AreaOf
       const areasOfInterest = { ...state }
       areasOfInterest.byId[action.payload.id] = action.payload
       areasOfInterest.allIds.push(action.payload.id)
+      return {
+        ...areasOfInterest,
+      }
+    }
+    case UPDATE_AOI: {
+      const areasOfInterest = { ...state }
+      areasOfInterest.byId[action.payload.id] = {
+        ...action.payload,
+      }
+
       return {
         ...areasOfInterest,
       }

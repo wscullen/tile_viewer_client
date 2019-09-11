@@ -57,9 +57,9 @@ export default function TileListItemCompact(props) {
   let displayName
 
   if (props.tile.properties.platformName === 'Sentinel-2') {
-    displayName = `${tileNameParts[0]}_${tileNameParts[1].slice(3)}_${tileNameParts[2]}_${
+    displayName = `${tileNameParts[0]}_${tileNameParts[1].slice(3)}_${tileNameParts[5].slice(1)}_${tileNameParts[2]}_${
       tileNameParts[6]
-    }_${tileNameParts[5].slice(1)}`
+    }`
   } else {
     displayName = props.tile.properties.name
   }

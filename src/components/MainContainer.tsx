@@ -46,6 +46,9 @@ import AddAreaOfInterestModal from './AddAreaOfInterestModal'
 
 import FilteringTools from './FilteringTools'
 
+import JobViewer from './JobViewer'
+import AreaOfInterestDetailView from './AreaOfInterestDetailView'
+
 // @ts-ignore
 import base64 from 'base-64'
 import { ipcRenderer } from 'electron'
@@ -1039,36 +1042,63 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('submitting all jobs for selected tiles')
 
     const tiles = this.props.selectedTiles
+
+    const highlightedTiles = this.props.highlightedTiles
     // @ts-ignore
 
     console.log('iterating over tiles to start jobs...')
     Object.keys(tiles).map(ele => {
-      console.log('Submitting job')
       console.log(ele)
       console.log(tiles[ele])
 
       if (tiles[ele].length > 0) {
         tiles[ele].map((tile: Tile) => {
           console.log(tile)
+          console.log(highlightedTiles.length > 0)
 
-          const newJob: Job = {
-            aoiId: this.props.session.currentAoi,
-            assignedDate: '',
-            checkedCount: 0,
-            completedDate: '',
-            id: '',
-            setIntervalId: 0,
-            status: 0,
-            submittedDate: '',
-            success: false,
-            type: 'tile',
-            workerId: '',
-            tileId: tile.id,
-            resultMessage: '',
+          if (highlightedTiles.length > 0) {
+            if (tile.highlighted) {
+              const newJob: Job = {
+                aoiId: this.props.session.currentAoi,
+                assignedDate: '',
+                checkedCount: 0,
+                completedDate: '',
+                id: '',
+                setIntervalId: 0,
+                status: 0,
+                submittedDate: '',
+                success: false,
+                type: 'tile',
+                workerId: '',
+                tileId: tile.id,
+                resultMessage: '',
+              }
+              console.log('Submitting job')
+
+              console.log('starting thunk')
+              this.props.thunkAddJob(newJob)
+            }
+          } else {
+            const newJob: Job = {
+              aoiId: this.props.session.currentAoi,
+              assignedDate: '',
+              checkedCount: 0,
+              completedDate: '',
+              id: '',
+              setIntervalId: 0,
+              status: 0,
+              submittedDate: '',
+              success: false,
+              type: 'tile',
+              workerId: '',
+              tileId: tile.id,
+              resultMessage: '',
+            }
+            console.log('Submitting job')
+
+            console.log('starting thunk')
+            this.props.thunkAddJob(newJob)
           }
-
-          console.log('starting thunk')
-          this.props.thunkAddJob(newJob)
         })
       }
     })
@@ -1812,14 +1842,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       )
     } else if (this.props.session.activeTab === 1) {
       return (
-        <div>
+        <div className="jobViewer">
           <h2>Jobs</h2>
+          <JobViewer />
         </div>
       )
     } else if (this.props.session.activeTab === 2) {
       return (
         <div>
           <h2>Details</h2>
+          <AreaOfInterestDetailView />
         </div>
       )
     }

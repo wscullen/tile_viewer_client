@@ -154,6 +154,7 @@ class TileList extends Component {
   }
 
   render() {
+    console.log('Tile List -----')
     console.log(this.props.selectedTilesInList)
     console.log(this.props.settings)
 
@@ -180,7 +181,7 @@ class TileList extends Component {
               <FontAwesomeIcon icon="cog" />
             </button>
             <button className="addAreaButton myButton" onClick={() => this.props.submitAllJobs()}>
-              Start All
+              {this.props.selectedTilesInList.length === 0 ? 'Start All' : 'Start Highlighted'}
             </button>
           </div>
         </div>

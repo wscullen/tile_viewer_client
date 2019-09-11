@@ -58,11 +58,17 @@ export interface StateById {
 export interface AreaOfInterestState extends StateById {}
 
 export const ADD_AOI = 'ADD_AOI'
+export const UPDATE_AOI = 'UPDATE_AOI'
 export const UPDATE_SESSION = 'UPDATE_SESSION'
 export const REMOVE_AOI = 'REMOVE_AOI'
 
 interface AddAoiAction {
   type: typeof ADD_AOI
+  payload: AreaOfInterest
+}
+
+interface UpdateAoiAction {
+  type: typeof UPDATE_AOI
   payload: AreaOfInterest
 }
 
@@ -76,4 +82,4 @@ interface UpdateSessionAction {
   payload: { session: Session; id: string }
 }
 
-export type AoiActionTypes = AddAoiAction | UpdateSessionAction | RemoveAoiAction
+export type AoiActionTypes = AddAoiAction | UpdateAoiAction | UpdateSessionAction | RemoveAoiAction
