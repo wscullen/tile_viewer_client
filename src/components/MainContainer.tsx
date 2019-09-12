@@ -46,6 +46,9 @@ import AddAreaOfInterestModal from './AddAreaOfInterestModal'
 
 import FilteringTools from './FilteringTools'
 
+import JobViewer from './JobViewer'
+import AreaOfInterestDetailView from './AreaOfInterestDetailView'
+
 // @ts-ignore
 import base64 from 'base-64'
 import { ipcRenderer } from 'electron'
@@ -64,7 +67,7 @@ const resourcesPath = path.join(remote.app.getPath('userData'), 'localstorage.js
 console.log('Resource path for saving local data')
 console.log(resourcesPath)
 
-import { getAoiNames, getSelectedTiles } from '../store/aoi/reducers'
+import { getAoiNames, getSelectedTiles, getHighlightedTiles } from '../store/aoi/reducers'
 
 interface SingleDateTileList {
   [index: string]: Tile[]
@@ -93,6 +96,7 @@ interface AppProps {
   history: History
   aoiNames: string[]
   selectedTiles: TileListByDate
+  highlightedTiles: string[]
 }
 
 interface SelectorFunctions {
@@ -197,7 +201,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     console.log(`default state is ${this.state}`)
     console.log(this.state)
-
   }
 
   componentDidMount() {
@@ -216,7 +219,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     if (this.props.session.currentAoi) {
       this.activateAOI(this.props.aois.byId[this.props.session.currentAoi].name)
     }
-
   }
 
   componentWillUnmount() {
@@ -246,7 +248,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (this.props.session.currentAoi && this.props.aois.byId[this.props.session.currentAoi].name === aoiName) {
       const session = { ...this.props.session }
-      session.currentAoi = null
+      session.currentAoi = ''
 
       this.props.updateMainSession(session)
     }
@@ -263,9 +265,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
   }
 
-  loadFromLocalStorage = () => {
-
-  }
+  loadFromLocalStorage = () => {}
 
   public handleTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
     const target = event.currentTarget as HTMLUListElement
@@ -284,11 +284,11 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         console.log('Activating after tab switch')
 
         let initMap
-        if (session.currentAoi !== "") {
-            this.activateAOI(this.props.aois.byId[session.currentAoi].name)
-          }
-        }, 1000)
-      }
+        if (session.currentAoi !== '') {
+          this.activateAOI(this.props.aois.byId[session.currentAoi].name)
+        }
+      }, 1000)
+    }
   }
 
   resetState = () => {
@@ -314,7 +314,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log(event.key)
 
     // @ts-ignore
-    if (this.state.activeAOI !== null) {
+    if (this.state.activeAOI !== '') {
       switch (event.key) {
         case 'ArrowRight': {
           console.log('Right arrow pressed, incrementing date')
@@ -662,7 +662,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   activateAOI = (aoi_name: string) => {
-
     console.log('Resuming job status checks')
     this.props.thunkResumeCheckingJobsForAoi(this.props.session.currentAoi)
 
@@ -767,7 +766,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       currentDate,
       aoi_list,
       cloudPercentFilter,
-      initMap: false
+      initMap: false,
     })
   }
 
@@ -830,7 +829,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               if (tiles[ele].length > 0) {
                 tiles[ele].map((t: any) => {
                   // @ts-ignore
-
                   if (t['job_status'] !== jobStatusVerbose[response['status']] && t['job_result'] !== 'success') {
                     allJobsDone = false
                   }
@@ -1044,37 +1042,63 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('submitting all jobs for selected tiles')
 
     const tiles = this.props.selectedTiles
+
+    const highlightedTiles = this.props.highlightedTiles
     // @ts-ignore
 
     console.log('iterating over tiles to start jobs...')
     Object.keys(tiles).map(ele => {
-      console.log('Submitting job')
       console.log(ele)
       console.log(tiles[ele])
 
       if (tiles[ele].length > 0) {
         tiles[ele].map((tile: Tile) => {
-
           console.log(tile)
+          console.log(highlightedTiles.length > 0)
 
-          const newJob : Job = {
-            "aoiId": this.props.session.currentAoi,
-            "assignedDate": "",
-            "checkedCount": 0,
-            "completedDate": "",
-            "id": "",
-            "setIntervalId": 0,
-            "status": 0,
-            "submittedDate": "",
-            "success": false,
-            "type": "tile",
-            "workerId": "",
-            "tileId": tile.id,
-            "resultMessage": ""
+          if (highlightedTiles.length > 0) {
+            if (tile.highlighted) {
+              const newJob: Job = {
+                aoiId: this.props.session.currentAoi,
+                assignedDate: '',
+                checkedCount: 0,
+                completedDate: '',
+                id: '',
+                setIntervalId: 0,
+                status: 0,
+                submittedDate: '',
+                success: false,
+                type: 'tile',
+                workerId: '',
+                tileId: tile.id,
+                resultMessage: '',
+              }
+              console.log('Submitting job')
+
+              console.log('starting thunk')
+              this.props.thunkAddJob(newJob)
+            }
+          } else {
+            const newJob: Job = {
+              aoiId: this.props.session.currentAoi,
+              assignedDate: '',
+              checkedCount: 0,
+              completedDate: '',
+              id: '',
+              setIntervalId: 0,
+              status: 0,
+              submittedDate: '',
+              success: false,
+              type: 'tile',
+              workerId: '',
+              tileId: tile.id,
+              resultMessage: '',
+            }
+            console.log('Submitting job')
+
+            console.log('starting thunk')
+            this.props.thunkAddJob(newJob)
           }
-
-          console.log('starting thunk')
-          this.props.thunkAddJob(newJob)
         })
       }
     })
@@ -1240,22 +1264,18 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('new job settings')
     console.log(testObject)
 
-    const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
-    currentAoiSession.settings = newSettings
+    if (this.props.session.currentAoi !== '') {
+      const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
+      currentAoiSession.settings = newSettings
 
-    this.props.updateSession(this.props.session.currentAoi, currentAoiSession)
-
-    this.setState({
-      // @ts-ignore
-      jobSettings: {
-        // @ts-ignore
-        ...this.state.jobSettings,
-        ...newSettings,
-      },
-    })
+      this.props.updateSession(this.props.session.currentAoi, currentAoiSession)
+    }
   }
 
-  public getTileList = (): TileListInterface => {
+  public getTileList = (
+    removeEmptyDates: boolean = false,
+    onlyHighlightedTiles: boolean = false,
+  ): TileListInterface => {
     const tileList: TileListInterface = {}
     const currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
 
@@ -1266,11 +1286,23 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         for (const [key, value] of Object.entries(currentAoi.allTiles[platform])) {
           const tileArray: string[] = []
           value.map((id: string): void => {
-            if (this.props.tiles.byId[id].selected) {
-              tileArray.push(this.props.tiles.byId[id].properties.name)
+            if (onlyHighlightedTiles) {
+              if (this.props.tiles.byId[id].selected && this.props.tiles.byId[id].highlighted) {
+                tileArray.push(this.props.tiles.byId[id].properties.name)
+              }
+            } else {
+              if (this.props.tiles.byId[id].selected) {
+                tileArray.push(this.props.tiles.byId[id].properties.name)
+              }
             }
           })
-          selectedTiles[key] = tileArray
+          if (removeEmptyDates) {
+            if (tileArray.length !== 0) {
+              selectedTiles[key] = tileArray
+            }
+          } else {
+            selectedTiles[key] = tileArray
+          }
         }
         tileList[platform] = selectedTiles
       }
@@ -1287,9 +1319,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename): void => {
       if (filename) {
-        const tileList = this.getTileList()
+        const tileList = this.getTileList(true)
         console.log(filename)
         console.log(tileList)
+
         fs.writeFileSync(filename, JSON.stringify(tileList))
         console.log('stringified AOI list successfully')
       }
@@ -1302,8 +1335,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (currentAoi) {
       const tileClipboardList: string[] = []
-      const tileList = this.getTileList()
+
       const currentPlatform = currentAoi.session.currentPlatform
+
+      const tilesHighlighted = this.props.highlightedTiles.length !== 0
+      let tileList
+      if (tilesHighlighted) {
+        tileList = this.getTileList(true, true)
+      } else {
+        tileList = this.getTileList(true)
+      }
 
       for (const [key, value] of Object.entries(tileList[currentPlatform])) {
         value.map((name: string): void => {
@@ -1768,6 +1809,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           </div>
           <TileList
             settings={currentAoi ? currentAoi.session.settings : {}}
+            currentAoi={this.props.session.currentAoi}
             updateSettings={this.updateJobSettings}
             selectedTiles={selectedTiles}
             selectedTilesInList={highlightedTiles}
@@ -1794,14 +1836,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       )
     } else if (this.props.session.activeTab === 1) {
       return (
-        <div>
+        <div className="jobViewer">
           <h2>Jobs</h2>
+          <JobViewer />
         </div>
       )
     } else if (this.props.session.activeTab === 2) {
       return (
         <div>
           <h2>Details</h2>
+          <AreaOfInterestDetailView />
         </div>
       )
     }
@@ -1813,8 +1857,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (this.props.session.currentAoi !== '') currentAoi = this.props.aois.byId[this.props.session.currentAoi]
 
-    const selectedTiles: SingleDateTileList = {}
-    const highlightedTiles: string[] = []
+    let selectedTiles: SingleDateTileList = {}
+    let highlightedTiles: string[] = []
     let currentTiles: Tile[] = []
     let currentPlatform = ''
     let currentDate = ''
@@ -1830,19 +1874,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
       console.log(currentTiles)
 
-      for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
-        const tileArray: Tile[] = []
-        const tileArray2: Tile[] = []
-        value.map((id: string) => {
-          if (this.props.tiles.byId[id].selected) {
-            tileArray.push(this.props.tiles.byId[id])
-          }
-          if (this.props.tiles.byId[id].highlighted) {
-            highlightedTiles.push(id)
-          }
-        })
-        selectedTiles[key] = tileArray
-      }
+      selectedTiles = this.props.selectedTiles
+      highlightedTiles = this.props.highlightedTiles
     }
 
     return (
@@ -1886,7 +1919,8 @@ const mapStateToProps = (state: AppState) => ({
   session: state.session,
   jobs: state.job,
   aoiNames: getAoiNames(state.aoi),
-  selectedTiles: getSelectedTiles(state)
+  selectedTiles: getSelectedTiles(state),
+  highlightedTiles: getHighlightedTiles(state),
 })
 
 export default connect(

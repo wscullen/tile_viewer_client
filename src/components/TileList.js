@@ -33,6 +33,12 @@ class TileList extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.currentAoi === '' && !this.state.optionsHide) {
+      this.toggle()
+    }
+  }
+
   updateSettings = (settingChanged, e) => {
     console.log(settingChanged)
     console.log(e.target.value)
@@ -154,6 +160,7 @@ class TileList extends Component {
   }
 
   render() {
+    console.log('Tile List -----')
     console.log(this.props.selectedTilesInList)
     console.log(this.props.settings)
 
@@ -174,13 +181,20 @@ class TileList extends Component {
     return (
       <div className="tileList">
         <div className="header">
-          <h5 className="sectionLabel title is-5">Tile List - {currentPlatform}</h5>
+          <h5 className="sectionLabel title is-5">Tile List {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
           <div className="buttonSection">
-            <button className="settingsButton" onClick={this.toggle}>
+            <button
+              className="settingsButton"
+              onClick={
+                this.props.settings.hasOwnProperty('atmosphericCorrection')
+                  ? this.toggle
+                  : console.log('no aoi selected, not showing options')
+              }
+            >
               <FontAwesomeIcon icon="cog" />
             </button>
             <button className="addAreaButton myButton" onClick={() => this.props.submitAllJobs()}>
-              Start All
+              {this.props.selectedTilesInList.length === 0 ? 'Start All' : 'Start Highlighted'}
             </button>
           </div>
         </div>
@@ -192,8 +206,13 @@ class TileList extends Component {
                 <input
                   onChange={e => this.updateSettings('atmosphericCorrection', e)}
                   id={this.id}
+                  value="atmosphericCorrection"
                   type="checkbox"
-                  checked={this.props.settings.atmosphericCorrection}
+                  checked={
+                    this.props.settings.hasOwnProperty('atmosphericCorrection')
+                      ? this.props.settings.atmosphericCorrection
+                      : false
+                  }
                 />
                 <label htmlFor={this.id}>Atmospheric Correction (Sen2Cor/LaSRC)</label>
               </li>
@@ -201,7 +220,11 @@ class TileList extends Component {
                 <button onClick={this.props.saveTileJson}>Save Tile List as JSON</button>
               </li>
               <li>
-                <button onClick={this.props.copyCurrentTilesToClipboard}>Copy Current Tiles to Clipboard</button>
+                <button onClick={this.props.copyCurrentTilesToClipboard}>
+                  {this.props.selectedTilesInList.length === 0
+                    ? 'Copy Current Platform Tiles to Clipboard'
+                    : 'Copy HIGHLIGHTED Current Platform Tiles to Clipboard'}
+                </button>
               </li>
             </ul>
             <h4>Sen2Agri</h4>
@@ -305,13 +328,11 @@ class TileList extends Component {
   }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
   jobs: state.job,
 })
 
 export default connect(
   mapStateToProps,
-  {
-
-  },
+  {},
 )(TileList)

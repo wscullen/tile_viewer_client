@@ -1,4 +1,12 @@
-import { AreaOfInterest, AreaOfInterestState, ADD_AOI, REMOVE_AOI, UPDATE_SESSION, AoiActionTypes } from './types'
+import {
+  AreaOfInterest,
+  AreaOfInterestState,
+  ADD_AOI,
+  REMOVE_AOI,
+  UPDATE_AOI,
+  UPDATE_SESSION,
+  AoiActionTypes,
+} from './types'
 
 import { TileListByDate, Tile } from '../tile/types'
 
@@ -17,7 +25,6 @@ export function getAoiNames(state = initialState): string[] {
   }
   return aoiNames
 }
-
 
 // const aois = Object.values(this.props.aois.byId)
 //     let currentAoi: AreaOfInterest
@@ -56,7 +63,6 @@ export function getAoiNames(state = initialState): string[] {
 
 // interface TileStatus
 
-
 export function getSelectedTiles(state: AppState): TileListByDate {
   let currentAoi: AreaOfInterest
 
@@ -84,12 +90,48 @@ export function getSelectedTiles(state: AppState): TileListByDate {
   return selectedTiles
 }
 
+export function getHighlightedTiles(state: AppState): string[] {
+  let currentAoi: AreaOfInterest
+
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const highlightedTiles: string[] = []
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+
+    for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+      const tileArray: Tile[] = []
+      value.map((id: string): void => {
+        if (state.tile.byId[id].highlighted) {
+          highlightedTiles.push(id)
+        }
+      })
+    }
+  }
+
+  return highlightedTiles
+}
+
 export function aoiReducer(state = initialState, action: AoiActionTypes): AreaOfInterestState {
   switch (action.type) {
     case ADD_AOI: {
       const areasOfInterest = { ...state }
       areasOfInterest.byId[action.payload.id] = action.payload
       areasOfInterest.allIds.push(action.payload.id)
+      return {
+        ...areasOfInterest,
+      }
+    }
+    case UPDATE_AOI: {
+      const areasOfInterest = { ...state }
+      areasOfInterest.byId[action.payload.id] = {
+        ...action.payload,
+      }
+
       return {
         ...areasOfInterest,
       }

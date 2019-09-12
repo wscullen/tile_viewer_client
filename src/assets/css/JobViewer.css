@@ -1,0 +1,15 @@
+.jobViewer {
+    height: 100%;
+}
+.jobViewerTable {
+    overflow-y: scroll;
+
+}
+
+table {
+    height: 100%;
+}
+
+tbody {
+    height: 100%
+}

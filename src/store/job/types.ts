@@ -1,6 +1,3 @@
-
-
-
 export enum JobStatus {
   Submitted,
   Assigned,

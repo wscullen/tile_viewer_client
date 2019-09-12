@@ -82,5 +82,9 @@
 
   position: fixed;
   left: 50%;
-  top: 20%;
+  top: 10%;
+}
+
+.modal-main h2 {
+	padding: 0px;
 }
