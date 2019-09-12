@@ -51,12 +51,6 @@ import { MainSessionState } from '../store/session/types'
 import { TileState } from '../store/tile/types'
 
 interface AppProps {
-  settings: {
-    job_url: string
-    s2d2_url: string
-  }
-  updateSettings: Function
-  resetSettings: Function
   addAoi: typeof addAoi
   removeAoi: typeof removeAoi
   updateSession: typeof updateSession
