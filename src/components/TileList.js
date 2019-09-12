@@ -33,6 +33,12 @@ class TileList extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.currentAoi === '' && !this.state.optionsHide) {
+      this.toggle()
+    }
+  }
+
   updateSettings = (settingChanged, e) => {
     console.log(settingChanged)
     console.log(e.target.value)
@@ -177,7 +183,14 @@ class TileList extends Component {
         <div className="header">
           <h5 className="sectionLabel title is-5">Tile List {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
           <div className="buttonSection">
-            <button className="settingsButton" onClick={this.toggle}>
+            <button
+              className="settingsButton"
+              onClick={
+                this.props.settings.hasOwnProperty('atmosphericCorrection')
+                  ? this.toggle
+                  : console.log('no aoi selected, not showing options')
+              }
+            >
               <FontAwesomeIcon icon="cog" />
             </button>
             <button className="addAreaButton myButton" onClick={() => this.props.submitAllJobs()}>
@@ -193,8 +206,13 @@ class TileList extends Component {
                 <input
                   onChange={e => this.updateSettings('atmosphericCorrection', e)}
                   id={this.id}
+                  value="atmosphericCorrection"
                   type="checkbox"
-                  checked={this.props.settings.atmosphericCorrection}
+                  checked={
+                    this.props.settings.hasOwnProperty('atmosphericCorrection')
+                      ? this.props.settings.atmosphericCorrection
+                      : false
+                  }
                 />
                 <label htmlFor={this.id}>Atmospheric Correction (Sen2Cor/LaSRC)</label>
               </li>

@@ -248,7 +248,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     if (this.props.session.currentAoi && this.props.aois.byId[this.props.session.currentAoi].name === aoiName) {
       const session = { ...this.props.session }
-      session.currentAoi = null
+      session.currentAoi = ''
 
       this.props.updateMainSession(session)
     }
@@ -314,7 +314,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log(event.key)
 
     // @ts-ignore
-    if (this.state.activeAOI !== null) {
+    if (this.state.activeAOI !== '') {
       switch (event.key) {
         case 'ArrowRight': {
           console.log('Right arrow pressed, incrementing date')
@@ -1264,19 +1264,12 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('new job settings')
     console.log(testObject)
 
-    const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
-    currentAoiSession.settings = newSettings
+    if (this.props.session.currentAoi !== '') {
+      const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
+      currentAoiSession.settings = newSettings
 
-    this.props.updateSession(this.props.session.currentAoi, currentAoiSession)
-
-    this.setState({
-      // @ts-ignore
-      jobSettings: {
-        // @ts-ignore
-        ...this.state.jobSettings,
-        ...newSettings,
-      },
-    })
+      this.props.updateSession(this.props.session.currentAoi, currentAoiSession)
+    }
   }
 
   public getTileList = (
@@ -1816,6 +1809,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           </div>
           <TileList
             settings={currentAoi ? currentAoi.session.settings : {}}
+            currentAoi={this.props.session.currentAoi}
             updateSettings={this.updateJobSettings}
             selectedTiles={selectedTiles}
             selectedTilesInList={highlightedTiles}

@@ -105,10 +105,12 @@ class AreaOfInterestDetailView extends Component<AppProps, AppState & DefaultApp
   componentWillUnmount() {}
 
   render() {
-    let aoi: AreaOfInterest
-    if (this.props.session.currentAoi !== null) {
+    let aoi: AreaOfInterest = undefined
+    if (this.props.session.currentAoi !== '') {
       aoi = { ...this.props.aois.byId[this.props.session.currentAoi] }
     }
+
+    console.log(aoi)
 
     return (
       <div className="aoiDetailView">
@@ -125,7 +127,7 @@ class AreaOfInterestDetailView extends Component<AppProps, AppState & DefaultApp
         <ul>
           {aoi
             ? aoi.sensorList.map(sensor => {
-                return <li>{sensor}</li>
+                return <li key={'key' + sensor}>{sensor}</li>
               })
             : ''}
         </ul>
@@ -135,7 +137,7 @@ class AreaOfInterestDetailView extends Component<AppProps, AppState & DefaultApp
         <ul>
           {aoi
             ? aoi.mgrsList.map(grid => {
-                return <li>{grid}</li>
+                return <li key={'key' + grid}>{grid}</li>
               })
             : ''}
         </ul>
@@ -143,7 +145,7 @@ class AreaOfInterestDetailView extends Component<AppProps, AppState & DefaultApp
         <ul>
           {aoi
             ? aoi.wrsList.map(grid => {
-                return <li>{grid}</li>
+                return <li key={'key' + grid}>{grid}</li>
               })
             : ''}
         </ul>

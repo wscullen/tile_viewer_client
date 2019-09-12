@@ -15,7 +15,7 @@ const initialState: MainSessionState = {
     jobManager: {
       key: '',
       updated: undefined,
-    }
+    },
   },
 }
 
