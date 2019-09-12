@@ -158,7 +158,7 @@ class Updater extends Component<AppProps, AppState & DefaultState> {
             <h5>Available Version:</h5>
             <p>{this.state.availableVersion}</p>
             <p>{this.state.currentMessage}</p>
-            <p>{this.renderDynamicContent()}</p>
+            <div>{this.renderDynamicContent()}</div>
           </div>
         </div>
       )

@@ -64,14 +64,28 @@ ipcMain.on('updaterMessage', (event, arg) => {
 
 function createUpdaterWindow() {
   if (updaterWindow === null) {
-    updaterWindow = new BrowserWindow({
-      icon: path.join(resources, '96x96.png'),
-      width: 400,
-      height: 200,
-      resizable: false,
-      show: false,
-      title: 'Updater',
-    })
+    if (dev) {
+      updaterWindow = new BrowserWindow({
+        icon: path.join(resources, '96x96.png'),
+        width: 800,
+        height: 600,
+        resizable: true,
+        show: false,
+        title: 'Updater',
+      })
+    } else {
+      updaterWindow = new BrowserWindow({
+        icon: path.join(resources, '96x96.png'),
+        width: 400,
+        height: 200,
+        resizable: false,
+        show: false,
+        title: 'Updater',
+      })
+    }
+
+
+
 
     // updaterWindow.toggleDevTools()
 
@@ -91,6 +105,11 @@ function createUpdaterWindow() {
   // .quitAndInstall(isSilent, isForceRunAfter)
   updaterWindow.webContents.on('did-finish-load', function() {
     // setTimeout(() => updaterWindow.show(), 650)
+
+    if (dev) {
+      console.log('wats happening')
+      updaterWindow.webContents.openDevTools()
+    }
     updaterWindow.show()
     autoUpdater.autoDownload = false
     autoUpdater.checkForUpdates()
