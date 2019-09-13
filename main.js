@@ -82,9 +82,6 @@ function createUpdaterWindow() {
       })
     }
 
-
-
-
     // updaterWindow.toggleDevTools()
   }
 
@@ -354,9 +351,14 @@ autoUpdater.on('checking-for-update', () => {
 })
 autoUpdater.on('update-available', info => {
   sendStatusToWindow('Update available.')
+
+  const payloadString = JSON.stringify({
+    version: info.version,
+    os: process.platform,
+  })
   updaterWindow.webContents.send('updaterMessage', {
     type: 'availableVersionMessage',
-    payload: info.version,
+    payload: payloadString,
   })
 })
 autoUpdater.on('update-not-available', info => {
@@ -374,6 +376,7 @@ autoUpdater.on('download-progress', progressObj => {
   log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
   log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
   sendStatusToWindow('Downloading...')
+
   updaterWindow.webContents.send('updaterMessage', {
     type: 'downloadProgress',
     payload: JSON.stringify(progressObj),
