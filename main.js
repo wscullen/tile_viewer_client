@@ -352,6 +352,8 @@ autoUpdater.on('checking-for-update', () => {
 autoUpdater.on('update-available', info => {
   sendStatusToWindow('Update available.')
 
+  console.log(info)
+
   const payloadString = JSON.stringify({
     version: info.version,
     os: process.platform,
@@ -363,9 +365,13 @@ autoUpdater.on('update-available', info => {
 })
 autoUpdater.on('update-not-available', info => {
   sendStatusToWindow('Update not available.')
+  const payloadString = JSON.stringify({
+    version: info.version,
+    os: process.platform,
+  })
   updaterWindow.webContents.send('updaterMessage', {
     type: 'availableVersionMessage',
-    payload: info.version,
+    payload: payloadString,
   })
 })
 autoUpdater.on('error', err => {
