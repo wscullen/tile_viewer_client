@@ -10,9 +10,8 @@ import { connect } from 'react-redux'
 import { AppState } from '../store/'
 
 import { History } from 'history'
-import { thisExpression } from '@babel/types';
-import { IpcMessageEvent } from 'electron';
-
+import { thisExpression } from '@babel/types'
+import { IpcMessageEvent } from 'electron'
 
 const { ipcRenderer } = require('electron')
 
@@ -32,16 +31,17 @@ interface DefaultState {
   totalDownloadSize: number
   downloadProgressPercent: number
   currentMessage: string
+  os: string
 }
 
 const defaultState = {
   updateAvailable: false,
-  currentVersion: "",
-  availableVersion: "",
+  currentVersion: '',
+  availableVersion: '',
   downloadedSize: -1,
   totalDownloadSize: -1,
   downloadProgressPercent: -1,
-  currentMessage: "",
+  currentMessage: '',
 }
 
 interface IpcMessageStructure {
@@ -50,7 +50,7 @@ interface IpcMessageStructure {
 }
 
 class Updater extends Component<AppProps, AppState & DefaultState> {
-  constructor (props: AppProps) {
+  constructor(props: AppProps) {
     super(props)
     console.log('settings constructor running')
 
@@ -59,110 +59,122 @@ class Updater extends Component<AppProps, AppState & DefaultState> {
 
       if (arg.type === 'versionMessage') {
         this.setState({
-          currentVersion: arg.payload
+          currentVersion: arg.payload,
         })
       } else if (arg.type === 'statusMessage') {
         const updateAvailable = arg.payload === 'Update available.'
         console.log(updateAvailable)
         this.setState({
           currentMessage: arg.payload,
-          updateAvailable
+          updateAvailable,
         })
       } else if (arg.type === 'availableVersionMessage') {
-        this.setState({
-          availableVersion: 'v' + arg.payload
-        })
-      }
+        const payloadObj = JSON.parse(arg.payload)
 
-      else if (arg.type === 'downloadProgress') {
+        this.setState({
+          availableVersion: 'v' + payloadObj.version,
+          os: payloadObj.os,
+        })
+      } else if (arg.type === 'downloadProgress') {
         const progressObj = JSON.parse(arg.payload)
         console.log(progressObj)
 
         this.setState({
           downloadProgressPercent: progressObj.percent,
           downloadedSize: progressObj.transferred,
-          totalDownloadSize: progressObj.total
+          totalDownloadSize: progressObj.total,
         })
       }
 
       // log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
       // log_message = log_message + ' (' + progressObj.transferred + '/' + progressObj.total + ')'
       // sendStatusToWindow('Downloading...')
-
-
     })
 
     this.state = {
       ...defaultState,
-      ...this.state
+      ...this.state,
     }
   }
 
-  startUpdate = (userWantsUpdate: boolean)  => {
+  startUpdate = (userWantsUpdate: boolean) => {
     console.log(userWantsUpdate)
 
     if (userWantsUpdate) {
       ipcRenderer.send('asynchronous-message', {
         type: 'update',
-        payload: true
+        payload: true,
       })
     } else {
       ipcRenderer.send('asynchronous-message', {
         type: 'update',
-        payload: false
+        payload: false,
       })
     }
   }
 
   startDownload = () => {
+    if (this.state.os === 'linux') {
+      this.setState({
+        currentMessage: 'Downloading...',
+      })
+    }
+
     ipcRenderer.send('updaterMessage', {
       type: 'updateControl',
-      payload: 'download'
+      payload: 'download',
     })
   }
 
   installAndRestart = () => {
     ipcRenderer.send('updaterMessage', {
       type: 'updateControl',
-      payload: 'installAndRestart'
+      payload: 'installAndRestart',
     })
   }
 
-
   renderDynamicContent = () => {
     if (this.state.currentMessage === 'Update available.') {
-      return (
-        <button onClick={() => this.startDownload()}>Download Update</button>
-      )
+      return <button onClick={() => this.startDownload()}>Download Update</button>
     } else if (this.state.currentMessage === 'Downloading...') {
-      return (
-        <div>
-          <progress className="progress" value={this.state.downloadProgressPercent} max="100"></progress>({(this.state.downloadedSize/1048576).toPrecision(2)}/{(this.state.totalDownloadSize/1048576).toPrecision(2)})
-        </div>
-      )
-    }
-    else if (this.state.currentMessage === 'Update downloaded.') {
-      return (
-        <button onClick={() => this.installAndRestart()}>Install Update and Restart</button>
-      )
+      if (this.state.os === 'linux') {
+        return (
+          <div>
+            <progress className="progress is-small is-primary" max="100"></progress>
+          </div>
+        )
+      } else {
+        return (
+          <div>
+            <progress
+              className="progress is-small is-primary"
+              value={this.state.downloadProgressPercent}
+              max="100"
+            ></progress>
+            ({(this.state.downloadedSize / 1048576).toPrecision(2)}/
+            {(this.state.totalDownloadSize / 1048576).toPrecision(2)})
+          </div>
+        )
+      }
+    } else if (this.state.currentMessage === 'Update downloaded.') {
+      return <button onClick={() => this.installAndRestart()}>Install Update and Restart</button>
     }
   }
 
-    render () {
-      return (
-
-        <div className='container'>
-          <div className='main'>
-            <h5>Current Version:</h5>
-            <p>{this.state.currentVersion}</p>
-            <h5>Available Version:</h5>
-            <p>{this.state.availableVersion}</p>
-            <p>{this.state.currentMessage}</p>
-            <div>{this.renderDynamicContent()}</div>
-          </div>
+  render() {
+    return (
+      <div className="container">
+        <div className="main">
+          <h5>Current Version:</h5>
+          <p>{this.state.currentVersion}</p>
+          <h5>Available Version:</h5>
+          <p>{this.state.availableVersion}</p>
+          <p>{this.state.currentMessage}</p>
+          <div>{this.renderDynamicContent()}</div>
         </div>
-      )
-    }
+      </div>
+    )
+  }
 }
 
 const mapStateToProps = (state: AppState) => ({
