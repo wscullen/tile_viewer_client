@@ -155,49 +155,64 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
           <tbody>
             {jobIds.map(id => {
               const job: Job = this.props.jobs.byId[id]
-              let jobType: string = ''
-              let displayName: string = ''
+              if (job) {
+                let jobType: string = ''
+                let displayName: string = ''
+                let abreviatedDisplayName: string = ''
 
-              if (job.hasOwnProperty('tileId')) {
-                jobType = 'Tile'
-                const tileName = this.props.tiles.byId[job.tileId].properties.name
-                const tileNameParts = tileName.split('_')
-                displayName = `${tileNameParts[0]}_${tileNameParts[1].slice(3)}_${tileNameParts[5].slice(1)}_${
-                  tileNameParts[2]
-                }_${tileNameParts[6]}`
-              } else {
-                jobType = 'Aoi'
-                displayName = 'na'
+                if (job.hasOwnProperty('tileId')) {
+                  jobType = 'Tile'
+                  const tileName = this.props.tiles.byId[job.tileId].properties.name
+                  const tileNameParts = tileName.split('_')
+
+                  if (tileName.startsWith('S2')) {
+                    displayName = `${tileNameParts[0]}_${tileNameParts[1].slice(3)}_${tileNameParts[5].slice(1)}_${
+                      tileNameParts[2]
+                    }_${tileNameParts[6]}`
+
+                    abreviatedDisplayName = displayName.slice(8, 22)
+                  } else if (tileName.startsWith('LC08')) {
+                    displayName = tileName
+                    abreviatedDisplayName = displayName.slice(10, 25)
+                  }
+                } else {
+                  jobType = 'Aoi'
+                  displayName = 'na'
+                }
+                console.log(job)
+                return (
+                  <tr key={job.id}>
+                    <th>
+                      <abbr title={job.id}>{job.id.slice(0, 8)}</abbr>
+                    </th>
+                    <td>{jobType}</td>
+                    <td>
+                      <abbr title={displayName}>{abreviatedDisplayName}</abbr>
+                    </td>
+                    <td>{JobStatus[job.status]}</td>
+                    <td>
+                      {job.submittedDate !== '' ? moment(job.submittedDate).format('MMM DD YYYY - HH:mm:ss') : ''}
+                    </td>
+                    <td>{job.assignedDate !== '' ? moment(job.assignedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
+                    <td>
+                      {job.completedDate !== '' ? moment(job.completedDate).format('MMM DD YYYY - HH:mm:ss') : ''}
+                    </td>
+                    <td>{this.jobSuccessIcon(job.success, job.status)}</td>
+                    <td>
+                      <button
+                        className="tileActionButton removeAction"
+                        onClick={event => {
+                          console.log('trying to remove job, inside tile list')
+                          this.props.removeJob(job.id)
+                          event.stopPropagation()
+                        }}
+                      >
+                        <FontAwesomeIcon icon="times-circle" />
+                      </button>
+                    </td>
+                  </tr>
+                )
               }
-              console.log(job)
-              return (
-                <tr key={job.id}>
-                  <th>
-                    <abbr title={job.id}>{job.id.slice(0, 8)}</abbr>
-                  </th>
-                  <td>{jobType}</td>
-                  <td>
-                    <abbr title={displayName}>{displayName.slice(8, 22)}</abbr>
-                  </td>
-                  <td>{JobStatus[job.status]}</td>
-                  <td>{job.submittedDate !== '' ? moment(job.submittedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
-                  <td>{job.assignedDate !== '' ? moment(job.assignedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
-                  <td>{job.completedDate !== '' ? moment(job.completedDate).format('MMM DD YYYY - HH:mm:ss') : ''}</td>
-                  <td>{this.jobSuccessIcon(job.success, job.status)}</td>
-                  <td>
-                    <button
-                      className="tileActionButton removeAction"
-                      onClick={event => {
-                        console.log('trying to remove job, inside tile list')
-                        this.props.removeJob(job.id)
-                        event.stopPropagation()
-                      }}
-                    >
-                      <FontAwesomeIcon icon="times-circle" />
-                    </button>
-                  </td>
-                </tr>
-              )
             })}
           </tbody>
         </table>

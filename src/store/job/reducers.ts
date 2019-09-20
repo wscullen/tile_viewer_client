@@ -30,10 +30,7 @@ export function jobReducer(state = initialState, action: JobActionTypes): JobSta
       const jobs = { ...state }
       const jobToUpdate = jobs.byId[action.payload.id]
 
-      const newJob = Object.assign(
-        {},
-        action.payload,
-      )
+      const newJob = Object.assign({}, action.payload)
 
       jobs.byId[action.payload.id] = newJob
 
@@ -47,6 +44,8 @@ export function jobReducer(state = initialState, action: JobActionTypes): JobSta
 
       const jobToDelete = jobs.byId[action.payload]
       const aoiId = jobToDelete.aoiId
+
+      clearInterval(jobToDelete.setIntervalId)
 
       delete jobs.byId[action.payload]
       jobs.allIds.splice(jobs.allIds.indexOf(action.payload), 1)

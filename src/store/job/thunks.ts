@@ -140,7 +140,7 @@ export const thunkResumeCheckingJobsForAoi = (
 
   const state = getState()
   if (state.job.byAoiId.hasOwnProperty(aoiId)) {
-    const jobsForAoi = state.job.byAoiId[aoiId]
+    const jobsForAoi = [...state.job.byAoiId[aoiId]]
 
     const jobManagerUrl: string = state.session.settings.jobManagerUrl
     const atmosCorrection: boolean = state.aoi.byId[aoiId].session.atmosCorrection
@@ -148,23 +148,25 @@ export const thunkResumeCheckingJobsForAoi = (
     const csrfToken: string = state.session.csrfTokens.jobManager.key
     console.log('resuming job status checking ================================')
     for (const jobId of jobsForAoi) {
-      const job = { ...state.job.byId[jobId] }
-      console.log(`job id ${jobId}`)
-      console.log('----------------------------------------')
-      console.log(job.status)
-      console.log(JobStatus.Completed)
-      if (job && job.status !== JobStatus.Completed) {
-        clearInterval(job.setIntervalId)
+      if (jobId) {
+        const job = { ...state.job.byId[jobId] }
+        console.log(`job id ${jobId}`)
+        console.log('----------------------------------------')
+        console.log(job.status)
+        console.log(JobStatus.Completed)
+        if (job && job.status !== JobStatus.Completed) {
+          clearInterval(job.setIntervalId)
 
-        const intervalId = setInterval(
-          () => checkJobStatus(job.id, jobManagerUrl, csrfToken, getState, dispatch),
-          1000 * 15,
-        )
+          const intervalId = setInterval(
+            () => checkJobStatus(job.id, jobManagerUrl, csrfToken, getState, dispatch),
+            1000 * 15,
+          )
 
-        console.log(`Inverval Id: ${intervalId}`)
-        job.setIntervalId = intervalId
-        console.log('updating job clear interval id')
-        dispatch(updateJob(job))
+          console.log(`Inverval Id: ${intervalId}`)
+          job.setIntervalId = intervalId
+          console.log('updating job clear interval id')
+          dispatch(updateJob(job))
+        }
       }
     }
   }
@@ -192,11 +194,11 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
   }
 
   const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken)
-
+  console.log(jobResult)
   if (jobResult) {
     console.log('thunk finished in func job submitted successfully')
 
-    const aoi = state.aoi.byId[state.session.currentAoi]
+    const aoi = { ...state.aoi.byId[state.session.currentAoi] }
 
     aoi.jobs.push(jobResult.id)
 
@@ -279,8 +281,16 @@ const submitJobToApi = async (
     body: JSON.stringify(jobReqBody),
     headers,
   })
-    .then(response => response.json())
     .then(response => {
+      console.log(response)
+      if (response.status === 201) {
+        return response.json()
+      } else {
+        return undefined
+      }
+    })
+    .then(response => {
+      console.log(response)
       console.log('Success:', JSON.stringify(response))
       // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
       // Todo update each tile with job info (id, status, success, workerid)
