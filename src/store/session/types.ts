@@ -4,9 +4,17 @@ export enum NavigationTabs {
   Details,
 }
 
+export interface AuthSettings {
+  userEmail: string
+  userPassword: string
+  accessToken: string
+  refreshToken: string
+}
+
 export interface SessionSettings {
   jobManagerUrl: string
   s2d2Url: string
+  auth: AuthSettings
 }
 
 export interface Token {
@@ -28,10 +36,16 @@ export interface MainSessionState {
 }
 
 export const UPDATE_MAIN_SESSION = 'UPDATE_MAIN_SESSION'
+export const AUTHENTICATE = 'AUTHENTICATE'
 
 interface UpdateMainSessionAction {
   type: typeof UPDATE_MAIN_SESSION
   payload: MainSessionState
 }
 
-export type SessionActionTypes = UpdateMainSessionAction
+interface AuthenticationAction {
+  type: typeof AUTHENTICATE
+  payload: MainSessionState
+}
+
+export type SessionActionTypes = UpdateMainSessionAction | AuthenticationAction

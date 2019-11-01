@@ -6,6 +6,12 @@ const initialState: MainSessionState = {
   settings: {
     jobManagerUrl: 'http://hal678772.agr.gc.ca:9090',
     s2d2Url: 'http://hal678772.agr.gc.ca:8000',
+    auth: {
+      accessToken: undefined,
+      refreshToken: undefined,
+      userEmail: undefined,
+      userPassword: undefined,
+    },
   },
   csrfTokens: {
     s2d2: {

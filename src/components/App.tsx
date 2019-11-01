@@ -44,6 +44,7 @@ import {
   faGlobeAmericas,
   faInfoCircle,
   faToolbox,
+  faSpinner,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { faHourglass as farHourglass, faCircle as farCircle } from '@fortawesome/free-regular-svg-icons'
@@ -76,19 +77,25 @@ library.add(
   faEye,
   faEyeSlash,
   faToolbox,
+  faSpinner,
 )
 
-import {  Switch } from 'react-router-dom'
+import { Switch } from 'react-router-dom'
 import { Route, HashRouter } from 'react-router-dom'
 
 import MainContainer from './MainContainer'
 import Settings from './Settings'
 import Updater from './Updater'
 
-
 const defaultSettings: SessionSettings = {
   jobManagerUrl: 'http://hal678772.agr.gc.ca:9090',
   s2d2Url: 'http://hal678772.agr.gc.ca:8000',
+  auth: {
+    userEmail: '',
+    userPassword: '',
+    refreshToken: '',
+    accessToken: '',
+  },
 }
 
 const renderHomeRoute = () => {
@@ -98,12 +105,10 @@ const renderHomeRoute = () => {
   } else return false
 }
 
-
 class App extends React.Component<any, any> {
   constructor(props: any) {
     super(props)
     // Check for saved settigns
-
   }
 
   public updateSettings = (updatedSettings: SessionSettings): void => {
@@ -133,10 +138,10 @@ class App extends React.Component<any, any> {
           <Route
             path="/updater"
             render={(props: RouteComponentProps) => (
-              <Updater {...props} settings={this.props.session.settings} updateSettings={this.updateSettings}/>
+              <Updater {...props} settings={this.props.session.settings} updateSettings={this.updateSettings} />
             )}
           />
-                <Route
+          <Route
             exact
             path="/"
             render={(props: RouteComponentProps) => (

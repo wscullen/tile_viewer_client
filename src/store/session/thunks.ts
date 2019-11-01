@@ -5,21 +5,79 @@ import { AppState } from '../index'
 
 import { MainSessionState, SessionSettings, Token } from './types'
 
-export const thunkUpdateCsrfTokens = (): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
+export const thunkUpdateCsrfTokens = (): ThunkAction<void, AppState, null, Action<string>> => async (
+  dispatch: any,
+  getState: any,
+) => {
   console.log('Trying to update the CSRF tokens')
 
   const state = getState()
 
   await getCSRFTokens(state.session, dispatch)
+}
 
+export const thunkAuthenticate = ({
+  email,
+  password,
+  url,
+}: {
+  email: string
+  password: string
+  url: string
+}): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
+  console.log('Trying to update the CSRF tokens')
+
+  const state = getState()
+
+  return await authenticate({ email, password, url }, dispatch)
+}
+
+async function authenticate(
+  {
+    email,
+    password,
+    url,
+  }: {
+    email: string
+    password: string
+    url: string
+  },
+  dispatch: any,
+) {
+  const body = JSON.stringify({
+    username: email,
+    password: password,
+  })
+
+  const result = await fetch(`${url}/api/token/`, {
+    method: 'POST',
+    mode: 'cors',
+    cache: 'default',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body,
+  })
+    .then(response => response.json())
+    .then(response => {
+      console.log('Success:', JSON.stringify(response))
+
+      // if (token.length !== 0) {
+      //   session.csrfTokens[apiName].key = token
+      //   session.csrfTokens[apiName].updated = Date.now()
+      //   dispatch(updateMainSession(session))
+      // }
+    })
+    .catch(err => {
+      console.log('Something blew up while verifying the API')
+      return err
+    })
 }
 
 async function getCSRFTokens(session: MainSessionState, dispatch: any) {
-
   const csrfRequestPromises = []
 
   for (const [key, apiUrl] of Object.entries(session.settings)) {
-
     console.log(apiUrl)
     console.log(key)
 
@@ -33,7 +91,6 @@ async function getCSRFTokens(session: MainSessionState, dispatch: any) {
       dispatch(updateMainSession(session))
     }
   }
-
 }
 
 export async function getCSRFToken(apiRootUrl: string): Promise<string> {

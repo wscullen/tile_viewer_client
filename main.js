@@ -247,7 +247,7 @@ function createWindow() {
     if (process.platform === 'win32') {
       reactDevToolsPath = path.join(
         os.homedir(),
-        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.6_0',
+        'AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.2.0_0',
       )
       reduxDevToolsPath = path.join(
         os.homedir(),
@@ -257,7 +257,7 @@ function createWindow() {
       // Ubuntu dev machine
       reactDevToolsPath = path.join(
         os.homedir(),
-        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.0.6_0',
+        '.config/chromium/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.2.0_0',
       )
       reduxDevToolsPath = path.join(
         os.homedir(),
