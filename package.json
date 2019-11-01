@@ -90,7 +90,7 @@
     "react-router-dom": "^5.0.0",
     "react-simple-storage": "^1.4.1",
     "react-spinners": "^0.5.4",
-    "yarn": "^1.15.2"
+    "yarn": "^1.17.3"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
