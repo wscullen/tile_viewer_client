@@ -4,7 +4,7 @@ import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { MainSessionState, Token, SessionSettings } from '../store/session/types'
-import { getCSRFToken, getApiVersion, thunkAuthenticate } from '../store/session/thunks'
+import { getCSRFToken, getApiVersion, thunkAuthenticate, thunkAttemptLogin } from '../store/session/thunks'
 import { updateMainSession } from '../store/session/actions'
 import { connect } from 'react-redux'
 import { AppState } from '../store/'
@@ -32,8 +32,7 @@ interface AppProps {
   session: MainSessionState
   updateMainSession: typeof updateMainSession
   thunkAuthenticate: typeof thunkAuthenticate
-  settings: SessionSettings
-  updateSettings: Function
+  thunkAttemptLogin: typeof thunkAttemptLogin
   history: History
 }
 
@@ -41,7 +40,6 @@ interface DefaultState {
   jobManagerUrl: string
   jobManagerEmail: string
   jobManagerPassword: string
-  submitting: boolean
   s2d2Url: string
   s2d2Verified: boolean
   tileViewerVersion: string
@@ -84,8 +82,7 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
     this.state = {
       ...defaultState,
       ...this.state,
-      jobManagerUrl: props.settings.jobManagerUrl,
-      s2d2Url: props.settings.s2d2Url,
+      jobManagerUrl: this.props.session.settings.jobManagerUrl,
       s2d2Verified: null,
       jobManagerVerified: null,
     }
@@ -98,35 +95,13 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
 
     console.log(session)
 
-    this.props.thunkAuthenticate({
+    let result = this.props.thunkAttemptLogin({
       email: this.state.jobManagerEmail,
       password: this.state.jobManagerPassword,
       url: this.state.jobManagerUrl,
     })
 
-    session.settings.auth.userEmail = this.state.jobManagerEmail
-    session.settings.auth.userPassword = this.state.jobManagerPassword
-    session.settings.jobManagerUrl = this.state.jobManagerUrl
-
-    this.props.updateMainSession(session)
-
-    // if (result.length !== 0) {
-    //   session.settings.jobManagerUrl = this.state.jobManagerUrl
-    //   session.csrfTokens.jobManager.key = result
-    //   session.csrfTokens.jobManager.updated = Date.now()
-    //   this.props.updateMainSession(session)
-
-    //   this.setState({
-    //     jobManagerVerified: true,
-    //   })
-    // } else {
-    //   session.csrfTokens.jobManager.key = ''
-    //   session.csrfTokens.jobManager.updated = undefined
-    //   this.props.updateMainSession(session)
-    //   this.setState({
-    //     jobManagerVerified: false,Input
-    //   })
-    // }
+    console.log('thunk result', result)
   }
 
   testS2d2Url = async () => {
@@ -221,28 +196,28 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
     }
 
     const jobManagerLoginIcon = () => {
-      if (this.state.submitting) {
+      if (this.props.session.settings.loggingIn) {
         return (
-          <div className="submittingForm flexItem">
+          <div className="submittingForm flexItem2">
             <FontAwesomeIcon icon={'spinner'} className="fa-pulse" />
           </div>
         )
       }
 
-      if (this.state.jobManagerVerified !== null) {
-        if (this.state.jobManagerVerified) {
-          return (
-            <div className="loggingIn flexItem2">
-              <FontAwesomeIcon icon={'check'} />
-            </div>
-          )
-        } else {
-          return (
-            <div className="notVerified flexItem2">
-              <FontAwesomeIcon icon={'times'} />
-            </div>
-          )
-        }
+      if (this.props.session.settings.authenticated) {
+        return (
+          <div className="verified flexItem2">
+            <FontAwesomeIcon icon={'check'} />
+            <span>{this.props.session.settings.loginResultMsg}</span>
+          </div>
+        )
+      } else {
+        return (
+          <div className="notVerified flexItem2">
+            <FontAwesomeIcon icon={'times'} />
+            <span>{this.props.session.settings.loginResultMsg}</span>
+          </div>
+        )
       }
     }
 
@@ -265,7 +240,6 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
                 s2d2Url: this.state.s2d2Url,
               }
 
-              this.props.updateSettings(settings)
               history.push('/')
             }}
           >
@@ -287,7 +261,6 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
 
                   this.setState(
                     {
-                      submitting: true,
                       jobManagerEmail: values.email,
                       jobManagerUrl: values.url,
                       jobManagerPassword: values.password,
@@ -385,5 +358,6 @@ export default connect(
   {
     updateMainSession,
     thunkAuthenticate,
+    thunkAttemptLogin,
   },
 )(Settings)

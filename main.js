@@ -221,6 +221,21 @@ function createWindow() {
             currentWindow.toggleDevTools()
           },
         },
+        {
+          label: 'Reset Redux to Defaults',
+          submenu: [
+            {
+              label: 'Session Settings',
+              click: (menuItem, currentWindow) => {
+                currentWindow.webContents.send('menu-item', {
+                  menuItem,
+                  currentWindow,
+                })
+              },
+              id: 'session-settings',
+            },
+          ],
+        },
       ],
     },
   ])

@@ -33,6 +33,11 @@
   flex-grow: 1;
   width: 15%;
   padding-left: 20px;
+  align-self: center;
+}
+
+.flexItem2 span {
+  padding-left: 20px;
 }
 
 .settingsEntry {

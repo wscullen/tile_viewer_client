@@ -95,7 +95,11 @@ const defaultSettings: SessionSettings = {
     userPassword: '',
     refreshToken: '',
     accessToken: '',
+    dateVerified: '',
   },
+  authenticated: false,
+  loggingIn: false,
+  loginResultMsg: '',
 }
 
 const renderHomeRoute = () => {
@@ -111,48 +115,13 @@ class App extends React.Component<any, any> {
     // Check for saved settigns
   }
 
-  public updateSettings = (updatedSettings: SessionSettings): void => {
-    console.log('updating settings in App.js')
-    const currentSession = { ...this.props.session }
-    currentSession.settings = updatedSettings
-    this.props.updateMainSession(currentSession)
-  }
-
-  public resetSettings = (): void => {
-    console.log('resetting settings to defaults')
-    const currentSession = { ...this.props.session }
-    currentSession.settings = defaultSettings
-    this.props.updateMainSession(currentSession)
-  }
-
   public render() {
     return (
       <HashRouter>
         <Switch>
-          <Route
-            path="/settings"
-            render={(props: RouteComponentProps) => (
-              <Settings {...props} settings={this.props.session.settings} updateSettings={this.updateSettings} />
-            )}
-          />
-          <Route
-            path="/updater"
-            render={(props: RouteComponentProps) => (
-              <Updater {...props} settings={this.props.session.settings} updateSettings={this.updateSettings} />
-            )}
-          />
-          <Route
-            exact
-            path="/"
-            render={(props: RouteComponentProps) => (
-              <MainContainer
-                {...props}
-                settings={this.props.session.settings}
-                updateSettings={this.updateSettings}
-                resetSettings={this.resetSettings}
-              />
-            )}
-          />
+          <Route path="/settings" render={(props: RouteComponentProps) => <Settings {...props} />} />
+          <Route path="/updater" render={(props: RouteComponentProps) => <Updater {...props} />} />
+          <Route exact path="/" render={(props: RouteComponentProps) => <MainContainer {...props} />} />
         </Switch>
       </HashRouter>
     )

@@ -18,8 +18,6 @@ const { ipcRenderer } = require('electron')
 interface AppProps {
   session: MainSessionState
   updateMainSession: typeof updateMainSession
-  settings: SessionSettings
-  updateSettings: Function
   history: History
 }
 

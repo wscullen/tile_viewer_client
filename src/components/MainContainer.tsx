@@ -22,7 +22,7 @@ import {
 } from '../store/aoi/types'
 
 import { MainSessionState } from '../store/session/types'
-import { updateMainSession } from '../store/session/actions'
+import { updateMainSession, resetState as resetSessionState } from '../store/session/actions'
 
 import { addAoi, removeAoi, updateSession } from '../store/aoi/actions'
 
@@ -74,18 +74,13 @@ interface SingleDateTileList {
 }
 
 interface AppProps {
-  settings: {
-    job_url: string
-    s2d2_url: string
-  }
-  updateSettings: Function
-  resetSettings: Function
   addTile: typeof addTile
   updateTile: typeof updateTile
   addAoi: typeof addAoi
   removeAoi: typeof removeAoi
   updateSession: typeof updateSession
   updateMainSession: typeof updateMainSession
+  resetSessionState: typeof resetSessionState
   aois: AreaOfInterestState
   session: MainSessionState
   jobs: JobState
@@ -175,7 +170,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     ipcRenderer.on('menu-item', (event: any, arg: any) => {
       console.log(event)
-
       console.log(arg)
 
       if (arg.menuItem.label === 'Clear Local Storage') {
@@ -190,9 +184,11 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         const { history } = this.props
         history.push('/settings')
       }
-    })
 
-    console.log(this.props.settings)
+      if (arg.menuItem.id === 'session-settings') {
+        this.props.resetSessionState()
+      }
+    })
 
     this.state = {
       ...defaultState,
@@ -1935,6 +1931,7 @@ export default connect(
     updateJob,
     removeJob,
     updateMainSession,
+    resetSessionState,
     thunkSendMessage,
     thunkAddJob,
     thunkResumeCheckingJobsForAoi,
