@@ -1,4 +1,20 @@
-import { AreaOfInterest, ADD_AOI, UPDATE_AOI, REMOVE_AOI, UPDATE_SESSION, AoiActionTypes, Session } from './types'
+import {
+  AreaOfInterest,
+  ADD_AOI,
+  UPDATE_AOI,
+  REMOVE_AOI,
+  UPDATE_SESSION,
+  AoiActionTypes,
+  Session,
+  START_ADD_AOI,
+} from './types'
+
+export function startAddAoi(newAoiFormData: HTMLFormElement): AoiActionTypes {
+  return {
+    type: START_ADD_AOI,
+    payload: newAoiFormData,
+  }
+}
 
 // TypeScript infers that this function is returning SendMessageAction
 export function addAoi(newAoi: AreaOfInterest): AoiActionTypes {

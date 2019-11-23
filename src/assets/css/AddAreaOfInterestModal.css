@@ -1,8 +1,8 @@
 @import 'react-dates/lib/css/_datepicker.css';
 
 .addAreaOfInterestModal {
-    border: 1px dashed grey;
-    /* margin: 2px; */
+  border: 1px dashed grey;
+  /* margin: 2px; */
 }
 
 /* .areaOfInterestList > .header {
@@ -14,67 +14,67 @@
 } */
 
 .createButton {
-	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));
-	background:-moz-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:-webkit-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:-o-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:-ms-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
-	background:linear-gradient(to bottom, #44c767 5%, #5cbf2a 100%);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
-	background-color:#44c767;
-	-moz-border-radius:3px;
-	-webkit-border-radius:3px;
-	border-radius:3px;
-	border:1px solid #18ab29;
-	display:inline-block;
-	cursor:pointer;
-	color:#ffffff;
-	font-family: 'Source Sans Pro', sans-serif;
-	font-weight: 600;
-	font-size: 18px;
-	padding: 5px 10px;
-    text-decoration:none;
-    outline: none;
-    bottom: -100px;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #44c767), color-stop(1, #5cbf2a));
+  background: -moz-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: -webkit-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: -o-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: -ms-linear-gradient(top, #44c767 5%, #5cbf2a 100%);
+  background: linear-gradient(to bottom, #44c767 5%, #5cbf2a 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#44c767', endColorstr='#5cbf2a',GradientType=0);
+  background-color: #44c767;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  border: 1px solid #18ab29;
+  display: inline-block;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  padding: 5px 10px;
+  text-decoration: none;
+  outline: none;
+  bottom: -100px;
   margin-top: 25px;
 }
 .createButton:hover {
-	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
-	background:-moz-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:-webkit-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:-o-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:-ms-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
-	background:linear-gradient(to bottom, #5cbf2a 5%, #44c767 100%);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
-	background-color:#5cbf2a;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5cbf2a), color-stop(1, #44c767));
+  background: -moz-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: -webkit-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: -o-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: -ms-linear-gradient(top, #5cbf2a 5%, #44c767 100%);
+  background: linear-gradient(to bottom, #5cbf2a 5%, #44c767 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+  background-color: #5cbf2a;
 }
 .createButton[disabled] {
-	background-color:#ddd;
+  background-color: #ddd;
 }
 .createButton:active {
-    position:relative;
-    top:1px;
+  position: relative;
+  top: 1px;
 }
 
 .fileList {
-    list-style: none;
-    padding-left: 0px;
-    font-size: 12px;
-    margin-top: 4px;
-    margin-left: 4px;
+  list-style: none;
+  padding-left: 0px;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 4px;
 }
 
 .loadingIndicators {
-	/* margin-left: auto; */
-	margin:auto;
-	text-align:center;
-	padding: 10px;
+  /* margin-left: auto; */
+  margin: auto;
+  text-align: center;
+  padding: 10px;
 }
 
 .css-0 {
-	margin-left: auto;
-	margin-right: auto;
-	width: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100px;
 }
 
 .modalContent {
@@ -86,5 +86,31 @@
 }
 
 .modal-main h2 {
-	padding: 0px;
+  padding: 0px;
+}
+
+.dropzone {
+  width: 100%;
+  height: auto;
+  border-width: 1.4px;
+  border-color: rgb(102, 102, 102);
+  border-style: dashed;
+  border-radius: 5px;
+  margin: 0px;
+  padding: 4px;
+}
+
+.dropzone *:focus {
+  outline: none;
+}
+
+.dropzone p {
+  text-align: center;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: none;
 }

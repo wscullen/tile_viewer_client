@@ -5,6 +5,8 @@ import {
   FINISH_LOGIN,
   RESET_STATE,
   SessionActionTypes,
+  UPDATE_ADD_AOI_FORM,
+  UPDATE_LOGIN_FORM,
 } from './types'
 
 const initialState: MainSessionState = {
@@ -21,8 +23,20 @@ const initialState: MainSessionState = {
       dateVerified: '',
     },
     authenticated: false,
-    loggingIn: false,
-    loginResultMsg: '',
+  },
+  forms: {
+    addAoi: {
+      submitting: false,
+      finished: false,
+      success: false,
+      msg: '',
+    },
+    login: {
+      submitting: false,
+      finished: false,
+      success: false,
+      msg: '',
+    },
   },
   csrfTokens: {
     s2d2: {
@@ -44,10 +58,24 @@ export function sessionReducer(state = initialState, action: SessionActionTypes)
         ...action.payload,
       }
     }
+    case UPDATE_ADD_AOI_FORM: {
+      const sessionState = { ...state }
+      console.log(action.payload)
+      sessionState.forms.addAoi = { ...action.payload }
+      console.log(sessionState)
+      return sessionState
+    }
+    case UPDATE_LOGIN_FORM: {
+      const sessionState = { ...state }
+      sessionState.forms.login = {
+        ...sessionState.forms.login,
+        ...action.payload,
+      }
+      return sessionState
+    }
     case START_LOGIN: {
       console.log('Attempting to login given the credentials in the form...')
       let session_settings = { ...state.settings }
-      session_settings.loggingIn = true
 
       return {
         ...state,

@@ -22,8 +22,6 @@ export interface SessionSettings {
   s2d2Url: string
   auth: AuthSettings
   authenticated: boolean
-  loggingIn: boolean
-  loginResultMsg: string
 }
 
 export interface Token {
@@ -37,11 +35,25 @@ export interface CSRFTokens {
   jobManager: Token
 }
 
+export interface FormUi {
+  submitting?: boolean
+  finished?: boolean
+  success?: boolean
+  msg?: string
+}
+
+export interface FormsUiState {
+  [index: string]: FormUi
+  addAoi: FormUi
+  login: FormUi
+}
+
 export interface MainSessionState {
   currentAoi: string
   activeTab: NavigationTabs
   csrfTokens: CSRFTokens
   settings: SessionSettings
+  forms: FormsUiState
 }
 
 export const UPDATE_MAIN_SESSION = 'UPDATE_MAIN_SESSION'
@@ -49,11 +61,24 @@ export const AUTHENTICATE = 'AUTHENTICATE'
 export const START_LOGIN = 'START_LOGIN'
 export const FINISH_LOGIN = 'FINISH_LOGIN'
 
+export const UPDATE_ADD_AOI_FORM = 'UPDATE_ADD_AOI_FORM'
+export const UPDATE_LOGIN_FORM = 'UPDATE_LOGIN_FORM'
+
 export const RESET_STATE = 'RESET_STATE'
 
 interface UpdateMainSessionAction {
   type: typeof UPDATE_MAIN_SESSION
   payload: MainSessionState
+}
+
+interface UpdateAddAoiFormAction {
+  type: typeof UPDATE_ADD_AOI_FORM
+  payload: FormUi
+}
+
+interface UpdateLoginFormAction {
+  type: typeof UPDATE_LOGIN_FORM
+  payload: FormUi
 }
 
 interface AuthenticationAction {
@@ -80,3 +105,5 @@ export type SessionActionTypes =
   | StartLoginAction
   | FinishLoginAction
   | ResetStateAction
+  | UpdateAddAoiFormAction
+  | UpdateLoginFormAction

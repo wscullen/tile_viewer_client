@@ -22,7 +22,7 @@ import {
 } from '../store/aoi/types'
 
 import { MainSessionState } from '../store/session/types'
-import { updateMainSession, resetState as resetSessionState } from '../store/session/actions'
+import { updateMainSession, resetState as resetSessionState, updateAddAoiForm } from '../store/session/actions'
 
 import { addAoi, removeAoi, updateSession } from '../store/aoi/actions'
 
@@ -81,6 +81,7 @@ interface AppProps {
   updateSession: typeof updateSession
   updateMainSession: typeof updateMainSession
   resetSessionState: typeof resetSessionState
+  updateAddAoiForm: typeof updateAddAoiForm
   aois: AreaOfInterestState
   session: MainSessionState
   jobs: JobState
@@ -221,7 +222,18 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('=================> Inside component will unmount')
 
     console.log(this.state)
-    this.saveToLocalStorage()
+
+    const newAoiFormState = {
+      ...this.props.session.forms.addAoi,
+      msg: '',
+      success: false,
+      finished: false,
+      submitting: false,
+    }
+
+    console.log(newAoiFormState)
+
+    this.props.updateAddAoiForm(newAoiFormState)
 
     window.removeEventListener('beforeunload', this.cleanUpBeforeClose)
 
@@ -297,6 +309,17 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   hideModal = () => {
+    const newAoiFormState = {
+      ...this.props.session.forms.addAoi,
+      msg: '',
+      success: false,
+      finished: false,
+      submitting: false,
+    }
+
+    console.log(newAoiFormState)
+
+    this.props.updateAddAoiForm(newAoiFormState)
     // @ts-ignore
     this.setState({ show: false })
   }
@@ -428,167 +451,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     }
   }
 
-  public addAreaOfInterest = (area: any): void => {
-    console.log('Adding area of interest...')
-    // @ts-ignore
-    const aoiListTemp = [...this.state.aoi_list]
-    // @ts-ignore
-    const tileDictTemp = { ...this.state.tileDict }
-    // @ts-ignore
-    const jobDict = { ...this.state.jobDict }
-
-    const allTileId: TileListInterface = {}
-    // landsat8: {},
-    // sentinel2: {},
-    const currentDates: CurrentDates = {}
-    // {
-    //   currentDate: '',
-    //   dates: [],
-    // },
-
-    const sensorList: string[] = []
-
-    const selectedTileId: TileListInterface = {}
-    // landsat8: {},
-    // sentinel2: {},
-
-    for (const key of Object.keys(area.raw_tile_list)) {
-      // @ts-ignore
-      const tiles = area.raw_tile_list[key]
-      const sortedTiles = this.sortTilesByDate(tiles)
-      const dateList = Object.keys(sortedTiles.datesObject)
-      sensorList.push(key)
-      const datesObjectWithIds = {}
-      const selectedInit = {}
-
-      allTileId[key] = {}
-      selectedTileId[key] = {}
-      currentDates[key] = {
-        dates: [],
-        currentDate: '',
-      }
-
-      for (const d of dateList) {
-        // @ts-ignore
-        datesObjectWithIds[d] = sortedTiles.datesObject[d].map(ele => ele.geojson.id)
-        // @ts-ignore
-        selectedInit[d] = []
-        const tileIds: string[] = []
-        console.log(sortedTiles)
-        // @ts-ignore
-        for (const t of sortedTiles.datesObject[d]) {
-          console.log('<<<<<<<<<<<<<<<<<<<===================================================')
-          console.log(t)
-          const idTemp = t.geojson.id
-          t.geojson.properties.lowres_preview_url = t.lowres_preview_url
-          console.log(t)
-          tileDictTemp[idTemp] = { ...t.geojson }
-          tileDictTemp[idTemp].id = idTemp
-          tileDictTemp[idTemp].selected = false
-          tileDictTemp[idTemp].visible = true
-          tileDictTemp[idTemp].date = t.date
-
-          const tile: Tile = {
-            id: t.geojson.id,
-            geometry: t.geojson.geometry,
-            type: 'Feature',
-            bbox: t.geojson.bbox,
-            date: t.date,
-            properties: {
-              acquisitionEnd: t.geojson.properties.acquisition_end,
-              acquisitionStart: t.geojson.properties.acquisition_start,
-              apiSource: t.geojson.properties.api_source,
-              cloudPercent: parseFloat(t.geojson.properties.cloud_percent),
-              datasetName: t.geojson.properties.dataset_name,
-              entityId: t.geojson.properties.entity_id,
-              manualBulkorderUrl: t.geojson.properties.manual_bulkorder_url,
-              manualDownloadUrl: t.geojson.properties.manual_download_url,
-              manualProductUrl: t.geojson.properties.manual_product_url,
-              metadataUrl: t.geojson.properties.metadata_url,
-              mgrs: t.geojson.properties.mgrs,
-              name: t.geojson.properties.name,
-              pathrow: t.geojson.properties.pathrow,
-              platformName: t.geojson.properties.platform_name,
-              previewUrl: t.geojson.properties.preview_url,
-              satName: t.geojson.properties.sat_name,
-              summary: t.geojson.properties.summary,
-              vendorName: t.geojson.properties.vendor_name,
-              lowresPreviewUrl: t.geojson.properties.lowres_preview_url,
-            },
-
-            selected: false,
-            visible: true,
-            highlighted: false,
-            jobs: [],
-          }
-
-          console.log('ADDDDING TILE!!!')
-          this.props.addTile(tile)
-          tileIds.push(idTemp)
-        }
-
-        allTileId[key][d] = tileIds
-        selectedTileId[key][d] = []
-        currentDates[key].dates = Object.keys(allTileId[key])
-        currentDates[key].currentDate = Object.keys(allTileId[key])[0]
-      }
-    }
-
-    console.log(currentDates)
-
-    const session: Session = {
-      cloudPercentFilter: 100,
-      datesList: currentDates,
-      currentPlatform: Object.keys(currentDates)[0],
-      settings: {
-        atmosphericCorrection: false,
-      },
-    }
-
-    const areaObject: AreaOfInterest = {
-      id: area.id,
-      endDate: area.endDate,
-      startDate: area.startDate,
-      mgrsList: area.mgrs_list,
-      wrsList: area.wrs_list,
-      wrsOverlay: area.wrs_overlay,
-      dateCreated: new Date().toISOString(),
-      session,
-      name: area.name,
-      wktFootprint: area.wkt_footprint,
-      jobs: [],
-      allTiles: allTileId,
-      selectedTiles: selectedTileId,
-      sensorList: area.sensor_list,
-    }
-
-    const areaSimple = { ...area }
-    // TODO: Need to fix how jobs are stored
-    jobDict[areaSimple.name] = {
-      sentinel2: {},
-      landsat8: {},
-    }
-
-    delete areaSimple.raw_tile_list
-
-    const currentPlatform = session.currentPlatform
-    const currentDate = session.datesList[currentPlatform].currentDate
-    areaSimple.tiles = allTileId[session.currentPlatform][currentDate]
-    areaSimple.selectedTiles = selectedTileId
-    aoiListTemp.push(areaSimple)
-    console.log('=========================================================================')
-    console.log('aoi_list clone with area pushed')
-    console.log(aoiListTemp)
-    console.log(tileDictTemp)
-
-    this.props.addAoi(areaObject)
-
-    this.setState({
-      // @ts-ignore
-      aoi_list: aoiListTemp,
-      tileDict: tileDictTemp,
-    })
-  }
+  public addAreaOfInterest = (area: any): void => {}
 
   resumeCheckingJobStatus = () => {
     // When starting up, check the job status of all tiles with (job id and job status of S or A)
@@ -658,47 +521,14 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   activateAOI = (aoi_name: string) => {
-    console.log('Resuming job status checks')
-    this.props.thunkResumeCheckingJobsForAoi(this.props.session.currentAoi)
-
     // When an AOI is clicked in the list, it is made active and passed to the map viewer
     console.log('YOU CLICKED AN AREA OF INTEREST')
     console.log(aoi_name)
-    const newIndex = this.getAoiIndex(aoi_name)
-    // @ts-ignore
-    const prevIndex = this.getAoiIndex(this.state.activeAOI)
-    // @ts-ignore
-    const aoi_list = [...this.state.aoi_list]
-    let activeAOI = { ...aoi_list[newIndex] }
-    const previousAOI = { ...aoi_list[prevIndex] }
-    // @ts-ignore
-    const tileDict = { ...this.state.tileDict }
-    // @ts-ignore
-    const jobDict = { ...this.state.jobDict }
+    let prevAoiName: string = ''
+    if (this.props.session.currentAoi) prevAoiName = this.props.aois.byId[this.props.session.currentAoi].name
 
-    console.log('JOB DICT:')
-    console.log(jobDict)
+    if (prevAoiName === aoi_name) return
 
-    const selectedTiles = {}
-    // @ts-ignore
-
-    for (const d of Object.keys(this.state.selectedTiles)) {
-      // @ts-ignore
-      selectedTiles[d] = this.state.selectedTiles[d].map(ele => ele.id)
-    }
-
-    previousAOI.selectedTiles = selectedTiles
-    aoi_list[prevIndex] = previousAOI
-
-    // Since the AOI is newly activated, lets put the current date to the first date.
-    const newAllTiles = {}
-    const newSelectedTiles = {}
-
-    if (prevIndex === newIndex) {
-      activeAOI = previousAOI
-    }
-
-    console.log(activeAOI)
     const areasOfInterest = { ...this.props.aois.byId }
     console.log(areasOfInterest)
     let areaOfInterest: AreaOfInterest
@@ -710,60 +540,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         areaOfInterest = areasOfInterest[id]
       }
     })
+
     console.log('___aoi: ')
     console.log(areaOfInterest)
 
-    const session = areaOfInterest.session
-    const currentPlatform = session.currentPlatform
-    const dateList = areaOfInterest.session.datesList[currentPlatform].dates
-    const currentDate = areaOfInterest.session.datesList[currentPlatform].currentDate
-
-    // populate the selected tile list from the aoi entry
-    const activeSelectedTiles = areaOfInterest.selectedTiles[currentPlatform]
-    const activeAllTiles = areaOfInterest.allTiles[currentPlatform]
-
-    for (const d of Object.keys(activeSelectedTiles)) {
-      // @ts-ignore
-      newSelectedTiles[d] = activeSelectedTiles[d].map(id => {
-        return {
-          ...tileDict[id],
-          ...jobDict[aoi_name].sentinel2[id],
-        }
-      })
-    }
-
-    for (const d of Object.keys(activeAllTiles)) {
-      // @ts-ignore
-      newAllTiles[d] = activeAllTiles[d].map(id => {
-        return { ...tileDict[id] }
-      })
-    }
-
-    // for newly activated AOI the cloudPercentFilter will be unpopulated
-    // @ts-ignore
-
-    const cloudPercentFilter = activeAOI.cloudPercentFilter
-      ? activeAOI.cloudPercentFilter
-      : this.state.cloudPercentFilter
-
     const currentMainSession = { ...this.props.session }
     currentMainSession.currentAoi = areaOfInterest.id
-
     this.props.updateMainSession(currentMainSession)
 
-    this.setState({
-      // @ts-ignore
-      activeAOI: aoi_name,
-      // @ts-ignore
-      currentTiles: newAllTiles[currentDate],
-      allTiles: newAllTiles,
-      selectedTiles: newSelectedTiles,
-      dateList,
-      currentDate,
-      aoi_list,
-      cloudPercentFilter,
-      initMap: false,
-    })
+    console.log('Resuming job status checks')
+    this.props.thunkResumeCheckingJobsForAoi(currentMainSession.currentAoi)
   }
 
   checkJobStatus = (job_id: string, tile_name: string, date: string) => {
@@ -809,8 +595,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           currentTile.job_status = jobStatusVerbose[response.status]
           currentTile.job_assigned = response.assigned
           currentTile.job_completed = response.completed
-          currentTile.job_submitted = response.submitted
-          currentTile.job_result_message = response.result_message
+          currentTile.job_submitted = response.submittedstart
+          currentTile.job_result_message = response.resustart
           currentTile.times_checked += 1
 
           console.log(currentTile.job_status)
@@ -1133,7 +919,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     // if a tile is clicked in the list
     // currentDate should be changed to this tiles date
     // cyan blue highlight overlay should be added to indicate the most recently clicked tiles
-    // @ts-ignore
+
     const relevantTile = { ...this.props.tiles.byId[tileId] }
     const tileDate = moment(relevantTile.date).format('YYYYMMDD')
     console.log('tile clicked in list')
@@ -1141,21 +927,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log(event.shiftKey)
     console.log(event.ctrlKey)
 
-    // TODO: create as a selector function in the Aoi reducer
+    let currentAoi: AreaOfInterest = this.props.aois.byId[this.props.session.currentAoi]
 
-    let currentAoi: AreaOfInterest
-    const aois = this.props.aois.allIds.map((id: string) => {
-      const aoi = this.props.aois.byId[id]
-
-      // @ts-ignore
-      if (aoi.name === this.state.activeAOI) {
-        // TODO: create a SESSION reducer for current user session settings like activeAOI
-        currentAoi = aoi
-      }
-      return this.props.aois.byId[id]
-    })
-
-    // TODO: Selector function for getting currentPlatform and currentDate from a AOI session
     const currentPlatform = currentAoi.session.currentPlatform
     let currentDate = currentAoi.session.datesList[currentPlatform].currentDate
 
@@ -1165,7 +938,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       this.props.updateTile(relevantTile)
     } else {
       // if ctrl key is not pressed, we have to iterate over each tile, de-highlight, and finally highlight the relevant tile.
-
       for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
         value.map((id: string) => {
           console.log('changing the highlight value for')
@@ -1198,9 +970,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   handleUpdateCloudFilter = (cloud: string) => {
-    // @ts-ignore
-
-    if (!this.state.activeAOI) {
+    if (this.props.session.currentAoi === '') {
       return
     }
 
@@ -1672,20 +1442,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     // submit again.
 
     console.log(tile)
-
-    // "assignedDate": "",
-    //         "checkedCount": 0,
-    //         "completedDate": "",
-    //         "id": "",
-    //         "setIntervalId": 0,
-    //         "status": 0,
-    //         "submittedDate": "",
-    //         "success": false,
-    //         "type": "tile",
-    //         "workerId": "",
-    //         "tileId": tile.id,
-    //         "resultMessage": ""
-
     const jobId = tile.jobs[tile.jobs.length - 1]
     const job = this.props.jobs.byId[jobId]
 
@@ -1879,7 +1635,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         <AddAreaOfInterestModal
           show={this.state.show}
           hideModal={this.hideModal}
-          addAreaOfInterest={this.addAreaOfInterest}
           settings={this.props.session.settings}
           aoiNames={this.props.aoiNames}
         />
@@ -1888,8 +1643,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         <AreaOfInterestList
           addAreaModal={this.showModal}
           areasOfInterest={aois}
-          activateAOI={this.activateAOI}
-          activeAOI={currentAoi ? currentAoi.name : null}
+          activateAoi={this.activateAOI}
+          activeAoi={currentAoi ? currentAoi.name : null}
           removeAoi={this.removeAoi}
           activeTab={this.props.session.activeTab}
           handleTabChange={this.handleTabChange}
@@ -1932,6 +1687,7 @@ export default connect(
     removeJob,
     updateMainSession,
     resetSessionState,
+    updateAddAoiForm,
     thunkSendMessage,
     thunkAddJob,
     thunkResumeCheckingJobsForAoi,

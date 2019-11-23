@@ -12,7 +12,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use:  ['babel-loader', 'ts-loader'],
+        use: ['babel-loader', 'ts-loader'],
         exclude: /node_modules/,
       },
       {
@@ -43,6 +43,7 @@ module.exports = {
             },
           },
         ],
+        exclude: /node_modules/,
       },
       {
         test: /\.jsx?$/,
@@ -52,12 +53,12 @@ module.exports = {
       {
         test: /\.(jpe?g|png|gif)$/,
         use: [{ loader: 'file-loader?name=img/[name]__[hash:base64:5].[ext]' }],
-        include: defaultInclude,
+        // include: defaultInclude,
       },
       {
-        test: /\.(eot|svg|ttf|woff|woff2)$/,
+        test: /\.(eot|svg|ttf|woff|woff2|otf)$/,
         use: [{ loader: 'file-loader?name=font/[name]__[hash:base64:5].[ext]' }],
-        include: defaultInclude,
+        // include: defaultInclude,
       },
     ],
   },
@@ -82,7 +83,7 @@ module.exports = {
       filename: 'css/[name].bundle.css',
     }),
     new webpack.DefinePlugin({
-      VERSION: JSON.stringify(require("./package.json").version)
+      VERSION: JSON.stringify(require('./package.json').version),
     }),
   ],
   devtool: 'inline-source-map',

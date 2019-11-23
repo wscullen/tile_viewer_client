@@ -1,6 +1,7 @@
 import { Action } from 'redux'
 import { ThunkAction } from 'redux-thunk'
 import { updateMainSession, startLogin, finishLogin } from './actions'
+import { updateLoginForm } from '../session/actions'
 import { AppState } from '../index'
 
 import { MainSessionState, SessionSettings, Token } from './types'
@@ -57,6 +58,19 @@ export const thunkAttemptLogin = ({
       if ([200, 201].includes(response.status)) {
         return response.json()
       } else {
+        console.log(response.status)
+        newSettings.authenticated = false
+
+        const newLoginFormStatus = {
+          success: false,
+          finished: true,
+          msg: `Unable to reach server (${response.status}`,
+          submitting: false,
+        }
+
+        dispatch(finishLogin(newSettings))
+        dispatch(updateLoginForm(newLoginFormStatus))
+        console.log('finish login here')
         throw new Error(response.status.toString())
       }
     })
@@ -68,21 +82,37 @@ export const thunkAttemptLogin = ({
       newSettings.auth.accessToken = response.access
       newSettings.auth.refreshToken = response.refresh
       newSettings.auth.dateVerified = now
-      newSettings.loggingIn = false
       newSettings.authenticated = true
-      newSettings.loginResultMsg = 'Successfully logged in.'
+
+      dispatch(finishLogin(newSettings))
 
       return getApiVersion(url)
     })
     .then(response => {
       const apiObj = JSON.parse(response)
-      newSettings.loginResultMsg += ` API v. ${apiObj['version']}`
+
+      const newLoginFormStatus = {
+        success: true,
+        finished: true,
+        msg: `Successfully authenticated. (API v${apiObj['version']})`,
+        submitting: false,
+      }
+
+      dispatch(updateLoginForm(newLoginFormStatus))
 
       dispatch(finishLogin(newSettings))
       console.log('finish login here')
     })
     .catch(err => {
       console.log('Something blew up while verifying the API')
+
+      let loginResultMsg = ''
+      console.log(err)
+      if (err.toString() === 'TypeError: Failed to fetch') {
+        loginResultMsg = 'Unable to reach server with URL provided.'
+      } else if (err.toString() === 'Error: 401') {
+        loginResultMsg = 'Not authorized.'
+      }
       const newSettings: SessionSettings = {
         ...session.settings,
         jobManagerUrl: url,
@@ -90,11 +120,17 @@ export const thunkAttemptLogin = ({
           userEmail: email,
           userPassword: password,
         },
-        loggingIn: false,
         authenticated: false,
-        loginResultMsg: 'Failed to login.',
       }
 
+      const newLoginFormStatus = {
+        success: false,
+        finished: true,
+        msg: loginResultMsg,
+        submitting: false,
+      }
+
+      dispatch(updateLoginForm(newLoginFormStatus))
       dispatch(finishLogin(newSettings))
       return err
     })
@@ -156,10 +192,14 @@ async function authenticate(
       session.settings.jobManagerUrl = url
       session.settings.auth.userEmail = email
       session.settings.auth.userPassword = password
-      session.settings.auth.accessToken = response.access
-      session.settings.auth.refreshToken = response.refresh
-      session.settings.auth.dateVerified = now
+
+      // Immediately after we login we want to refresh the token
+      refreshToken(session, dispatch)
+
       dispatch(updateMainSession(session))
+    })
+    .then(response => {
+      console.log(response)
     })
     .catch(err => {
       console.log('Something blew up while verifying the API')
@@ -184,6 +224,36 @@ async function getCSRFTokens(session: MainSessionState, dispatch: any) {
       dispatch(updateMainSession(session))
     }
   }
+}
+
+export async function refreshToken(session: MainSessionState, dispatch: any) {
+  // Create Request body
+  const body = JSON.stringify({
+    refresh: session.settings.auth.refreshToken,
+  })
+
+  const result = await fetch(`${session.settings.jobManagerUrl}/api/token/refresh/`, {
+    method: 'POST',
+    mode: 'cors',
+    cache: 'default',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body,
+  })
+    .then(response => response.json())
+    .then(response => {
+      console.log('Success:', JSON.stringify(response))
+
+      const now = Date.now().toString()
+      session.settings.auth.accessToken = response.access
+      session.settings.auth.dateVerified = now
+      dispatch(updateMainSession(session))
+    })
+    .catch(err => {
+      console.log('Something blew up while trying to refresh the access token')
+      return err
+    })
 }
 
 export async function getCSRFToken(apiRootUrl: string): Promise<string> {

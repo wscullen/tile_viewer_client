@@ -1,13 +1,13 @@
 /* Main CSS file */
 
 @import '_example/_example.css';
+
 @import url('https://fonts.googleapis.com/css?family=Heebo:700|Source+Sans+Pro:300,400,400i,600,700');
 
 * {
-    box-sizing: border-box;
-    margin: 0px;
-    font-family: 'Source Sans Pro', sans-serif;
-
+  box-sizing: border-box;
+  margin: 0px;
+  font-family: 'Source Sans Pro', sans-serif;
 }
 
 /* html,body {
@@ -17,29 +17,29 @@
 } */
 
 html {
-    overflow-y: auto;
+  overflow-y: auto;
 }
 
 body {
-    margin: 0px;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
+  margin: 0px;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 #root {
-    margin: 0px;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+  margin: 0px;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 .sectionLabel {
-    display: block;
+  display: block;
 }
 
 .fa-icon-black {
-    color: black;
+  color: black;
 }
 
 button.glyphicon-button:focus,
@@ -51,6 +51,7 @@ button.glyphicon-button.active.focus {
   outline: none !important;
 }
 
-button:focus, button:active:focus {
+button:focus,
+button:active:focus {
   outline: none !important;
 }

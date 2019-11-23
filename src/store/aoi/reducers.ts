@@ -65,7 +65,7 @@ export function getAoiNames(state = initialState): string[] {
 
 export function getSelectedTiles(state: AppState): TileListByDate {
   let currentAoi: AreaOfInterest
-
+  console.log(state.session)
   if (state.session.currentAoi !== '') {
     currentAoi = state.aoi.byId[state.session.currentAoi]
   }

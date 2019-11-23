@@ -11,6 +11,8 @@ import { AreaOfInterest } from '../aoi/types'
 import { updateAoi } from '../aoi/actions'
 import { tsImportEqualsDeclaration } from '@babel/types'
 
+import { refreshToken } from '../session/thunks'
+
 //@ts-ignore
 import base64 from 'base-64'
 
@@ -182,6 +184,7 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
 
   const jobManagerUrl: string = state.session.settings.jobManagerUrl
   const atmosCorrection: boolean = state.aoi.byId[newJob.aoiId].session.settings.atmosphericCorrection
+  const accessToken: string = state.session.settings.auth.accessToken
 
   console.log(atmosCorrection)
 
@@ -193,7 +196,9 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
     tile = { ...state.tile.byId[newJob.tileId] }
   }
 
-  const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken)
+  await refreshToken(state.session, dispatch)
+
+  const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken, accessToken)
   console.log(jobResult)
   if (jobResult) {
     console.log('thunk finished in func job submitted successfully')
@@ -224,6 +229,7 @@ const submitJobToApi = async (
   tile: Tile,
   atmosCorrection: boolean,
   csrfToken: string,
+  accessToken: string,
 ): Promise<Job> => {
   console.log(jobManagerUrl)
   console.log(job)
@@ -265,14 +271,12 @@ const submitJobToApi = async (
     priority: '3',
   }
 
-  // return job
-
   const headers = new Headers()
 
   // @ts-ignore
   headers.append('X-CSRFToken', csrfToken)
   headers.append('Content-Type', 'application/json')
-  headers.append('Authorization', `Basic ${base64.encode(`${JOBMANAGER_USERNAME}:${JOBMANAGER_PASSWORD}`)}`)
+  headers.append('Authorization', `Bearer ${accessToken}`)
 
   // @ts-ignore
 

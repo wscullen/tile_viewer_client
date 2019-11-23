@@ -4,13 +4,30 @@ import {
   START_LOGIN,
   FINISH_LOGIN,
   RESET_STATE,
+  UPDATE_ADD_AOI_FORM,
+  UPDATE_LOGIN_FORM,
   SessionActionTypes,
   SessionSettings,
   MainSessionState,
+  FormUi,
   JWTPayload,
 } from './types'
 
 // TypeScript infers that this function is returning SendMessageAction
+export function updateAddAoiForm(updatedFormUi: FormUi): SessionActionTypes {
+  return {
+    type: UPDATE_ADD_AOI_FORM,
+    payload: updatedFormUi,
+  }
+}
+
+export function updateLoginForm(updatedFormUi: FormUi): SessionActionTypes {
+  return {
+    type: UPDATE_LOGIN_FORM,
+    payload: updatedFormUi,
+  }
+}
+
 export function updateMainSession(sessionState: MainSessionState): SessionActionTypes {
   return {
     type: UPDATE_MAIN_SESSION,

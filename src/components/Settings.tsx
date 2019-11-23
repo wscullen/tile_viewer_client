@@ -3,16 +3,16 @@ import './../assets/css/Settings.css'
 import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-import { MainSessionState, Token, SessionSettings } from '../store/session/types'
+import { MainSessionState, Token, SessionSettings, UPDATE_LOGIN_FORM } from '../store/session/types'
 import { getCSRFToken, getApiVersion, thunkAuthenticate, thunkAttemptLogin } from '../store/session/thunks'
-import { updateMainSession } from '../store/session/actions'
+import { updateMainSession, updateLoginForm } from '../store/session/actions'
 import { connect } from 'react-redux'
 import { AppState } from '../store/'
 
 import { History } from 'history'
-import { thisExpression } from '@babel/types'
 
-import { Button, FormFeedback, FormGroup, Label, Input } from 'reactstrap'
+import { Button, Checkbox, Form as FormSemantic, Message } from 'semantic-ui-react'
+
 import {
   Formik,
   Form,
@@ -33,6 +33,7 @@ interface AppProps {
   updateMainSession: typeof updateMainSession
   thunkAuthenticate: typeof thunkAuthenticate
   thunkAttemptLogin: typeof thunkAttemptLogin
+  updateLoginForm: typeof updateLoginForm
   history: History
 }
 
@@ -195,32 +196,6 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
       }
     }
 
-    const jobManagerLoginIcon = () => {
-      if (this.props.session.settings.loggingIn) {
-        return (
-          <div className="submittingForm flexItem2">
-            <FontAwesomeIcon icon={'spinner'} className="fa-pulse" />
-          </div>
-        )
-      }
-
-      if (this.props.session.settings.authenticated) {
-        return (
-          <div className="verified flexItem2">
-            <FontAwesomeIcon icon={'check'} />
-            <span>{this.props.session.settings.loginResultMsg}</span>
-          </div>
-        )
-      } else {
-        return (
-          <div className="notVerified flexItem2">
-            <FontAwesomeIcon icon={'times'} />
-            <span>{this.props.session.settings.loginResultMsg}</span>
-          </div>
-        )
-      }
-    }
-
     const initialValues: JobManagerFormValues = {
       email: this.props.session.settings.auth.userEmail ? this.props.session.settings.auth.userEmail : '',
       password: this.props.session.settings.auth.userPassword ? this.props.session.settings.auth.userPassword : '',
@@ -230,7 +205,8 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
     return (
       <div className="pageContainer">
         <div className="leftColumn">
-          <button
+          <Button
+            icon="arrow left"
             onClick={() => {
               console.log('user wants to go to the main screen')
               const { history } = this.props
@@ -239,12 +215,15 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
                 jobManagerUrl: this.state.jobManagerUrl,
                 s2d2Url: this.state.s2d2Url,
               }
+              const newLoginFormStatus = {
+                success: false,
+                msg: '',
+              }
 
+              this.props.updateLoginForm(newLoginFormStatus)
               history.push('/')
             }}
-          >
-            Back
-          </button>
+          />
         </div>
         <div className="main">
           <div className="settings">
@@ -255,10 +234,14 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
                 initialValues={initialValues}
                 onSubmit={(values, actions) => {
                   console.log({ values, actions })
-                  // alert(JSON.stringify(values, null, 2))
+                  const newLoginFormStatus = {
+                    success: false,
+                    finished: false,
+                    msg: 'Attempting to login...',
+                    submitting: true,
+                  }
 
-                  actions.setSubmitting(true)
-
+                  this.props.updateLoginForm(newLoginFormStatus)
                   this.setState(
                     {
                       jobManagerEmail: values.email,
@@ -271,70 +254,56 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
                 validationSchema={LoginSchema}
                 render={formikBag => (
                   <Form>
-                    <FormGroup>
+                    <FormSemantic loading={this.props.session.forms.login.submitting}>
                       <Field
                         name="email"
                         render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                          <div>
-                            <Label for="email">Email</Label>
-                            <Input type="text" {...field} name="email" id="email" />
+                          <FormSemantic.Field>
+                            <label>Email</label>
+                            <input type="text" {...field} name="email" id="email" />
                             <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                          </div>
+                          </FormSemantic.Field>
                         )}
                       />
                       <Field
                         name="password"
                         render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                          <div>
-                            <Label for="password">Password</Label>
-                            <Input type="password" {...field} name="password" id="password" />
+                          <FormSemantic.Field>
+                            <label>Password</label>
+                            <input type="password" {...field} name="password" id="password" />
                             <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                          </div>
+                          </FormSemantic.Field>
                         )}
                       />
                       <Field
                         name="url"
                         render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                          <div>
-                            <Label for="url">API URL</Label>
-                            <Input type="text" {...field} name="url" id="url" />
+                          <FormSemantic.Field>
+                            <label>API URL</label>
+                            <input type="text" {...field} name="url" id="url" />
                             <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                          </div>
+                          </FormSemantic.Field>
                         )}
                       />
-                    </FormGroup>
-                    <div className="buttonAndStatus">
-                      <Button type="submit" className="flexItem">
-                        Submit
-                      </Button>{' '}
-                      {jobManagerLoginIcon()}
-                    </div>
+                      <Button type="submit" className="flexItem" primary>
+                        Verify Connection to API
+                      </Button>
+                    </FormSemantic>
+                    <Message
+                      hidden={this.props.session.forms.login.msg === ''}
+                      positive={this.props.session.forms.login.finished && this.props.session.forms.login.success}
+                      negative={this.props.session.forms.login.finished && !this.props.session.forms.login.success}
+                    >
+                      <p>{this.props.session.forms.login.msg}</p>
+                    </Message>
                   </Form>
                 )}
               />
             </div>
-            <br />
-            <br />
-            <br />
-            <br />
-            <label htmlFor="s2d2_url">S2D2 API Url</label> <br />
-            <div className="settingsEntry">
-              <input
-                id="s2d2_url"
-                className="s2d2_url"
-                size={50}
-                type="text"
-                value={this.state.s2d2Url}
-                onChange={this.updateS2D2Url}
-              />
-              <button onClick={this.testS2d2Url}>Verify</button>
-              {s2d2VerifiedIcon()}
-            </div>
-            <br />
-            <br />
           </div>
           <div className="about">
             <h1>About</h1>
+            <br />
             <h5>Version: {this.state.tileViewerVersion}</h5>
 
             <br />
@@ -357,6 +326,7 @@ export default connect(
   mapStateToProps,
   {
     updateMainSession,
+    updateLoginForm,
     thunkAuthenticate,
     thunkAttemptLogin,
   },

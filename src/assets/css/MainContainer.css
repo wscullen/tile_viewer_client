@@ -1,5 +1,4 @@
 @import 'ol/ol.css';
-@import 'bootstrap/dist/css/bootstrap.min.css';
 
 .mainContainer {
   height: 100%;
@@ -17,6 +16,7 @@ button {
 
 .rightContainer {
   width: 100%;
+  flex-grow: 3;
 }
 
 .contentContainer {

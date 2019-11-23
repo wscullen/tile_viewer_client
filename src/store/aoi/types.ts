@@ -1,5 +1,7 @@
 import { FeatureCollection } from 'geojson'
 
+import { RawTile } from '../tile/types'
+
 export interface DateList {
   dates: string[]
   currentDate: string
@@ -24,6 +26,10 @@ export interface Session {
 
 export interface DateObject {
   [index: string]: string[]
+}
+
+export interface RawTileByDate {
+  [index: string]: RawTile[]
 }
 
 export interface TileList {
@@ -58,6 +64,8 @@ export interface StateById {
 export interface AreaOfInterestState extends StateById {}
 
 export const ADD_AOI = 'ADD_AOI'
+export const START_ADD_AOI = 'START_ADD_AOI'
+
 export const UPDATE_AOI = 'UPDATE_AOI'
 export const UPDATE_SESSION = 'UPDATE_SESSION'
 export const REMOVE_AOI = 'REMOVE_AOI'
@@ -65,6 +73,11 @@ export const REMOVE_AOI = 'REMOVE_AOI'
 interface AddAoiAction {
   type: typeof ADD_AOI
   payload: AreaOfInterest
+}
+
+interface StartAddAoiAction {
+  type: typeof START_ADD_AOI
+  payload: HTMLFormElement
 }
 
 interface UpdateAoiAction {
@@ -82,4 +95,4 @@ interface UpdateSessionAction {
   payload: { session: Session; id: string }
 }
 
-export type AoiActionTypes = AddAoiAction | UpdateAoiAction | UpdateSessionAction | RemoveAoiAction
+export type AoiActionTypes = AddAoiAction | StartAddAoiAction | UpdateAoiAction | UpdateSessionAction | RemoveAoiAction
