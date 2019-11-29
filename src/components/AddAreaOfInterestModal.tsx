@@ -5,46 +5,20 @@ import { connect } from 'react-redux'
 import moment, { Moment } from 'moment'
 import omit from 'lodash/omit'
 
-import Dropzone from 'react-dropzone'
-
 import { AppState as ReduxAppState } from '../store/'
-
-import { DateRangePicker, DateRangePickerPhrases, DateRangePickerShape, isInclusivelyAfterDay } from 'react-dates'
-
-import { SyncLoader } from 'react-spinners'
-
-import Modal from './Modal'
 
 const path = require('path')
 
-import { Header, Button, Popup, Grid, Form as FormSemantic, Message } from 'semantic-ui-react'
+import { Alert, Modal, Button, Icon, Form, Input, Spin, Select } from 'antd'
 
-import {
-  Formik,
-  Form,
-  Field,
-  FormikHelpers,
-  FormikProps,
-  FieldProps,
-  ErrorMessage,
-  FieldInputProps,
-  FormikBag,
-  FieldMetaProps,
-} from 'formik'
+import { withFormik, Form as FormikForm, Field as FormikField, Formik } from 'formik'
+const FormItem = Form.Item
+const Option = Select.Option
 
-import { TileState, Tile, TileListByDate } from '../store/tile/types'
+import { TileState } from '../store/tile/types'
 import { JobState } from '../store/job/types'
 
-import { addTile, updateTile } from '../store/tile/actions'
-
-import {
-  AreaOfInterestState,
-  AreaOfInterest,
-  TileList as TileListInterface,
-  Session,
-  CurrentDates,
-  DateObject,
-} from '../store/aoi/types'
+import { AreaOfInterestState } from '../store/aoi/types'
 
 import { MainSessionState } from '../store/session/types'
 
@@ -52,7 +26,7 @@ import * as Yup from 'yup'
 
 import { thunkStartAddAoi } from '../store/aoi/thunks'
 
-import { SessionSettings, FormUi } from '../store/session/types'
+import { SessionSettings } from '../store/session/types'
 import { updateAddAoiForm } from '../store/session/actions'
 
 import DatePickerFormikWrapper from '../components/DatePickerFormikWrapper'
@@ -81,8 +55,6 @@ interface AddAoiFormValues {
   endDate: Moment
   files: any
   platforms: string[]
-  // password: string
-  // url: string
 }
 
 interface AppProps {
@@ -117,12 +89,120 @@ interface AppState {
   session?: MainSessionState
   jobs?: JobState
   tiles?: TileState
+  siteName?: any
+}
+
+const formItemLayout = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 8 },
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 16 },
+  },
+}
+
+//@ts-ignore
+const InnerForm = ({
+  props,
+  values,
+  errors,
+  touched,
+  setFieldTouched,
+  setFieldValue,
+  isSubmitting,
+  handleSubmit,
+}: {
+  props?: any
+  values?: any
+  errors?: any
+  touched?: any
+  setFieldTouched?: any
+  setFieldValue?: any
+  isSubmitting?: any
+  handleSubmit?: any
+}) => {
+  return (
+    <FormikForm onSubmit={handleSubmit}>
+      <FormikField name="siteName">
+        {({ field, form, meta }: { field: any; form: any; meta: any }) => {
+          return (
+            <FormItem label="Site Name" help={meta.error} validateStatus={meta.touched && meta.error ? 'error' : null}>
+              <Input
+                type="text"
+                {...field}
+                onChange={value => setFieldValue('siteName', value)}
+                onBlur={() => setFieldTouched('siteName', true)}
+              />
+            </FormItem>
+          )
+        }}
+      </FormikField>
+      <FormItem>
+        <FormikField
+          name="fruit"
+          render={({ field }: { field: any }) => (
+            <Select
+              {...field}
+              onChange={value => setFieldValue('fruit', value)}
+              onBlur={() => setFieldTouched('fruit', true)}
+              value={values.fruit}
+            >
+              <Option key={1} value="Apple">
+                Apple
+              </Option>
+              <Option key={2} value="Orange">
+                Orange
+              </Option>
+              <Option key={3} value="Mango">
+                Mango
+              </Option>
+              <Option key={4} value="Pineapple">
+                Pineapple
+              </Option>
+            </Select>
+          )}
+        />
+      </FormItem>
+      <FormItem>
+        <Button htmlType="submit" type="primary" disabled={isSubmitting}>
+          Create Area of Interest
+        </Button>
+      </FormItem>
+    </FormikForm>
+  )
+}
+
+const AddAoiForm = (props: any) => {
+  const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched } = props.form
+
+  return (
+    <Form {...formItemLayout} onSubmit={() => console.log('hello!')}>
+      <FormikField name="siteName">
+        {({ field, form, meta }: { field: any; form: any; meta: any }) => {
+          return (
+            <Form.Item label="Site Name">
+              {getFieldDecorator('text', {
+                rules: [
+                  {
+                    required: true,
+                    message: 'Site name is required!',
+                  },
+                ],
+              })(<Input />)}
+            </Form.Item>
+          )
+        }}
+      </FormikField>
+    </Form>
+  )
 }
 
 class AddAreaOfInterestModal extends Component<AppProps, AppState> {
-  fileInput: React.RefObject<HTMLInputElement>
-  form: React.RefObject<HTMLFormElement>
+  formik: React.RefObject<HTMLFormElement>
   addAoiSchema: any
+  handleReset: any
 
   constructor(props: AppProps) {
     super(props)
@@ -148,55 +228,14 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
       nameErrorMessage: '',
       csrfToken: null,
       message: '',
+      siteName: {
+        validateStatus: 'success',
+        errorMsg: null,
+        value: '',
+      },
     }
 
-    this.fileInput = React.createRef()
-    this.form = React.createRef()
-
-    this.addAoiSchema = Yup.object().shape({
-      siteName: Yup.string()
-        .min(5, 'Site name must be 5 characters or longer.')
-        .required('Required.')
-        .test('Site name', 'Site name already taken.', (value: any): boolean => {
-          if (value) {
-            console.log(value)
-            let siteNames = this.props.aoiNames
-            console.log(siteNames)
-            if (siteNames.includes(value.trim())) return false
-            else return true
-          }
-        }),
-      startDate: Yup.mixed()
-        .test('Moment Object', 'Start date is required.', (value: any): boolean => {
-          console.log(value)
-          if (value !== null) return true
-          else return false
-        })
-        .nullable()
-        .required('Required.'),
-      endDate: Yup.mixed()
-        .test('Moment Object', 'End date is required.', (value: any): boolean => {
-          console.log(value)
-          if (value !== null) return true
-          else return false
-        })
-        .nullable()
-        .required('Required.'),
-      platforms: Yup.mixed()
-        .test('Array of platform strings', 'At least 1 platform must be selected.', (value: any): boolean => {
-          console.log(value)
-          if (value.length === 0) return false
-          else return true
-        })
-        .required('Required.'),
-
-      // password: Yup.string()
-      //   .min(3, 'Password must be 3 characters at minimum')
-      //   .required('Required.'),
-      // url: Yup.string()
-      //   .url('Invalid URL')
-      //   .required('Required.'),
-    })
+    this.formik = React.createRef()
   }
 
   onDatesChange = ({ startDate, endDate }: { startDate: Moment; endDate: Moment }) => {
@@ -223,14 +262,6 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
 
     this.setState({
       platforms,
-    })
-  }
-
-  filesSelected = (event: any) => {
-    console.log(event)
-
-    this.setState({
-      files: Array.from(this.fileInput.current.files),
     })
   }
 
@@ -307,6 +338,7 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
       })
     }
 
+    console.log(this.formik)
     this.props.hideModal()
   }
 
@@ -332,57 +364,86 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
     return valid
   }
 
-  handleSubmit = (event: any) => {
-    event.preventDefault()
-    // process form submission here
-    console.log(event)
-    // method="post" enctype="multipart/form-data"
-    // `Selected file - ${
-    //   this.fileInput.current.files[0].name
-    // }`
+  validateSiteName = (name: string): { validateStatus: string; errorMsg: string } => {
+    console.log(name)
+    let valid = true
 
-    const nameValid = this.validateName(this.state.name)
-
-    if (!nameValid) {
-      return
+    if (this.props.aoiNames.includes(name)) {
+      valid = false
+      return {
+        validateStatus: 'error',
+        errorMsg: 'Name already taken.',
+      }
     }
 
-    for (const f of Array.from(this.fileInput.current.files)) {
-      console.log(f.name)
+    if (name.length < 5) {
+      valid = false
+      console.log('name too short')
+      return {
+        validateStatus: 'error',
+        errorMsg: 'Name too short.',
+      }
     }
 
+    return {
+      validateStatus: 'success',
+      errorMsg: null,
+    }
+  }
+
+  handleSiteNameChange = (name: any) => {
+    console.log(name)
     this.setState({
-      nameErrorMessage: '',
+      siteName: {
+        ...this.validateSiteName(name),
+        value: name,
+      },
     })
-
-    const headers = new Headers()
-
-    if (this.state.csrfToken === null) {
-      console.log('fetching csrf token')
-      fetch(`${this.props.settings.s2d2Url}/generate_csrf/`, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'default',
-        headers: headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          this.setState({
-            csrfToken: JSON.stringify(response),
-          })
-
-          this.submitAreaOfInterest()
-        })
-        .catch(error => console.error('Error:', error))
-    } else {
-      this.submitAreaOfInterest()
-    }
   }
 
   render() {
     const { focusedInput, startDate, endDate } = this.state
+    const addAoiSchema = Yup.object().shape({
+      siteName: Yup.string()
+        .min(5, 'Site name must be 5 characters or longer.')
+        .required('Required.')
+        .test('Site name', 'Site name already taken.', (value: any): boolean => {
+          if (value) {
+            console.log(value)
+            let siteNames = this.props.aoiNames
+            console.log(siteNames)
+            if (siteNames.includes(value.trim())) return false
+            else return true
+          }
+        }),
+      startDate: Yup.mixed().test('Moment Object', 'Start date is required.', (value: any): boolean => {
+        console.log('START DATE VALIDATION')
+        console.log(value)
+        if (value) return true
+        else return false
+      }),
+      endDate: Yup.mixed().test('Moment Object', 'End date is required.', (value: any): boolean => {
+        console.log('END DATE VALIDATION')
+        console.log(value)
 
+        if (value) return true
+        else return false
+      }),
+      platforms: Yup.mixed()
+        .test('Array of platform strings', 'At least 1 platform must be selected.', (value: any): boolean => {
+          console.log(value)
+          if (value.length === 0) return false
+          else return true
+        })
+        .required('Required.'),
+
+      // password: Yup.string()
+      //   .min(3, 'Password must be 3 characters at minimum')
+      //   .required('Required.'),
+      // url: Yup.string()
+      //   .url('Invalid URL')
+      //   .required('Required.'),
+    })
     // autoFocus, autoFocusEndDate, initialStartDate and initialEndDate are helper props for the
     // example wrapper but are not props on the SingleDatePicker itself and
     // thus, have to be omitted.
@@ -414,9 +475,39 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
       platforms: [],
     }
 
+    const MyFormikForm = withFormik({
+      mapPropsToValues({ props, username, fruit }: { props?: any; username?: any; fruit?: any }) {
+        return {
+          ...props,
+          username: username || '',
+          fruit: fruit || '',
+        }
+      },
+      // validationSchema: yup.object().shape({
+      // username: yup.string().required('Username is required'),
+      // }),
+      handleSubmit(values, { resetForm, setErrors, setSubmitting }) {
+        setTimeout(() => {
+          console.log('Form values', values)
+          // save
+          setSubmitting(false)
+        }, 2000)
+      },
+    })(InnerForm)
+
     return (
-      <Modal show={this.props.show} handleClose={this.modalCleanup}>
-        <h2>Area of Interest Constraints</h2>
+      <Modal
+        title={
+          <div>
+            <Icon type="flag" />
+            Create Area of Interest
+          </div>
+        }
+        visible={this.props.show}
+        onCancel={this.modalCleanup}
+        footer={null}
+        width={'70%'}
+      >
         <Formik
           initialValues={initialValues}
           onSubmit={(values, actions) => {
@@ -443,63 +534,225 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
 
             this.props.thunkStartAddAoi(data, actions.resetForm)
           }}
-          validationSchema={this.addAoiSchema}
-          render={({ values, handleSubmit, setFieldValue, errors, touched }) => (
-            <Form>
-              <FormSemantic loading={this.props.session.forms.addAoi.submitting}>
-                <Field
-                  name="siteName"
-                  render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                    <FormSemantic.Field>
-                      <label>Site Name</label>
-                      <input type="text" {...field} name="siteName" id="siteName" />
-                      <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                    </FormSemantic.Field>
-                  )}
-                />
-                <FormSemantic.Field>
-                  <label>Date Range</label>
-                  <Field component={DatePickerFormikWrapper} name="datePicker" required />
-                </FormSemantic.Field>
-                <FormSemantic.Field>
-                  <label>Shapefile for Site Extent</label>
-                  <Field
-                    component={FileDropzoneWrapper}
-                    name="files"
-                    validate={this.fileValidation}
-                    filesValidator={this.fileValidation}
-                    required
-                  />
-                </FormSemantic.Field>
-                <FormSemantic.Field>
-                  <label>Platforms</label>
-                  <Checkbox name="platforms" value="landsat8" label="Landsat 8" /> <br />
-                  <Checkbox name="platforms" value="sentinel2" label="Sentinel 2" /> <br />
-                  {errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms') ? (
-                    <span className="errorMsg">{errors.platforms}</span>
-                  ) : null}
-                </FormSemantic.Field>
+          validationSchema={addAoiSchema}
+        >
+          {({ values, handleSubmit, resetForm, setFieldValue, setFieldTouched, errors, touched, validateField }) => {
+            this.handleReset = resetForm
 
-                <div className="buttonAndStatus">
-                  <Button type="submit" className="flexItem" primary>
-                    Create Area of Interest
-                  </Button>
-                </div>
-              </FormSemantic>
-              <Message
-                hidden={this.props.session.forms.addAoi.msg === ''}
-                positive={this.props.session.forms.addAoi.finished && this.props.session.forms.addAoi.success}
-                negative={this.props.session.forms.addAoi.finished && !this.props.session.forms.addAoi.success}
-              >
-                <p>{this.props.session.forms.addAoi.msg}</p>
-              </Message>
-            </Form>
-          )}
-        />
+            const showAlertMessage = this.props.session.forms.addAoi.finished
+            const alertMessageType = this.props.session.forms.addAoi.success ? 'success' : 'error'
+
+            return (
+              <FormikForm>
+                <Spin spinning={this.props.session.forms.addAoi.submitting}>
+                  <Form>
+                    <FormikField name="siteName">
+                      {({ field, form, meta }: { field: any; form: any; meta: any }) => {
+                        console.log(meta)
+                        return (
+                          <Form.Item
+                            {...formItemLayout}
+                            label="Site Name"
+                            validateStatus={meta.touched && meta.error ? 'error' : 'success'}
+                            help={meta.error}
+                          >
+                            <Input
+                              value={values.siteName}
+                              onChange={e => {
+                                setTimeout(() => {
+                                  const value = e.target.value
+                                  setFieldValue('siteName', value)
+                                  setFieldTouched('siteName', true)
+                                }, 500)
+                              }}
+                            />
+                          </Form.Item>
+                        )
+                      }}
+                    </FormikField>
+                  </Form>
+                </Spin>
+              </FormikForm>
+            )
+          }}
+        </Formik>
+
+        {/* <Formik
+          initialValues={initialValues}
+          onSubmit={(values, actions) => {
+            console.log({ values, actions })
+            let newAoiFormState = {
+              submitting: true,
+              finished: false,
+              success: false,
+              msg: 'Sending request to server... (this can take a while)',
+            }
+            console.log('-----------------------------------alskdjfl;aksjf;laskjf;lkj')
+            this.props.updateAddAoiForm(newAoiFormState)
+            let data = new FormData()
+
+            for (let f of values.files) {
+              console.log(f)
+              data.append('shapefiles', f, f.name)
+            }
+
+            data.append('startDate', values.startDate.format('YYYYMMDD'))
+            data.append('endDate', values.endDate.format('YYYYMMDD'))
+            data.append('platforms', values.platforms.join(','))
+            data.append('name', values.siteName)
+
+            this.props.thunkStartAddAoi(data, actions.resetForm)
+          }}
+          validationSchema={addAoiSchema}
+        >
+          {({ values, handleSubmit, resetForm, setFieldValue, errors, touched, validateField }) => {
+            this.handleReset = resetForm
+
+            const showAlertMessage = this.props.session.forms.addAoi.finished
+            const alertMessageType = this.props.session.forms.addAoi.success ? 'success' : 'error'
+            const WrappedForm = Form.create({})(AddAoiForm)
+
+            return (
+              <FormikForm>
+                <Spin spinning={this.props.session.forms.addAoi.submitting}>
+                  <WrappedForm />
+                </Spin>
+              </FormikForm>
+            )
+          }}
+        </Formik> */}
+        {/* <MyFormikForm {...this.props} /> */}
       </Modal>
+      // <Modal
+      //   open={this.props.show}
+      //   onClose={this.modalCleanup}
+      //   closeOnEscape={false}
+      //   closeOnDimmerClick={false}
+      //   closeIcon
+      //   centered={false}
+      // >
+      //   <Header icon="flag" content="Area of Interest Constraints" />
+      //   <Modal.Content>
+      //     <Formik
+      //       initialValues={initialValues}
+      //       onSubmit={(values, actions) => {
+      //         console.log({ values, actions })
+      //         let newAoiFormState = {
+      //           submitting: true,
+      //           finished: false,
+      //           success: false,
+      //           msg: 'Sending request to server... (this can take a while)',
+      //         }
+      //         console.log('-----------------------------------alskdjfl;aksjf;laskjf;lkj')
+      //         this.props.updateAddAoiForm(newAoiFormState)
+      //         let data = new FormData()
+
+      //         for (let f of values.files) {
+      //           console.log(f)
+      //           data.append('shapefiles', f, f.name)
+      //         }
+
+      //         data.append('startDate', values.startDate.format('YYYYMMDD'))
+      //         data.append('endDate', values.endDate.format('YYYYMMDD'))
+      //         data.append('platforms', values.platforms.join(','))
+      //         data.append('name', values.siteName)
+
+      //         this.props.thunkStartAddAoi(data, actions.resetForm)
+      //       }}
+      //       validationSchema={addAoiSchema}
+      //     >
+      //       {({ values, handleSubmit, resetForm, setFieldValue, errors, touched, validateField }) => {
+      //         this.handleReset = resetForm
+      //         return (
+      //           <Form>
+      //             <FormSemantic loading={this.props.session.forms.addAoi.submitting}>
+      //               <Field name="siteName">
+      //                 {({ field, form, meta }: { field: any; form: any; meta: any }) => {
+      //                   return (
+      //                     <FormSemantic.Input
+      //                       label="Site Name"
+      //                       error={meta.touched && meta.error && meta.error}
+      //                       type="text"
+      //                       {...field}
+      //                       name="siteName"
+      //                       id="siteName"
+      //                     />
+      //                   )
+      //                 }}
+      //               </Field>
+      //               <FormSemantic.Field>
+      //                 <Field component={DatePickerFormikWrapper} name="datePicker" required />
+      //               </FormSemantic.Field>
+      //               <FormSemantic.Field>
+      //                 <Field
+      //                   component={FileDropzoneWrapper}
+      //                   name="files"
+      //                   validate={this.fileValidation}
+      //                   filesValidator={this.fileValidation}
+      //                   required
+      //                 />
+      //               </FormSemantic.Field>
+      //               <FormSemantic.Field
+      //                 error={errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms')}
+      //               >
+      //                 <label>Platforms</label>
+      //                 <div className="platformsCheckboxes">
+      //                   <div>
+      //                     <Checkbox name="platforms" value="landsat8" label="Landsat 8" /> <br />
+      //                     <Checkbox name="platforms" value="sentinel2" label="Sentinel 2" />
+      //                   </div>
+      //                   <div>
+      //                     {errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms') ? (
+      //                       <Label prompt pointing="left">
+      //                         {errors.platforms}
+      //                       </Label>
+      //                     ) : null}
+      //                   </div>
+      //                 </div>
+      //               </FormSemantic.Field>
+
+      //               <div className="buttonAndStatus">
+      //                 <Button type="submit" className="flexItem" primary>
+      //                   Create Area of Interest
+      //                 </Button>
+      //               </div>
+      //             </FormSemantic>
+      //             <Message
+      //               hidden={this.props.session.forms.addAoi.msg === ''}
+      //               positive={this.props.session.forms.addAoi.finished && this.props.session.forms.addAoi.success}
+      //               negative={this.props.session.forms.addAoi.finished && !this.props.session.forms.addAoi.success}
+      //             >
+      //               <p>{this.props.session.forms.addAoi.msg}</p>
+      //             </Message>
+      //           </Form>
+      //         )
+      //       }}
+      //     </Formik>
+      //   </Modal.Content>
+      // </Modal>
     )
   }
 }
+
+const MyFormikForm = withFormik({
+  mapPropsToValues({ props, username, fruit }: { props: any; username: any; fruit: any }) {
+    return {
+      ...props,
+      username: username || '',
+      fruit: fruit || '',
+    }
+  },
+  // validationSchema: yup.object().shape({
+  // username: yup.string().required('Username is required'),
+  // }),
+  handleSubmit(values, { resetForm, setErrors, setSubmitting }) {
+    setTimeout(() => {
+      console.log('Form values', values)
+      // save
+      setSubmitting(false)
+    }, 2000)
+  },
+})(InnerForm)
 
 const mapStateToProps = (state: ReduxAppState) => ({
   session: state.session,

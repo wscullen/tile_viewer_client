@@ -275,16 +275,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
   loadFromLocalStorage = () => {}
 
-  public handleTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
-    const target = event.currentTarget as HTMLUListElement
-    console.log(target.id)
-    console.log(target)
-    console.log(event.currentTarget)
-    console.log('======================+')
-    console.log('trying to update active tab')
+  public handleTabChange = (tabId: number): void => {
     const session = { ...this.props.session }
     const prevTab = session.activeTab
-    session.activeTab = parseInt(target.id)
+    session.activeTab = tabId
     this.props.updateMainSession(session)
 
     if (session.activeTab === 0 && prevTab !== 0) {

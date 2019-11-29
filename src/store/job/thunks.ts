@@ -244,7 +244,6 @@ const submitJobToApi = async (
       jobType = 'S2Download'
       options = {
         tile: tile.properties.name,
-        // @ts-ignore
         ac: atmosCorrection,
         ac_res: 10,
         entity_id: tile.properties.entityId,
@@ -255,8 +254,10 @@ const submitJobToApi = async (
       jobType = 'L8Download'
       options = {
         tile: tile.properties.name,
-        // @ts-ignore
         ac: atmosCorrection,
+        ac_res: 30,
+        entity_id: tile.properties.entityId,
+        api_source: tile.properties.apiSource,
       }
       break
   }

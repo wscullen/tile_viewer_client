@@ -35,6 +35,7 @@ export const thunkStartAddAoi = (
 
   fetch(`${state.session.settings.jobManagerUrl}/s2d2/submit_aoi/`, {
     method: 'POST',
+    mode: 'cors',
     body: addAoiFormData,
     headers: headers,
   })

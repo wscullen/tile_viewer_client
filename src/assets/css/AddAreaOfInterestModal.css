@@ -77,40 +77,27 @@
   width: 100px;
 }
 
-.modalContent {
+/* .modalContent {
   width: 80%;
 
   position: fixed;
   left: 50%;
   top: 10%;
-}
+} */
 
-.modal-main h2 {
+/* .modal-main h2 {
   padding: 0px;
-}
-
-.dropzone {
-  width: 100%;
-  height: auto;
-  border-width: 1.4px;
-  border-color: rgb(102, 102, 102);
-  border-style: dashed;
-  border-radius: 5px;
-  margin: 0px;
-  padding: 4px;
-}
-
-.dropzone *:focus {
-  outline: none;
-}
-
-.dropzone p {
-  text-align: center;
-}
+} */
 
 input:focus,
 select:focus,
 textarea:focus,
 button:focus {
   outline: none;
+}
+
+.platformsCheckboxes {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }

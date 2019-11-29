@@ -36,8 +36,31 @@
 .areaOfInterestList {
   border-right: 1px solid lightgrey;
   /* margin: 2px; */
-  min-width: 300px;
   flex-grow: 1;
+  min-width: 274px;
+  max-width: 274px;
+}
+
+.areaOfInterestList h4.ant-typography {
+  margin-bottom: 0px;
+}
+
+.areaOfInterestList h3 {
+  padding: 3px;
+  margin: 0px;
+}
+
+.areaOfInterestList h4.ant-list-item-meta-title {
+  margin-left: 3px;
+}
+
+.areaOfInterestList .activeAoi {
+  background-color: $primary-color;
+}
+
+.ant-modal-content .anticon.anticon-flag {
+  font-size: 20px;
+  margin-right: 4px;
 }
 
 .ui.button.addAoiButton {
@@ -98,10 +121,6 @@ h5.sectionLabel.title.is-5 {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-}
-
-.aoiListItem.activeAOI {
-  background-color: $active-selection;
 }
 
 .sectionLabel {
@@ -207,4 +226,8 @@ h5.sectionLabel.title.is-5 {
 .cancelButton:active {
   position: relative;
   top: 1px;
+}
+
+.radioButtonLabel {
+  margin-left: 3px;
 }

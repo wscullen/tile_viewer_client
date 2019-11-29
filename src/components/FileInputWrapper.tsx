@@ -17,6 +17,7 @@ function FileUpload(props: any) {
 
   return (
     <div>
+      <label>Shapefile for Site Extent</label>
       <Input type="file" name="file" id="file" onChange={(o: any) => handleChange(o)} multiple />
     </div>
   )

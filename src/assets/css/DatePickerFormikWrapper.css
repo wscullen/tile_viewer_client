@@ -7,3 +7,7 @@
 .form-check-input {
   vertical-align: middle;
 }
+
+.DateRangePicker_picker {
+  z-index: 999;
+}

@@ -3,7 +3,8 @@ import './../assets/css/AreaOfInterestList.scss'
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-import { Header, Button, Popup, Grid, Icon, Item } from 'semantic-ui-react'
+import Icon from 'antd/es/icon'
+import { List, Radio, Popconfirm, message, Button } from 'antd'
 
 import { AreaOfInterest } from '../store/aoi/types'
 
@@ -51,64 +52,72 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
       <div className="areaOfInterestList">
         <div className="header">
           <div className="topRow">
-            <h5 className="sectionLabel title is-5">AoI List</h5>
+            <h3>Areas of Interest</h3>
             <Button
               className="addAoiButton"
               onClick={e => {
                 this.props.addAreaModal()
               }}
-              primary
-              icon
-              compact
-            >
-              <Icon name="plus" />
-            </Button>
+              type="primary"
+              icon="plus"
+            />
           </div>
           <div className="bottomRow">
-            <Button.Group className="tabSelect">
-              <Button
-                id="0"
-                active={this.props.activeTab === 0}
-                onClick={e => {
-                  this.props.handleTabChange(e)
-                }}
-                compact
-              >
-                <span className="icon is-small">
-                  <FontAwesomeIcon icon="globe-americas" />
-                </span>
-                <span>Map</span>
-              </Button>
-              <Button
-                id="1"
-                active={this.props.activeTab === 1}
-                onClick={e => {
-                  this.props.handleTabChange(e)
-                }}
-                compact
-              >
-                <span className="icon is-small">
-                  <FontAwesomeIcon icon="toolbox" />
-                </span>
-                <span>Jobs</span>
-              </Button>
-              <Button
-                id="2"
-                active={this.props.activeTab === 2}
-                onClick={e => {
-                  this.props.handleTabChange(e)
-                }}
-                compact
-              >
-                <span className="icon is-small">
-                  <FontAwesomeIcon icon="info-circle" />
-                </span>
-                <span>Details</span>
-              </Button>
-            </Button.Group>
+            <Radio.Group
+              defaultValue="0"
+              buttonStyle="solid"
+              size="large"
+              onChange={e => {
+                console.log(e)
+                this.props.handleTabChange(parseInt(e.target.value))
+              }}
+            >
+              <Radio.Button value="0">
+                <Icon type="global" />
+                <span className="radioButtonLabel">Map</span>
+              </Radio.Button>
+              <Radio.Button value="1">
+                <Icon type="tool" />
+                <span className="radioButtonLabel">Jobs</span>
+              </Radio.Button>
+              <Radio.Button value="2">
+                <Icon type="info-circle" />
+                <span className="radioButtonLabel">Details</span>
+              </Radio.Button>
+            </Radio.Group>
           </div>
         </div>
-        <ul>
+        <List
+          // locale={{ emptyText: 'xxx' }}
+          itemLayout="horizontal"
+          dataSource={this.props.areasOfInterest}
+          renderItem={(aoi: AreaOfInterest) => {
+            let aoiClassName = ''
+            const text = 'Are you sure to delete this AoI?'
+
+            if (aoi.name === this.props.activeAoi) {
+              aoiClassName += ' activeAoi'
+            }
+
+            return (
+              <List.Item onClick={() => this.props.activateAoi(aoi.name)} className={aoiClassName}>
+                <List.Item.Meta
+                  // avatar={<Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />}
+                  title={aoi.name}
+                />
+                <Popconfirm
+                  placement="topLeft"
+                  title={text}
+                  onConfirm={() => this.props.removeAoi(aoi.name)}
+                  okText="Delete"
+                >
+                  <Button icon="delete" />
+                </Popconfirm>
+              </List.Item>
+            )
+          }}
+        />
+        {/* <ul>
           {this.props.areasOfInterest.map((ele, idx) => {
             let aoiClassName = 'aoiListItem'
 
@@ -134,11 +143,9 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
 
                             event.stopPropagation()
                           }}
-                          icon="times"
-                          compact
-                          size="mini"
-                          basic
-                        />
+                        >
+                          <Icon type="times"></Icon>
+                        </Button>
                       }
                       flowing
                       hoverable
@@ -156,7 +163,6 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                             event.stopPropagation()
                             this.props.removeAoi(ele.name)
                           }}
-                          negative
                         >
                           Delete
                         </Button>
@@ -167,7 +173,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
               </li>
             )
           })}
-        </ul>
+        </ul> */}
       </div>
     )
   }

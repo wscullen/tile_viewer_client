@@ -136,6 +136,7 @@
     "@typescript-eslint/eslint-plugin": "^1.13.0",
     "@typescript-eslint/parser": "^1.13.0",
     "add": "^2.0.6",
+    "antd": "^3.25.3",
     "base-64": "^0.1.0",
     "canvas-prebuilt": "^2.0.0-alpha.14",
     "electron-log": "^3.0.5",
