@@ -94,12 +94,12 @@ interface AppState {
 
 const formItemLayout = {
   labelCol: {
-    xs: { span: 24 },
-    sm: { span: 8 },
+    xs: { span: 4 },
+    sm: { span: 4 },
   },
   wrapperCol: {
-    xs: { span: 24 },
-    sm: { span: 16 },
+    xs: { span: 12 },
+    sm: { span: 12 },
   },
 }
 
@@ -506,7 +506,6 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
         visible={this.props.show}
         onCancel={this.modalCleanup}
         footer={null}
-        width={'70%'}
       >
         <Formik
           initialValues={initialValues}
@@ -544,34 +543,39 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
 
             return (
               <FormikForm>
-                <Spin spinning={this.props.session.forms.addAoi.submitting}>
-                  <Form>
-                    <FormikField name="siteName">
-                      {({ field, form, meta }: { field: any; form: any; meta: any }) => {
-                        console.log(meta)
-                        return (
-                          <Form.Item
-                            {...formItemLayout}
-                            label="Site Name"
-                            validateStatus={meta.touched && meta.error ? 'error' : 'success'}
-                            help={meta.error}
-                          >
-                            <Input
-                              value={values.siteName}
-                              onChange={e => {
-                                setTimeout(() => {
-                                  const value = e.target.value
-                                  setFieldValue('siteName', value)
-                                  setFieldTouched('siteName', true)
-                                }, 500)
-                              }}
-                            />
-                          </Form.Item>
-                        )
-                      }}
-                    </FormikField>
-                  </Form>
-                </Spin>
+                <Form {...formItemLayout} layout="horizontal">
+                  <FormikField name="siteName">
+                    {({ field, form, meta }: { field: any; form: any; meta: any }) => {
+                      console.log(meta)
+                      return (
+                        <Form.Item
+                          label="Site Name"
+                          validateStatus={meta.touched && meta.error ? 'error' : 'success'}
+                          help={meta.touched && meta.error && meta.error}
+                        >
+                          <Input
+                            {...field}
+                            value={values.siteName}
+                            onChange={e => {
+                              setFieldValue('siteName', e.target.value)
+                              // setFieldTouched('siteName', true)
+                            }}
+                          />
+                        </Form.Item>
+                      )
+                    }}
+                  </FormikField>
+                </Form>
+                <Button type="primary" htmlType="submit" className="flexItem">
+                  Create Area of Interest
+                </Button>
+                {/* <Message
+                  hidden={this.props.session.forms.addAoi.msg === ''}
+                  positive={this.props.session.forms.addAoi.finished && this.props.session.forms.addAoi.success}
+                  negative={this.props.session.forms.addAoi.finished && !this.props.session.forms.addAoi.success}
+                >
+                  <p>{this.props.session.forms.addAoi.msg}</p>
+                </Message> */}
               </FormikForm>
             )
           }}
