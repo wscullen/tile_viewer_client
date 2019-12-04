@@ -11,11 +11,9 @@ import { AppState as ReduxAppState } from '../store/'
 
 import SemanticDatepicker from 'react-semantic-ui-datepickers'
 
-import Modal from './Modal'
-
 const path = require('path')
 
-import { Header, Button, Popup, Grid, Form, Message, Label } from 'semantic-ui-react'
+import { Header, Button, Popup, Grid, Form, Message, Label, Modal } from 'semantic-ui-react'
 
 import {
   Formik,
@@ -402,113 +400,115 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
     }
 
     return (
-      <Modal show={this.props.show} handleClose={this.modalCleanup}>
-        <h2>Area of Interest Constraints</h2>
-        <Formik
-          initialValues={initialValues}
-          onSubmit={(values, actions) => {
-            console.log({ values, actions })
-            let newAoiFormState = {
-              submitting: true,
-              finished: false,
-              success: false,
-              msg: 'Sending request to server... (this can take a while)',
-            }
-            console.log('-----------------------------------alskdjfl;aksjf;laskjf;lkj')
-            this.props.updateAddAoiForm(newAoiFormState)
-            let data = new FormData()
+      <Modal open={this.props.show} size="small" closeIcon onClose={this.modalCleanup}>
+        <Header icon="flag" content="Area of Interest Constraints" />
+        <Modal.Content>
+          <Formik
+            initialValues={initialValues}
+            onSubmit={(values, actions) => {
+              console.log({ values, actions })
+              let newAoiFormState = {
+                submitting: true,
+                finished: false,
+                success: false,
+                msg: 'Sending request to server... (this can take a while)',
+              }
+              console.log('-----------------------------------alskdjfl;aksjf;laskjf;lkj')
+              this.props.updateAddAoiForm(newAoiFormState)
+              let data = new FormData()
 
-            for (let f of values.files) {
-              console.log(f)
-              data.append('shapefiles', f, f.name)
-            }
+              for (let f of values.files) {
+                console.log(f)
+                data.append('shapefiles', f, f.name)
+              }
 
-            data.append('startDate', moment(values.dateRange[0]).format('YYYYMMDD'))
-            data.append('endDate', moment(values.dateRange[1]).format('YYYYMMDD'))
-            data.append('platforms', values.platforms.join(','))
-            data.append('name', values.siteName)
+              data.append('startDate', moment(values.dateRange[0]).format('YYYYMMDD'))
+              data.append('endDate', moment(values.dateRange[1]).format('YYYYMMDD'))
+              data.append('platforms', values.platforms.join(','))
+              data.append('name', values.siteName)
 
-            this.props.thunkStartAddAoi(data, actions.resetForm)
-          }}
-          validationSchema={this.addAoiSchema}
-        >
-          {({ values, handleSubmit, setFieldValue, setFieldTouched, errors, touched, validateField, resetForm }) => {
-            this.handleReset = resetForm
+              this.props.thunkStartAddAoi(data, actions.resetForm)
+            }}
+            validationSchema={this.addAoiSchema}
+          >
+            {({ values, handleSubmit, setFieldValue, setFieldTouched, errors, touched, validateField, resetForm }) => {
+              this.handleReset = resetForm
 
-            return (
-              <FormikForm>
-                <Form loading={this.props.session.forms.addAoi.submitting}>
-                  <FormikField name="siteName">
-                    {({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                      <Form.Input
-                        {...field}
-                        label="Site Name"
-                        name="siteName"
-                        id="siteName"
-                        error={meta.touched && meta.error && meta.error}
+              return (
+                <FormikForm>
+                  <Form loading={this.props.session.forms.addAoi.submitting}>
+                    <FormikField name="siteName">
+                      {({ field, form, meta }: { field: any; form: any; meta: any }) => (
+                        <Form.Input
+                          {...field}
+                          label="Site Name"
+                          name="siteName"
+                          id="siteName"
+                          error={meta.touched && meta.error && meta.error}
+                        />
+                      )}
+                    </FormikField>
+                    <FormikField name="dateRange" fluid>
+                      {({ field, form, meta }: { field: any; form: any; meta: any }) => (
+                        <SemanticDatepicker
+                          onChange={(e: any, data: any) => {
+                            console.log('wath')
+                            console.log(data)
+                            setFieldValue('dateRange', data.value, false)
+                            setFieldTouched('dateRange', false)
+                            console.log(values.dateRange)
+                            // if (data.value && data.value.length === 2) setFieldTouched('dateRange', true)
+
+                            // setTimeout(() => validateField('dateRange'), 300)
+                          }}
+                          type="range"
+                          placeholder="YYYY-MM-DD - YYYY-MM-DD"
+                          label="Date Range"
+                          iconPosition="left"
+                          name="dateRange"
+                          error={meta.touched && meta.error && meta.error}
+                          value={values.dateRange}
+                        />
+                      )}
+                    </FormikField>
+                    <Form.Field>
+                      <FormikField
+                        component={FileDropzoneWrapper}
+                        name="files"
+                        validate={this.fileValidation}
+                        filesValidator={this.fileValidation}
+                        required
                       />
-                    )}
-                  </FormikField>
-                  <FormikField name="dateRange" fluid>
-                    {({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                      <SemanticDatepicker
-                        onChange={(e: any, data: any) => {
-                          console.log('wath')
-                          console.log(data)
-                          setFieldValue('dateRange', data.value, false)
-                          setFieldTouched('dateRange', false)
-                          console.log(values.dateRange)
-                          // if (data.value && data.value.length === 2) setFieldTouched('dateRange', true)
+                    </Form.Field>
+                    <Form.Field error={errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms')}>
+                      <label>Platforms</label>
+                      <Checkbox name="platforms" value="landsat8" label="Landsat 8" /> <br />
+                      <Checkbox name="platforms" value="sentinel2" label="Sentinel 2" /> <br />
+                      {errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms') ? (
+                        <Label prompt pointing={'above'}>
+                          {errors.platforms}
+                        </Label>
+                      ) : null}
+                    </Form.Field>
 
-                          // setTimeout(() => validateField('dateRange'), 300)
-                        }}
-                        type="range"
-                        placeholder="YYYY-MM-DD - YYYY-MM-DD"
-                        label="Date Range"
-                        iconPosition="left"
-                        name="dateRange"
-                        error={meta.touched && meta.error && meta.error}
-                        value={values.dateRange}
-                      />
-                    )}
-                  </FormikField>
-                  <Form.Field>
-                    <FormikField
-                      component={FileDropzoneWrapper}
-                      name="files"
-                      validate={this.fileValidation}
-                      filesValidator={this.fileValidation}
-                      required
-                    />
-                  </Form.Field>
-                  <Form.Field error={errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms')}>
-                    <label>Platforms</label>
-                    <Checkbox name="platforms" value="landsat8" label="Landsat 8" /> <br />
-                    <Checkbox name="platforms" value="sentinel2" label="Sentinel 2" /> <br />
-                    {errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms') ? (
-                      <Label prompt pointing={'above'}>
-                        {errors.platforms}
-                      </Label>
-                    ) : null}
-                  </Form.Field>
-
-                  <div className="buttonAndStatus">
-                    <Button type="submit" className="flexItem" primary>
-                      Create Area of Interest
-                    </Button>
-                  </div>
-                </Form>
-                <Message
-                  hidden={this.props.session.forms.addAoi.msg === ''}
-                  positive={this.props.session.forms.addAoi.finished && this.props.session.forms.addAoi.success}
-                  negative={this.props.session.forms.addAoi.finished && !this.props.session.forms.addAoi.success}
-                >
-                  <p>{this.props.session.forms.addAoi.msg}</p>
-                </Message>
-              </FormikForm>
-            )
-          }}
-        </Formik>
+                    <div className="buttonAndStatus">
+                      <Button type="submit" className="flexItem" primary>
+                        Create Area of Interest
+                      </Button>
+                    </div>
+                  </Form>
+                  <Message
+                    hidden={this.props.session.forms.addAoi.msg === ''}
+                    positive={this.props.session.forms.addAoi.finished && this.props.session.forms.addAoi.success}
+                    negative={this.props.session.forms.addAoi.finished && !this.props.session.forms.addAoi.success}
+                  >
+                    <p>{this.props.session.forms.addAoi.msg}</p>
+                  </Message>
+                </FormikForm>
+              )
+            }}
+          </Formik>
+        </Modal.Content>
       </Modal>
     )
   }
