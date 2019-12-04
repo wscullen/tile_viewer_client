@@ -51,7 +51,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
       <div className="areaOfInterestList">
         <div className="header">
           <div className="topRow">
-            <h5 className="sectionLabel title is-5">AoI List</h5>
+            <h5 className="sectionLabel title is-5">Areas of Interest</h5>
             <Button
               className="addAoiButton"
               onClick={e => {

@@ -181,7 +181,7 @@ class TileList extends Component {
     return (
       <div className="tileList">
         <div className="header">
-          <h5 className="sectionLabel title is-5">Tile List {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
+          <h5 className="sectionLabel title is-5">Tiles {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
           <div className="buttonSection">
             <button
               className="settingsButton"

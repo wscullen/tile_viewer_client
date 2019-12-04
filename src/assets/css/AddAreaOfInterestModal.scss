@@ -1,5 +1,3 @@
-@import 'react-dates/lib/css/_datepicker.css';
-
 .addAreaOfInterestModal {
   border: 1px dashed grey;
   /* margin: 2px; */
@@ -92,20 +90,54 @@
 .dropzone {
   width: 100%;
   height: auto;
-  border-width: 1.4px;
-  border-color: rgb(102, 102, 102);
+  border-width: 1px;
+  border-color: rgba(34, 36, 38, 0.15);
   border-style: dashed;
   border-radius: 5px;
   margin: 0px;
-  padding: 4px;
+  color: rgba(34, 36, 38, 0.6);
 }
 
 .dropzone *:focus {
   outline: none;
 }
 
-.dropzone p {
-  text-align: center;
+.dropzone .icon {
+  width: 30px;
+}
+
+.dropzone {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  padding: 4px;
+  color: black;
+}
+
+.dropzoneHeader {
+  padding: 5.5px 0px;
+  color: rgba(34, 36, 38, 0.6);
+}
+
+.dropzoneFiles {
+  margin-left: 5px;
+  font-size: 0.9em;
+  color: black;
+}
+
+.dropzone ul {
+  margin: 0px;
+  padding-left: 0px;
+  padding-top: 4px;
+  list-style: none;
+}
+
+.error .dropzone,
+.error .dropzone .dropzoneHeader,
+.error .dropzone .dropzoneFiles {
+  background: #fff6f6;
+  border-color: #e0b4b4;
+  color: #9f3a38;
 }
 
 input:focus,
@@ -113,4 +145,8 @@ select:focus,
 textarea:focus,
 button:focus {
   outline: none;
+}
+
+.platformsInput {
+  display: flex;
 }

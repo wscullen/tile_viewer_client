@@ -4,8 +4,9 @@ import React, { useState } from 'react'
 import 'react-dates/initialize'
 import { DateRangePicker } from 'react-dates'
 
-import { Button, FormFeedback, FormGroup, Label, Input } from 'reactstrap'
 import Dropzone from 'react-dropzone'
+
+import { Icon, Label, Form } from 'semantic-ui-react'
 
 interface FormInputs {
   setFieldValue: Function
@@ -34,8 +35,9 @@ const FileDropzoneWrapper = ({
   const [focusedInput, setFocusedInput] = useState(null)
 
   return (
-    <div>
-      <div className="dropzone">
+    <Form.Field error={errors.hasOwnProperty('files') && touched.hasOwnProperty('files')}>
+      <label>Shapefile for Site Extent</label>
+      <div className="dropzone input">
         <Dropzone
           onDrop={acceptedFiles => {
             // do nothing if no files
@@ -59,12 +61,19 @@ const FileDropzoneWrapper = ({
         >
           {({ getRootProps, getInputProps }) => (
             <section>
-              <div {...getRootProps()}>
+              <div {...getRootProps()} className="dropzoneHeader">
+                <Icon name="upload" />
                 <input {...getInputProps()} />
-                <p>Drag 'n' drop some files here, or click to select files</p>
-                {values.files.map((file: any, i: any) => {
-                  return <div key={i}>{file.name}</div>
-                })}
+                <span className="header">Drag 'n' drop some files here, or click to select files</span>
+                {values.files.length !== 0 ? (
+                  <div className="dropzoneFiles">
+                    <ul>
+                      {values.files.map((file: any, i: any) => {
+                        return <li key={i}>{file.name}</li>
+                      })}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </section>
           )}
@@ -72,9 +81,11 @@ const FileDropzoneWrapper = ({
       </div>
       {console.log(`Dropzone errors: ${errors.files}`)}
       {errors.hasOwnProperty('files') && touched.hasOwnProperty('files') ? (
-        <span className="errorMsg">{errors.files}</span>
+        <Label prompt pointing={'above'}>
+          {errors.files}
+        </Label>
       ) : null}
-    </div>
+    </Form.Field>
   )
 }
 
