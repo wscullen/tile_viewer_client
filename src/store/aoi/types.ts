@@ -1,6 +1,6 @@
 import { FeatureCollection } from 'geojson'
 
-import { RawTile } from '../tile/types'
+import { RawTile, Tile } from '../tile/types'
 
 export interface DateList {
   dates: string[]
@@ -11,6 +11,10 @@ export interface CurrentDates {
   [index: string]: DateList
   sentinel2?: DateList
   landsat8?: DateList
+}
+
+export interface SingleDateTileList {
+  [index: string]: Tile[]
 }
 
 export interface AoiSettings {
@@ -37,7 +41,6 @@ export interface TileList {
   sentinel2?: DateObject
   landsat8?: DateObject
 }
-// 'sentinel2', 'landsat8'
 
 export interface AreaOfInterest {
   id: string

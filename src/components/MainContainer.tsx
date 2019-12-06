@@ -26,7 +26,9 @@ import { updateMainSession, resetState as resetSessionState, updateAddAoiForm } 
 
 import { addAoi, removeAoi, updateSession } from '../store/aoi/actions'
 
-import { JobState, Job } from '../store/job/types'
+import { SingleDateTileList } from '../store/aoi/types'
+
+import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
 
 import { thunkAddJob, thunkResumeCheckingJobsForAoi } from '../store/job/thunks'
@@ -37,7 +39,6 @@ import { thunkSendMessage } from '../thunks'
 import MapViewer from './MapViewer'
 
 import AreaOfInterestList from './AreaOfInterestList'
-
 import TimelineViewer from './TimelineViewer'
 
 import TileList from './TileList'
@@ -69,10 +70,6 @@ console.log(resourcesPath)
 
 import { getAoiNames, getSelectedTiles, getHighlightedTiles } from '../store/aoi/reducers'
 
-interface SingleDateTileList {
-  [index: string]: Tile[]
-}
-
 interface AppProps {
   addTile: typeof addTile
   updateTile: typeof updateTile
@@ -99,13 +96,15 @@ interface SelectorFunctions {
   aoiNames: string[]
 }
 
-interface JobObject {
+export interface JobObject {
   job_status: string
   job_id: string
   job_result: string
   job_assigned: string
   job_completed: string
   job_submitted: string
+  job_result_message: string
+  times_checked: number
 }
 
 interface JobStatusVerbose {
@@ -134,9 +133,9 @@ interface DefaultAppState {
   enableSen2AgriL2A: boolean
   enableSen2AgriL3A: boolean
   enableSen2AgriL3B: boolean
-  sen2agri_l2a_job: Record<string, any>
-  sen2agri_l3a_job: Record<string, any>
-  sen2agri_l3b_job: Record<string, any>
+  sen2agri_l2a_job: JobObject
+  sen2agri_l3a_job: JobObject
+  sen2agri_l3b_job: JobObject
   initMap: boolean
 }
 
@@ -157,9 +156,9 @@ const defaultState: DefaultAppState = {
   enableSen2AgriL2A: false,
   enableSen2AgriL3A: false,
   enableSen2AgriL3B: false,
-  sen2agri_l2a_job: {},
-  sen2agri_l3a_job: {},
-  sen2agri_l3b_job: {},
+  sen2agri_l2a_job: null,
+  sen2agri_l3a_job: null,
+  sen2agri_l3b_job: null,
   initMap: false,
 }
 
@@ -451,69 +450,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     }
   }
 
-  public addAreaOfInterest = (area: any): void => {}
-
-  resumeCheckingJobStatus = () => {
-    // When starting up, check the job status of all tiles with (job id and job status of S or A)
-    // Clear previous job_interval it exists
-    // @ts-ignore
-    const tiles = { ...this.state.selectedTiles }
-
-    console.log('Current Selected tiles')
-    console.log(tiles)
-
-    // Iterating over selected tiles
-    Object.keys(tiles).map(ele => {
-      console.log(ele)
-      console.log(tiles[ele])
-
-      if (tiles[ele].length > 0) {
-        console.log('found date with tiles')
-        tiles[ele].map((tile: any) => {
-          if (tile && tile.hasOwnProperty('job_id')) {
-            console.log('Checking tile job status')
-            if (tile.job_check_interval !== null) {
-              clearInterval(tile.job_check_interval)
-            }
-            tile.job_check_interval = setInterval(
-              () => this.checkJobStatus(tile.job_id, tile.properties.name, ele),
-
-              1000 * 60,
-            )
-          }
-        })
-      }
-    })
-
-    // @ts-ignore
-    const l2a_job = this.state.sen2agri_l2a_job
-
-    if (l2a_job && l2a_job.hasOwnProperty('job_status')) {
-      l2a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL2AJobStatus(l2a_job['job_id']), 1000 * 60)
-    }
-
-    // @ts-ignore
-    const l3a_job = this.state.sen2agri_l3a_job
-
-    if (l3a_job && l3a_job.hasOwnProperty('job_status')) {
-      l3a_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3AJobStatus(l3a_job['job_id']), 1000 * 60)
-    }
-
-    // @ts-ignore
-    const l3b_job = this.state.sen2agri_l3b_job
-    if (l3b_job && l3b_job.hasOwnProperty('job_status')) {
-      l3b_job['job_check_interval'] = setInterval(() => this.checkSen2AgriL3BJobStatus(l3b_job['job_id']), 1000 * 60)
-    }
-
-    this.setState({
-      // @ts-ignore
-      selectedTiles: tiles,
-      sen2agri_l2a_job: l2a_job,
-      sen2agri_l3a_job: l3a_job,
-      sen2agri_l3b_job: l3b_job,
-    })
-  }
-
   toggleVisibility = (tileId: any) => {
     const relevantTile: Tile = { ...this.props.tiles.byId[tileId] }
     relevantTile.visible = !relevantTile.visible
@@ -633,10 +569,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   checkSen2AgriL2AJobStatus = (job_id: string) => {
-    const jobStatusVerbose = {
-      C: 'completed',
-      A: 'assigned',
-      S: 'submitted',
+    const jobStatusVerbose: JobStatusVerbose = {
+      C: 'Completed',
+      A: 'Assigned',
+      S: 'Submitted',
     }
 
     // @ts-ignore
@@ -660,22 +596,20 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           console.log('Success:', JSON.stringify(response))
           console.log(response)
 
-          // @ts-ignore
-          const sen2agri_job_status = this.state.sen2agri_l2a_job
+          const status: string = response.status
+
+          const sen2agri_job_status: JobObject = this.state.sen2agri_l2a_job
           sen2agri_job_status.job_id = response.id
           sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
-
-          // @ts-ignore
-          sen2agri_job_status['job_status'] = jobStatusVerbose[response.status]
+          sen2agri_job_status['job_status'] = jobStatusVerbose[status]
           sen2agri_job_status.job_assigned = response.assigned
           sen2agri_job_status.job_completed = response.completed
           sen2agri_job_status.job_submitted = response.submitted
           sen2agri_job_status.job_result_message = response.result_message
-          sen2agri_job_status.times_checked += 1
 
           let enableL3Other = false
 
-          if (sen2agri_job_status.job_status === 'completed') {
+          if (sen2agri_job_status.job_status === jobStatusVerbose.C) {
             enableL3Other = true
           }
 
@@ -727,7 +661,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
           const sen2agri_job_status = this.state.sen2agri_l3a_job
           sen2agri_job_status.job_id = response.id
-          sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
+          sen2agri_job_status.job_result = response['success'] ? 'success' : 'failed'
           sen2agri_job_status['job_status'] = jobStatusVerbose[response.status]
           sen2agri_job_status.job_assigned = response.assigned
           sen2agri_job_status.job_completed = response.completed
@@ -792,7 +726,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         })
         .catch(err => {
           console.log(err)
-          console.log('something went wrong when trying to check the job')
+          console.log('something went wrong when tupdateSessionob')
         })
     }
   }
@@ -1022,7 +956,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   updateJobSettings = (newSettings: any) => {
     console.log(newSettings)
     const testObject = {
-      // @ts-ignore
       ...this.state.jobSettings,
       ...newSettings,
     }
@@ -1283,6 +1216,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             job_assigned: '',
             job_completed: '',
             job_submitted: '',
+            job_result_message: '',
+            times_checked: 0,
           }
           // @ts-ignore
           job_status.job_id = response.id
@@ -1386,6 +1321,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             job_assigned: '',
             job_completed: '',
             job_submitted: '',
+            job_result_message: '',
+            times_checked: 0,
           }
 
           // @ts-ignore
@@ -1557,7 +1494,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             />
           </div>
           <TileList
-            settings={currentAoi ? currentAoi.session.settings : {}}
+            settings={currentAoi ? currentAoi.session.settings : { atmosphericCorrection: false }}
             currentAoi={this.props.session.currentAoi}
             updateSettings={this.updateJobSettings}
             selectedTiles={selectedTiles}

@@ -5,7 +5,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow:hidden;
+  overflow: hidden;
 }
 
 .listOfTiles {
@@ -24,10 +24,13 @@
   width: 100%;
 }
 
-.listWrapper {
+.tileList .listWrapper {
   z-index: 1;
   width: 100%;
   height: auto;
+  // background: #eee;
+  // border-top: 1px #bbb solid;
+  // box-shadow: 0 -1px 3px 0px rgba(100, 100, 100, 0.3);
 }
 
 .verified {
@@ -196,7 +199,7 @@ h5.sectionLabel.title.is-5 {
 
 .optionsContent {
   background-color: #ddd;
-  box-shadow: inset 0px 1px 3px rgba(100, 100, 100, 0.3);
+  box-shadow: inset 0px 4px 5px 5px rgba(100, 100, 100, 0.3);
   /* border: #ddd solid 5px; */
   white-space: nowrap;
   padding: 5px;
@@ -216,8 +219,12 @@ h5.sectionLabel.title.is-5 {
   transition: max-height 750ms ease-in-out, padding 1ms 0.45s linear;
   max-height: 0px;
   padding: 0px;
-  /* overflow: hidden; */
+  overflow: hidden;
   /* transition: min-height 0.65s ease-in-out, opacity 0.5s, padding 0s;
   transition: height 0.65s, padding 0s;
   transition: min-height 0.65s; */
+}
+
+.tileList .ui.segment.pushable {
+  margin-top: 0px;
 }
