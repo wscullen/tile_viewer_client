@@ -1,0 +1,73 @@
+.timelineViewer {
+  border-top: 1px solid lightgrey;
+  /* margin: 2px; */
+  flex-grow: 1;
+  min-height: 30%;
+}
+
+.timelineViewer > .header {
+  padding: 4px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  background: #eee;
+  border-bottom: 1px #bbb solid;
+  box-shadow: 0 1px 3px 0px rgba(100, 100, 100, 0.3);
+  position: sticky;
+  top: 0px;
+
+  flex-shrink: 0;
+  width: 100%;
+  z-index: 50;
+}
+
+.timelineViewer .title {
+  align-self: flex-end;
+}
+
+.buttonSection {
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.controlsSection {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  justify-content: flex-end;
+}
+
+.controlsSection h5.sectionLabel.title.is-5 {
+  margin-bottom: 0px;
+  align-self: center;
+  margin-right: 5px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.platformSelect {
+  margin-right: 5px;
+}
+
+.platformSelectSection {
+  display: flex;
+  /* width: 60%; */
+  justify-content: flex-end;
+  flex-grow: 1;
+}
+
+.dateSelectSection {
+  display: flex;
+  /* width: 40%; */
+  justify-content: flex-end;
+  flex-grow: 1;
+}
+
+.timelineViewer h5.sectionLabel.title.is-5 {
+  margin-left: 4px;
+}

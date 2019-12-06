@@ -75,18 +75,18 @@ export function getSelectedTiles(state: AppState): TileListByDate {
   if (currentAoi) {
     const session = { ...currentAoi.session }
     const currentPlatform = session.currentPlatform
-
-    for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
-      const tileArray: Tile[] = []
-      value.map((id: string): void => {
-        if (state.tile.byId[id].selected) {
-          tileArray.push(state.tile.byId[id])
-        }
-      })
-      selectedTiles[key] = tileArray
+    if (currentAoi.allTiles[currentPlatform]) {
+      for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+        const tileArray: Tile[] = []
+        value.map((id: string): void => {
+          if (state.tile.byId[id].selected) {
+            tileArray.push(state.tile.byId[id])
+          }
+        })
+        selectedTiles[key] = tileArray
+      }
     }
   }
-
   return selectedTiles
 }
 
@@ -102,14 +102,15 @@ export function getHighlightedTiles(state: AppState): string[] {
   if (currentAoi) {
     const session = { ...currentAoi.session }
     const currentPlatform = session.currentPlatform
-
-    for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
-      const tileArray: Tile[] = []
-      value.map((id: string): void => {
-        if (state.tile.byId[id].highlighted) {
-          highlightedTiles.push(id)
-        }
-      })
+    if (currentAoi.allTiles[currentPlatform]) {
+      for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+        const tileArray: Tile[] = []
+        value.map((id: string): void => {
+          if (state.tile.byId[id].highlighted) {
+            highlightedTiles.push(id)
+          }
+        })
+      }
     }
   }
 

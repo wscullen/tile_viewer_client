@@ -57,7 +57,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
               onClick={e => {
                 this.props.addAreaModal()
               }}
-              primary
+              color="green"
               icon
               compact
             >
@@ -73,11 +73,10 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                   this.props.handleTabChange(e)
                 }}
                 compact
+                primary
               >
-                <span className="icon is-small">
-                  <FontAwesomeIcon icon="globe-americas" />
-                </span>
-                <span>Map</span>
+                <Icon disabled name="map" />
+                Map
               </Button>
               <Button
                 id="1"
@@ -86,11 +85,10 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                   this.props.handleTabChange(e)
                 }}
                 compact
+                primary
               >
-                <span className="icon is-small">
-                  <FontAwesomeIcon icon="toolbox" />
-                </span>
-                <span>Jobs</span>
+                <Icon disabled name="tasks" />
+                Jobs
               </Button>
               <Button
                 id="2"
@@ -99,11 +97,10 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                   this.props.handleTabChange(e)
                 }}
                 compact
+                primary
               >
-                <span className="icon is-small">
-                  <FontAwesomeIcon icon="info-circle" />
-                </span>
-                <span>Details</span>
+                <Icon disabled name="info circle" />
+                Details
               </Button>
             </Button.Group>
           </div>

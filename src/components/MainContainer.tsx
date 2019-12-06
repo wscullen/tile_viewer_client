@@ -1424,12 +1424,9 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     }
   }
 
-  public handlePlatformChange = (event: React.SyntheticEvent<HTMLOptionElement>): void => {
-    console.log('platform change called')
-    const target = event.target as HTMLOptionElement
-    console.log(target.value)
+  public handlePlatformChange = (event: React.SyntheticEvent<HTMLOptionElement>, value: string): void => {
     let aoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
-    aoiSession.currentPlatform = target.value
+    aoiSession.currentPlatform = value
 
     this.props.updateSession(this.props.session.currentAoi, aoiSession)
   }
