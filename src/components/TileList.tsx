@@ -3,7 +3,7 @@ import './../assets/css/TileList.scss'
 import React, { Component } from 'react'
 import moment from 'moment'
 
-import { Icon, Button, Checkbox } from 'semantic-ui-react'
+import { Icon, Button, Checkbox, Popup, Grid, Header } from 'semantic-ui-react'
 
 import TileListItemCompact from './TileListItemCompact'
 
@@ -12,12 +12,14 @@ import { connect } from 'react-redux'
 import { AppState } from '../store/'
 
 import { JobState, Job, JobStatus } from '../store/job/types'
+import { Session } from '../store/aoi/types'
 
 import { AoiSettings, SingleDateTileList } from '../store/aoi/types'
 import { JobObject } from './MainContainer'
 
 interface AppProps {
   jobs: JobState
+  currentSession: Session
   currentAoi: string
   updateSettings: Function
   sen2agriL2AJob: JobObject
@@ -68,14 +70,13 @@ class TileList extends Component<AppProps, DefaultAppState> {
     }
   }
 
-  updateSettings = (settingChanged: string, e: any) => {
-    console.log(settingChanged)
-    console.log(e.target.value)
+  updateAtmosphericCorrection = (event: React.FormEvent<HTMLInputElement>, data: any) => {
+    const value = data.checked
+    console.log(data)
+    console.log(event)
+
     const updatedSettings: AoiSettings = {
-      atmosphericCorrection: null,
-    }
-    if (settingChanged === 'atmosphericCorrection') {
-      updatedSettings['atmosphericCorrection'] = e.target.checked
+      atmosphericCorrection: value,
     }
 
     this.props.updateSettings(updatedSettings)
@@ -86,6 +87,16 @@ class TileList extends Component<AppProps, DefaultAppState> {
     this.setState({
       optionsHide: !this.state.optionsHide,
     })
+  }
+
+  handleTileSettingsClose = (event: any) => {
+    console.log('Tile settings closing')
+
+    if (event.type === 'click') {
+      this.setState({
+        optionsHide: true,
+      })
+    }
   }
 
   toggle = () => {
@@ -133,7 +144,7 @@ class TileList extends Component<AppProps, DefaultAppState> {
   //     } else if (this.props.sen2agriL3AJob.status === JobStatus.Assigned) {
   //       jobProgressIcon = 'hourglass half'
   //       jobProgressClass = 'tileActionIndicator '
-  //     } else if (this.props.sen2agriL3AJob.status === JobStatus.Completed) {
+  //     } else if (this.props.sen2agriL3AJob.status === JobSsystemtatus.Completed) {
   //       jobProgressIcon = 'hourglass end'
   //       jobProgressClass = 'tileActionIndicator '
   //     }
@@ -191,12 +202,15 @@ class TileList extends Component<AppProps, DefaultAppState> {
     let optionsHeaderClass = 'optionsWrapper'
     optionsHeaderClass += this.state.optionsHide ? ' removed' : ' flexed'
     let currentPlatform = ''
+    let platformAbbreviation = ''
 
     if (this.props.currentPlatform) {
       if (this.props.currentPlatform === 'sentinel2') {
         currentPlatform = 'Sentinel 2'
+        platformAbbreviation = 'S2'
       } else if (this.props.currentPlatform === 'landsat8') {
         currentPlatform = 'Landsat 8'
+        platformAbbreviation = 'L8'
       }
     }
 
@@ -205,76 +219,90 @@ class TileList extends Component<AppProps, DefaultAppState> {
         <div className="header">
           <h5 className="sectionLabel title is-5">Tiles {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
           <div className="buttonSection">
-            <Button
-              icon
-              onClick={e =>
-                this.props.currentAoi !== '' ? this.toggle() : console.log('No Aoi Selected, not showing options')
+            <Popup
+              trigger={
+                <Button
+                  icon
+                  compact
+                  onClick={e =>
+                    this.props.currentAoi !== '' ? this.toggle() : console.log('No Aoi Selected, not showing options')
+                  }
+                >
+                  <Icon name="cog" />
+                </Button>
               }
+              flowing
+              onClose={e => this.handleTileSettingsClose(e)}
+              open={!this.state.optionsHide}
+              position="bottom right"
+              className="optionsPopup"
             >
-              <Icon name="cog" />
-            </Button>
-            <Button color="green" onClick={() => this.props.submitAllJobs()}>
+              <Grid divided columns={2}>
+                <Grid.Column>
+                  <Header as="h4">Tile Processing Options</Header>
+                  <ul>
+                    <li>
+                      <Checkbox
+                        label="Atmospheric Correction (Sen2Cor/LaSRC)"
+                        onChange={this.updateAtmosphericCorrection}
+                        checked={
+                          this.props.currentSession ? this.props.currentSession.settings.atmosphericCorrection : false
+                        }
+                      />
+                    </li>
+                    <li>
+                      <Button onClick={e => this.props.saveTileJson()}>Save Tile List as JSON</Button>
+                    </li>
+                    <li>
+                      <Button onClick={e => this.props.copyCurrentTilesToClipboard()}>
+                        {this.props.selectedTilesInList.length === 0
+                          ? `Copy ${platformAbbreviation} Names to Clipboard`
+                          : `Copy Highlighted ${platformAbbreviation} Names to Clipboard`}
+                      </Button>
+                    </li>
+                  </ul>
+                </Grid.Column>
+                <Grid.Column>
+                  <Header as="h4">Sen2Agri</Header>
+                  <ul>
+                    <li>
+                      <div className="menuItem">
+                        <Button onClick={e => this.props.submitSen2agriL2A()} disabled={!this.props.enableSen2agriL2A}>
+                          Generate Atmos. Corrected (L2A)
+                        </Button>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="menuItem">
+                        <Button onClick={e => this.props.submitSen2agriL3A()} disabled={!this.props.enableSen2agriL3A}>
+                          Generate Cloudfree Composites (L3A)
+                        </Button>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="menuItem">
+                        <Button onClick={e => this.props.submitSen2agriL3B()} disabled={!this.props.enableSen2agriL3B}>
+                          Generate LAI/NDVI For Each Date (L3B)
+                        </Button>
+                      </div>
+                    </li>
+                  </ul>
+                </Grid.Column>
+              </Grid>
+            </Popup>
+
+            <Button color="green" compact onClick={() => this.props.submitAllJobs()}>
               {this.props.selectedTilesInList.length === 0 ? 'Start All' : 'Start Highlighted'}
             </Button>
           </div>
         </div>
-        <div className={optionsHeaderClass}>
-          <div className="optionsContent">
-            <h4>Job Options</h4>
-            <ul>
-              <li>
-                <Checkbox
-                  label="Atmospheric Correction (Sen2Cor/LaSRC)"
-                  onChange={e => this.updateSettings('atmosphericCorrection', e)}
-                />
-              </li>
-              <li>
-                <Button onClick={e => this.props.saveTileJson()}>Save Tile List as JSON</Button>
-              </li>
-              <li>
-                <Button onClick={e => this.props.copyCurrentTilesToClipboard()}>
-                  {this.props.selectedTilesInList.length === 0
-                    ? 'Copy Current Platform Tiles to Clipboard'
-                    : 'Copy HIGHLIGHTED Current Platform Tiles to Clipboard'}
-                </Button>
-              </li>
-            </ul>
-            <h4>Sen2Agri</h4>
-            <ul>
-              <li>
-                <div className="menuItem">
-                  <button onClick={e => this.props.submitSen2agriL2A()} disabled={!this.props.enableSen2agriL2A}>
-                    Generate Atmos. Corrected (L2A)
-                  </button>
-                  {/* {this.job_verified_icon_l2a()} */}
-                </div>
-              </li>
-              <li>
-                <div className="menuItem">
-                  <button onClick={e => this.props.submitSen2agriL3A()} disabled={!this.props.enableSen2agriL3A}>
-                    Generate Cloudfree Composites (L3A)
-                  </button>
-                  {/* {this.job_verified_icon_l3a()} */}
-                </div>
-              </li>
-              <li>
-                <div className="menuItem">
-                  <button onClick={e => this.props.submitSen2agriL3B()} disabled={!this.props.enableSen2agriL3B}>
-                    Generate LAI/NDVI For Each Date (L3B)
-                  </button>
-                  {/* {this.job_verified_icon_l3b()} */}
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <div className={optionsHeaderClass}></div>
         <div className="listOfTiles">
           <div className="listWrapper">
             <ul>
               {Object.keys(this.props.selectedTiles).map((d: string) => {
                 const listElements = []
-                console.log(d)
-                //@ts-ignore
+
                 if (this.props.selectedTiles[d].length > 0) {
                   const headerEle = (
                     <li
@@ -342,6 +370,7 @@ class TileList extends Component<AppProps, DefaultAppState> {
 
 const mapStateToProps = (state: AppState) => ({
   jobs: state.job,
+  currentSession: state.session.currentAoi ? state.aoi.byId[state.session.currentAoi].session : null,
 })
 
 export default connect(

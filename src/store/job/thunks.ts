@@ -184,7 +184,6 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
 
   const jobManagerUrl: string = state.session.settings.jobManagerUrl
   const atmosCorrection: boolean = state.aoi.byId[newJob.aoiId].session.settings.atmosphericCorrection
-  const accessToken: string = state.session.settings.auth.accessToken
 
   console.log(atmosCorrection)
 
@@ -197,6 +196,8 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
   }
 
   await refreshToken(state.session, dispatch)
+
+  const accessToken: string = state.session.settings.auth.accessToken
 
   const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken, accessToken)
   console.log(jobResult)
@@ -244,7 +245,6 @@ const submitJobToApi = async (
       jobType = 'S2Download'
       options = {
         tile: tile.properties.name,
-        // @ts-ignore
         ac: atmosCorrection,
         ac_res: 10,
         entity_id: tile.properties.entityId,
@@ -255,8 +255,9 @@ const submitJobToApi = async (
       jobType = 'L8Download'
       options = {
         tile: tile.properties.name,
-        // @ts-ignore
         ac: atmosCorrection,
+        entity_id: tile.properties.entityId,
+        api_source: tile.properties.apiSource,
       }
       break
   }

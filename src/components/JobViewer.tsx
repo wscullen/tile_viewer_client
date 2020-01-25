@@ -1,4 +1,4 @@
-import '../assets/css/JobViewer.css'
+import '../assets/css/JobViewer.scss'
 import '../assets/css/App.scss'
 
 import React, { Component, ReactElement } from 'react'

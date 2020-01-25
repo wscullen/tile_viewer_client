@@ -101,7 +101,7 @@ h5.sectionLabel.title.is-5 {
 }
 
 .aoiListItem.activeAOI {
-  background-color: $active-selection;
+  background: $active-selection;
 }
 
 .sectionLabel {
@@ -207,4 +207,8 @@ h5.sectionLabel.title.is-5 {
 .cancelButton:active {
   position: relative;
   top: 1px;
+}
+
+.ui.small.basic.compact.icon.button.aoiActionButton.removeAction {
+  box-shadow: none !important;
 }

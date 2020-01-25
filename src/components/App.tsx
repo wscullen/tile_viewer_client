@@ -1,6 +1,6 @@
 import 'react-dates/initialize'
 
-import '../assets/css/App.css'
+import '../assets/css/App.scss'
 
 import * as React from 'react'
 

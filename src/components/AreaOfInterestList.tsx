@@ -125,15 +125,15 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                     <Popup
                       trigger={
                         <Button
-                          className="aoiActionButton removeAction"
                           onClick={event => {
                             console.log('trying to remove aoi, inside aoi list')
 
                             event.stopPropagation()
                           }}
-                          icon="times"
+                          icon="times circle outline"
                           compact
                           size="mini"
+                          color="red"
                           basic
                         />
                       }
@@ -145,7 +145,6 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                       <p className="deleteWarning">Permanently delete this area of interest?</p>
                       <div className="aoiDeleteButtons">
                         <Button
-                          className="deleteButton"
                           onClick={event => {
                             console.log('trying to remove aoi, inside aoi list')
                             console.log(idx)

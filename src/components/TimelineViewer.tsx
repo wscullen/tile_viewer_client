@@ -67,10 +67,10 @@ function TimelineViewer(props: AppProps) {
             </h5>
             <div className="buttonSection">
               <Button.Group>
-                <Button icon compact onClick={() => props.decrementDate()} disabled={decrementDisabled}>
+                <Button icon compact primary onClick={() => props.decrementDate()} disabled={decrementDisabled}>
                   <Icon name="arrow left" />
                 </Button>
-                <Button icon compact onClick={() => props.incrementDate()} disabled={incrementDisabled}>
+                <Button icon compact primary onClick={() => props.incrementDate()} disabled={incrementDisabled}>
                   <Icon name="arrow right" />
                 </Button>
               </Button.Group>

@@ -1,6 +1,10 @@
-import { Feature, Geometry } from 'geojson'
+import { Feature as GeoJsonFeature, Geometry } from 'geojson'
+
+import Feature from 'ol/Feature'
 
 import { Moment } from 'moment'
+import VectorLayer from 'ol/layer/Vector'
+import ImageLayer from 'ol/layer/Image'
 
 export interface Properties {
   acquisitionEnd: string // "2016-04-12T18:55:46.520000"
@@ -10,6 +14,7 @@ export interface Properties {
   datasetName: string // ["SENTINEL_2A"]
   entityId: string // 106965
   lowresPreviewUrl: string // "http://s2d2.satdat.space/media/lowres_previews/S2A_OPER_MSI_L1C_TL_MTI__20160412T185546_20160412T220337_A004214_T12UUA_N02_01_01.jpg"
+  currentPreviewUrl?: string
   manualBulkorderUrl: string
   manualDownloadUrl: string // "https://earthexplorer.usgs.gov/download/external/options/SENTINEL_2A/106965/INVSVC/"
   manualProductUrl: string // "https://earthexplorer.usgs.gov/order/process?dataset_name=SENTINEL_2A&ordered=106965&node=INVSVC"
@@ -22,9 +27,10 @@ export interface Properties {
   satName: string // "SENTINEL-2A"
   summary: string //"Entity ID: S2A_OPER_MSI_L1C_TL_MTI__20160412T185546_20160412T220337_A004214_T12UUA_N02_01_01, Acquisition Date: 12-APR-16, Start Date: 12-APR-16, End Date: 12-APR-16"
   vendorName: string // name specific to the API source"S2A_OPER_PRD_MSIL1C_PDMC_T12UUA_R070_V20160412T184855_20160412T184855"
+  projection: string
 }
 
-export interface Tile extends Feature {
+export interface Tile extends GeoJsonFeature {
   id: string
   geometry: Geometry
   properties: Properties
@@ -33,6 +39,8 @@ export interface Tile extends Feature {
   visible: boolean
   highlighted: boolean
   jobs: Array<string>
+  vectorFeature?: Feature
+  rasterFeature?: ImageLayer
 }
 
 export interface RawTile {
@@ -43,7 +51,7 @@ export interface RawTile {
   date: Moment
   cloud: string
   visible: boolean
-  geojson: Feature
+  geojson: GeoJsonFeature
 }
 
 export interface TileListByDate {
@@ -71,32 +79,3 @@ interface UpdateTileAction {
 }
 
 export type TileActionTypes = AddTileAction | UpdateTileAction
-
-// // Describing the shape of the chat's slice of state
-// export interface Message {
-//   user: string;
-//   message: string;
-//   timestamp: number;
-// }
-
-// export interface ChatState {
-//   messages: Message[];
-// }
-
-// // Describing the different ACTION NAMES available
-// export const SEND_MESSAGE = "SEND_MESSAGE";
-// export const DELETE_MESSAGE = "DELETE_MESSAGE";
-
-// interface SendMessageAction {
-//   type: typeof SEND_MESSAGE;
-//   payload: Message;
-// }
-
-// interface DeleteMessageAction {
-//   type: typeof DELETE_MESSAGE;
-//   meta: {
-//     timestamp: number;
-//   };
-// }
-
-// export type ChatActionTypes = SendMessageAction | DeleteMessageAction;

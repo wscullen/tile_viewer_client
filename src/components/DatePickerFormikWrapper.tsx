@@ -1,4 +1,4 @@
-import './../assets/css/DatePickerFormikWrapper.css'
+import './../assets/css/DatePickerFormikWrapper.scss'
 
 import React, { useState } from 'react'
 import 'react-dates/initialize'
@@ -61,14 +61,16 @@ const DatePickerWithFormik = ({
       {console.log(touched)}
       {console.log(errors)}
       <br />
-      {errors.hasOwnProperty('startDate') && touched.hasOwnProperty('startDate')? (
+      {errors.hasOwnProperty('startDate') && touched.hasOwnProperty('startDate') ? (
         <span className="errorMsg">
           {errors.startDate}
           <br />
         </span>
       ) : null}
 
-      {errors.hasOwnProperty('endDate') && touched.hasOwnProperty('endDate') ? <span className="errorMsg">{errors.endDate}</span> : null}
+      {errors.hasOwnProperty('endDate') && touched.hasOwnProperty('endDate') ? (
+        <span className="errorMsg">{errors.endDate}</span>
+      ) : null}
     </div>
   )
 }

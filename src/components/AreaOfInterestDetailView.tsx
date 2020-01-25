@@ -1,4 +1,4 @@
-import '../assets/css/AreaOfInterestDetailView.css'
+import '../assets/css/AreaOfInterestDetailView.scss'
 import '../assets/css/App.scss'
 
 import React, { Component, ReactElement } from 'react'

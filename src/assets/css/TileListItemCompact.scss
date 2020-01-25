@@ -1,0 +1,82 @@
+@import './App.scss';
+
+.tileListItemCompact {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tileListItemActions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tileListItemLeft {
+  display: flex;
+  flex-direction: row;
+}
+
+.tileActionButton {
+  cursor: pointer;
+  color: #000;
+  padding: 0px 4px;
+
+  text-decoration: none;
+  outline: none;
+  background: none;
+  border: none;
+}
+// al .tileActionButton:hover {
+//   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cbf2a', endColorstr='#44c767',GradientType=0);
+// }
+
+// .tileActionButton:active {
+//   position: relative;
+//   top: 1px;
+// }
+
+// .jobSuccess {
+//   alcolor: lightgreen;
+// }
+// .jobFailed {
+//   color: red;
+// }
+
+// .removeAction {
+//   color: red;
+// }
+
+// .nonvisibleIcon {
+//   color: gray;
+//   font-size: 12px;
+//   width: 25px;
+// }
+
+// .visibleIcon {
+//   color: lightgreen;
+//   font-size: 13px;
+//   width: 25px;
+// }
+
+.tileListItem {
+  padding: 6px 2px;
+  border-bottom: 2px #eee solid;
+}
+
+.activeSelection {
+  background: $active-selection;
+}
+
+.tileListItemLeft .ui.blue.small.basic.circular.compact.icon.button,
+.tileListItemLeft .ui.grey.small.basic.circular.compact.icon.button {
+  box-shadow: none !important;
+}
+
+.tileList .sectionLabel {
+  margin-top: 4px;
+  padding-left: 3px;
+  font-size: 12px;
+}

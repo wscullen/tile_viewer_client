@@ -133,6 +133,7 @@ export const thunkStartAddAoi = (
                 summary: t.geojson.properties.summary,
                 vendorName: t.geojson.properties.vendor_name,
                 lowresPreviewUrl: t.geojson.properties.lowres_preview_url,
+                projection: t.proj,
               },
 
               selected: false,

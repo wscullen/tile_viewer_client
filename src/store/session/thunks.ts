@@ -67,9 +67,6 @@ export const thunkAttemptLogin = ({
           msg: `Unable to reach server (${response.status}`,
           submitting: false,
         }
-
-        dispatch(finishLogin(newSettings))
-        dispatch(updateLoginForm(newLoginFormStatus))
         console.log('finish login here')
         throw new Error(response.status.toString())
       }
@@ -112,7 +109,12 @@ export const thunkAttemptLogin = ({
         loginResultMsg = 'Unable to reach server with URL provided.'
       } else if (err.toString() === 'Error: 401') {
         loginResultMsg = 'Not authorized.'
+      } else if (err.toString() === 'Error: 404') {
+        loginResultMsg = 'Unable to reach server with URL provided.'
+      } else if (err.toString() === 'Error: 500') {
+        loginResultMsg = 'The server suffered an internal error.'
       }
+
       const newSettings: SessionSettings = {
         ...session.settings,
         jobManagerUrl: url,

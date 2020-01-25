@@ -8,6 +8,15 @@
   overflow: hidden;
 }
 
+.optionsPopup ul {
+  list-style-type: none;
+  padding-left: 0px;
+}
+
+.optionsPopup li {
+  padding-bottom: 4px;
+}
+
 .listOfTiles {
   list-style: none;
   padding-left: 0px;
@@ -91,7 +100,7 @@ button {
   font-weight: 600;
   font-size: 15px;
   padding: 5px 10px;
-  margin-right: 2px;
+  margin-left: 3px;
   text-decoration: none;
   outline: none;
 }
@@ -115,10 +124,12 @@ button {
 .dateSection {
   padding: 1px 4px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   position: sticky;
   top: 0;
   background: #fff;
+  border-bottom: 2px #eee solid;
+  z-index: 99999;
 }
 
 .tileActionIndicator {
@@ -153,7 +164,7 @@ button {
   padding: 5px 10px;
   text-decoration: none;
   outline: none;
-  margin-right: 3px;
+  margin-left: 3px;
   min-height: 31px;
 }
 

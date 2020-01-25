@@ -1,5 +1,5 @@
-import '../assets/css/MainContainer.css'
-import '../assets/css/CenterContainer.css'
+import '../assets/css/MainContainer.scss'
+import '../assets/css/CenterContainer.scss'
 
 import '../assets/css/App.scss'
 
@@ -200,20 +200,14 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   componentDidMount() {
-    console.log('======================> Inside component did mount')
-    this.loadFromLocalStorage()
-    console.log(this.state)
-
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose)
-
-    // @ts-ignore
     window.addEventListener('keydown', this.handleKeyPress)
-
-    this.props.thunkUpdateCsrfTokens()
 
     if (this.props.session.currentAoi) {
       this.activateAOI(this.props.aois.byId[this.props.session.currentAoi].name)
+      console.log('Resuming job status checks')
+      this.props.thunkResumeCheckingJobsForAoi(this.props.session.currentAoi)
     }
   }
 
@@ -327,11 +321,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     localStorage.clear()
   }
 
-  handleKeyPress = (event: React.KeyboardEvent<HTMLElement>) => {
+  handleKeyPress = (event: KeyboardEvent) => {
     console.log('key pressed')
     console.log(event.key)
 
-    // @ts-ignore
     if (this.state.activeAOI !== '') {
       switch (event.key) {
         case 'ArrowRight': {
@@ -483,9 +476,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     const currentMainSession = { ...this.props.session }
     currentMainSession.currentAoi = areaOfInterest.id
     this.props.updateMainSession(currentMainSession)
-
-    console.log('Resuming job status checks')
-    this.props.thunkResumeCheckingJobsForAoi(currentMainSession.currentAoi)
   }
 
   checkJobStatus = (job_id: string, tile_name: string, date: string) => {
@@ -1472,7 +1462,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               tileSelected={this.handleTileSelect}
               currentAoiWkt={currentAoi ? currentAoi.wktFootprint : null}
               wrsOverlay={currentAoi ? currentAoi.wrsOverlay : null}
-              activeAOI={currentAoi ? currentAoi.name : null}
+              activeAoi={currentAoi ? currentAoi.name : null}
               currentDate={currentAoi ? currentAoi.session.datesList[currentPlatform].currentDate : null}
               currentPlatform={currentPlatform}
               initializeMap={this.state.initMap}

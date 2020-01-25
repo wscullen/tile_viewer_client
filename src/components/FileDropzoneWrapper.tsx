@@ -1,4 +1,4 @@
-import './../assets/css/DatePickerFormikWrapper.css'
+import './../assets/css/DatePickerFormikWrapper.scss'
 
 import React, { useState } from 'react'
 import 'react-dates/initialize'

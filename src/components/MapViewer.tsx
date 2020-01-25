@@ -1,14 +1,14 @@
-import './../assets/css/MapViewer.css'
+import './../assets/css/MapViewer.scss'
 
-import React, { Component } from 'react'
+import React, { Component, createRef } from 'react'
 
 import Map from 'ol/Map'
 import View from 'ol/View'
 import WKT from 'ol/format/WKT'
 import GeoJSON from 'ol/format/GeoJSON'
-import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
+import { Tile as TileLayer, Vector as VectorLayer, Layer } from 'ol/layer'
 import ImageLayer from 'ol/layer/Image'
-import { OSM, Vector as VectorSource } from 'ol/source'
+import { OSM, Vector as VectorSource, Vector } from 'ol/source'
 import { fromLonLat } from 'ol/proj'
 import Static from 'ol/source/ImageStatic'
 import { DragBox, Select, defaults as InteractionDefaults } from 'ol/interaction'
@@ -18,19 +18,51 @@ import { Fill, Stroke, Style, Text } from 'ol/style'
 
 import moment from 'moment'
 
-import imgNotFound from '../assets/img/notfound.png'
+import { Tile } from '../store/tile/types'
+
+import Feature from 'ol/Feature'
+
+//@ts-ignore may need to use require here instead
+import imgNotFound from '../assets/img/notfound_v2.png'
+import { FeatureCollection } from 'geojson'
+import { MapBrowserEvent } from 'ol'
+import { Pixel } from 'ol/pixel'
 
 const middleCanada = [-97.02, 55.72]
 const middleCanadaWebMercatorProj = fromLonLat(middleCanada)
 
-export default class MapViewer extends Component {
-  static defaultProps = {
-    tiles: [],
-    currentDate: null,
-    currentAOIName: null,
-  }
+interface AppProps {
+  tiles: Array<Tile>
+  tilesSelectedInList: string[]
+  tileSelected: Function
+  currentAoiWkt: string
+  wrsOverlay: FeatureCollection
+  activeAoi: string
+  currentDate: string
+  currentPlatform: string
+  initializeMap: Boolean
+}
 
-  constructor(props) {
+interface AppState {
+  currentInstance: any
+  featuresHovered: any
+  imageLayers: any
+  map: Map
+}
+
+interface ImgObject {
+  img: HTMLImageElement
+  tile: Tile
+}
+
+interface ImageLayerDict<Generic> {
+  [id: string]: Generic
+}
+
+export default class MapViewer extends Component<AppProps, AppState> {
+  mapViewer = createRef<HTMLDivElement>()
+
+  constructor(props: AppProps) {
     super(props)
 
     this.getMeta = this.getMeta.bind(this)
@@ -39,11 +71,12 @@ export default class MapViewer extends Component {
       currentInstance: this,
       featuresHovered: [],
       imageLayers: {},
+      map: undefined,
     }
   }
 
   componentDidMount() {
-    console.log('Inside Map Viewer Component Did Mount ==================================')
+    console.log('Inside Map Viewer Component Did Mount -----------')
     var style = new Style({
       fill: new Fill({
         color: 'rgba(255, 255, 255, 0.6)',
@@ -71,17 +104,21 @@ export default class MapViewer extends Component {
     var featureOverlay = new VectorLayer({
       source: new VectorSource(),
       style: this.getStyle(undefined, 'highlight'),
-      name: 'hoverLayer',
     })
 
     featureOverlay.setZIndex(99999)
+    featureOverlay.setProperties({
+      name: 'hoverLayer',
+    })
 
     const selectedInListOverlay = new VectorLayer({
       source: new VectorSource(),
-      name: 'selectedLayer',
     })
 
     selectedInListOverlay.setZIndex(88888)
+    selectedInListOverlay.setProperties({
+      name: 'selectedLayer',
+    })
 
     var map = new Map({
       layers: [raster, featureOverlay, selectedInListOverlay],
@@ -93,19 +130,22 @@ export default class MapViewer extends Component {
       interactions: InteractionDefaults({ doubleClickZoom: false }),
     })
 
-    map.on('pointermove', evt => {
+    map.on('pointermove', (evt: MapBrowserEvent) => {
       if (evt.dragging) {
         return
       }
       console.log('POINTER MOVE EVENT')
       console.log(evt)
-      var pixel = map.getEventPixel(evt.originalEvent)
+      let originalEvent: MouseEvent = evt.originalEvent as MouseEvent
 
-      this.displayFeatureInfo(pixel, evt.pointerEvent.ctrlKey, evt.pointerEvent.shiftKey)
+      let pixel = map.getEventPixel(originalEvent)
+
+      this.displayFeatureInfo(pixel, originalEvent.ctrlKey, originalEvent.shiftKey)
     })
 
     var dragBox = new DragBox({
       condition: platformModifierKeyOnly,
+      onBoxEnd: () => console.log('dragging finished'),
     })
 
     map.addInteraction(dragBox)
@@ -113,20 +153,23 @@ export default class MapViewer extends Component {
     dragBox.on('boxend', () => {
       // features that intersect the box are added to the collection of
       // selected features
-      const selectedFeatures = []
+      const selectedFeatures: string[] = []
       var extent = dragBox.getGeometry().getExtent()
-      let tileLayer = this.getLayer('tileLayer')
+      let tileLayer: Layer = this.getLayer('tileLayer') || undefined
+
       console.log('dragbox START')
       console.log(tileLayer)
+      if (tileLayer) {
+        let tileLayerVectorSource: Vector = tileLayer.getSource() as Vector
+        tileLayerVectorSource.forEachFeatureIntersectingExtent(extent, function(feature: Feature) {
+          selectedFeatures.push(feature.getId() as string)
+          console.log(feature)
+        })
 
-      tileLayer.getSource().forEachFeatureIntersectingExtent(extent, function(feature) {
-        selectedFeatures.push(feature.getId())
-        console.log(feature)
-      })
-
-      console.log('dragbox selected features')
-      this.props.tileSelected(selectedFeatures)
-      console.log(selectedFeatures)
+        console.log('dragbox selected features')
+        this.props.tileSelected(selectedFeatures)
+        console.log(selectedFeatures)
+      }
     })
 
     map.on('click', this.handleMapClick.bind(this))
@@ -138,7 +181,7 @@ export default class MapViewer extends Component {
         map: map,
       },
       () => {
-        if (this.props.activeAOI) {
+        if (this.props.activeAoi) {
           this.initMap()
           this.updateSelectedOverlay()
           this.updateAllStyle()
@@ -152,7 +195,7 @@ export default class MapViewer extends Component {
     console.log('map viewer unmounting')
   }
 
-  getLayer = layerName => {
+  getLayer = (layerName: string) => {
     let searchLayer
 
     this.state.map.getLayers().forEach(layer => {
@@ -167,27 +210,30 @@ export default class MapViewer extends Component {
   }
 
   clearOverlay = () => {
-    let hoverLayer
+    let hoverLayer: VectorLayer = undefined
 
     this.state.map.getLayers().forEach(layer => {
       const name = layer.get('name')
       if (name) {
         if (name.search('hoverLayer') !== -1) {
-          hoverLayer = layer
+          hoverLayer = layer as VectorLayer
         }
       }
     })
     console.log(hoverLayer)
-    hoverLayer.getSource().clear()
-    return hoverLayer
+
+    if (hoverLayer) {
+      hoverLayer.getSource().clear()
+      return hoverLayer
+    }
   }
 
-  displayFeatureInfo(pixel, ctrlKey, shiftKey) {
+  displayFeatureInfo(pixel: Pixel, ctrlKey: Boolean, shiftKey: Boolean) {
     const map = this.state.map
     console.log(ctrlKey)
     console.log(shiftKey)
     const featureOverlay = this.clearOverlay()
-    map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+    map.forEachFeatureAtPixel(pixel, (feature: Feature, layer) => {
       console.log(layer)
       if (layer.get('name') === 'tileLayer' || layer.get('name') === 'wrsOverlay') {
         layer.setZIndex(100)
@@ -204,7 +250,7 @@ export default class MapViewer extends Component {
     })
   }
 
-  async getMeta(tile) {
+  async getMeta(tile: Tile): Promise<ImgObject> {
     console.log('fetching meta for image')
     console.log(tile)
     return new Promise((resolve, reject) => {
@@ -217,13 +263,22 @@ export default class MapViewer extends Component {
         console.log('is img onload callback ever run??!')
         console.log(img)
         tile.properties.currentPreviewUrl = tile.properties.lowresPreviewUrl
-        resolve({ img, tile })
+        const imgObject: ImgObject = {
+          img,
+          tile,
+        }
+        resolve(imgObject)
       }
 
       img.onerror = () => {
         console.log('problem loading image')
         tile.properties.currentPreviewUrl = imgNotFound
-        resolve({ img, tile })
+        const imgObject: ImgObject = {
+          img,
+          tile,
+        }
+
+        resolve(imgObject)
       }
       console.log(tile.properties.lowresPreviewUrl)
       img.src = tile.properties.lowresPreviewUrl
@@ -231,57 +286,23 @@ export default class MapViewer extends Component {
   }
 
   // pass new features from props into the OpenLayers layer object
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps: AppProps, prevState: AppState) {
     // Programmatically set selected features NOT WORKING TODO: fix this
-    console.log(prevState)
-    console.log(this.state)
-
     console.log('inside component will update')
 
-    if (prevProps.currentlySelectedTiles !== this.props.currentlySelectedTiles) {
-      this.state.map.getLayers().forEach(ele => {
-        console.log(ele)
-        console.log(ele.get('name'))
-        console.log(this.props.currentlySelectedTiles)
-
-        if (
-          ele.get('name') &&
-          ele.get('name').startsWith('tileLayer') &&
-          this.props.currentlySelectedTiles.includes(ele.get('name').split('__')[1])
-        ) {
-          console.log(ele)
-          let source = ele.getSource()
-          console.log(source)
-
-          let features = source.getFeatures()
-          console.log(features)
-          layersToSelect.push(...features)
-          console.log('features to be seelcted added programmatically')
-        }
-      })
-
-      layersToSelect.map(ele => {
-        console.log(ele)
-        console.log('going over the features to select programmatically')
-      })
-    }
-
-    console.log('inside component will update')
-    console.log(prevProps.activeAOI)
-    console.log(this.props.activeAOI)
-    console.log(prevProps.activeAOI)
-    console.log(this.props.activeAOI)
+    console.log(prevProps.activeAoi)
+    console.log(this.props.activeAoi)
     console.log('updating AOI info')
 
-    if (this.props.activeAOI === null) {
+    if (this.props.activeAoi === null) {
       this.clearMap()
     }
 
-    if (this.props.activeAOI !== null && prevProps.activeAOI !== this.props.activeAOI) {
+    if (this.props.activeAoi !== null && prevProps.activeAoi !== this.props.activeAoi) {
       this.initMap()
     }
 
-    if (prevProps.tilesSelectedInList !== this.props.tilesSelectedInList) {
+    if (prevProps.tiles !== this.props.tiles) {
       this.updateSelectedOverlay()
     }
 
@@ -289,7 +310,7 @@ export default class MapViewer extends Component {
 
     if (
       prevProps.currentDate !== this.props.currentDate ||
-      prevProps.activeAOI !== this.props.activeAOI ||
+      prevProps.activeAoi !== this.props.activeAoi ||
       prevProps.currentPlatform !== this.props.currentPlatform
     ) {
       console.log('updating map....')
@@ -300,7 +321,7 @@ export default class MapViewer extends Component {
   clearMap = () => {
     const map = this.state.map
 
-    map.getLayers().forEach(ele => {
+    map.getLayers().forEach((ele: VectorLayer) => {
       console.log(ele)
       console.log(ele.get('name'))
       if (
@@ -324,7 +345,7 @@ export default class MapViewer extends Component {
       }),
     })
 
-    function getOverlayStyle(feature) {
+    function getOverlayStyle(feature: Feature) {
       const wrsOverlayStyle = new Style({
         stroke: new Stroke({
           color: 'rgba(100,100,220,0.2)',
@@ -348,18 +369,19 @@ export default class MapViewer extends Component {
       return wrsOverlayStyle
     }
     const map = this.state.map
-    let aoiFootprintLayer
-    let wrsOverlayLayer
+    let aoiFootprintLayer: VectorLayer
+    let wrsOverlayLayer: VectorLayer
+    let tileFootprintLayer: VectorLayer
 
     map.getLayers().forEach(ele => {
       console.log(ele)
       console.log(ele.get('name'))
       if (ele.get('name') === 'currentAoiFootprint') {
-        aoiFootprintLayer = ele
+        aoiFootprintLayer = ele as VectorLayer
       } else if (ele.get('name') === 'tileFootprint') {
-        tileFootprintLayer = ele
+        tileFootprintLayer = ele as VectorLayer
       } else if (ele.get('name') === 'wrsOverlay') {
-        wrsOverlayLayer = ele
+        wrsOverlayLayer = ele as VectorLayer
       }
     })
 
@@ -382,8 +404,11 @@ export default class MapViewer extends Component {
         source: new VectorSource({
           features: [feature],
         }),
-        name: 'currentAoiFootprint',
         style: aoi_style,
+      })
+
+      aoiFootprintLayer.setProperties({
+        name: 'currentAoiFootprint',
       })
 
       map.addLayer(aoiFootprintLayer)
@@ -422,8 +447,11 @@ export default class MapViewer extends Component {
           source: new VectorSource({
             features: featureList,
           }),
-          name: 'wrsOverlay',
           style: getOverlayStyle,
+        })
+
+        wrsOverlayLayer.setProperties({
+          name: 'wrsOverlay',
         })
 
         map.addLayer(wrsOverlayLayer)
@@ -440,34 +468,37 @@ export default class MapViewer extends Component {
 
   updateSelectedOverlay = () => {
     console.log('updating list selection overlay')
-    let selectedLayer = this.getLayer('selectedLayer')
+    let selectedLayer: VectorLayer = this.getLayer('selectedLayer') || undefined
+    console.log(selectedLayer)
 
-    console.log(selectedLayer.getSource())
-    selectedLayer.getSource().clear()
+    if (selectedLayer) {
+      console.log(selectedLayer.getSource())
+      selectedLayer.getSource().clear()
 
-    // Iterate over current tiles
-    // if current tile is in selectedTilesInList,
-    // create a new feature and add it to the layer
-    for (const tile of this.props.tiles) {
-      const tileDate = moment(tile.date).format('YYYYMMDD')
-      console.log('000-----------------------------------------------------------000')
-      console.log(tile)
-      if (this.props.tilesSelectedInList.includes(tile.id) && this.props.currentDate === tileDate) {
-        const format = new GeoJSON()
+      // Iterate over current tiles
+      // if current tile is in selectedTilesInList,
+      // create a new feature and add it to the layer
+      for (const tile of this.props.tiles) {
+        const tileDate = moment(tile.date).format('YYYYMMDD')
+        console.log('000--------------------------------000')
+        console.log(tile)
+        if (this.props.tilesSelectedInList.includes(tile.id) && this.props.currentDate === tileDate) {
+          const format = new GeoJSON()
 
-        const feature = format.readFeature(tile, {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857',
-        })
+          const feature = format.readFeature(tile, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+          })
 
-        feature.setStyle(this.getStyle(feature, 'selected-in-list'))
-        console.log('adding overlay feature to layer')
-        selectedLayer.getSource().addFeature(feature)
+          feature.setStyle(this.getStyle(feature, 'selected-in-list'))
+          console.log('adding overlay feature to layer')
+          selectedLayer.getSource().addFeature(feature)
+        }
       }
     }
   }
 
-  getStyle(feature, feature_type) {
+  getStyle(feature: Feature, feature_type: string) {
     let style
     console.log('getting STYLE')
 
@@ -594,7 +625,7 @@ export default class MapViewer extends Component {
 
     for (const tile in this.props.tiles) {
       const format = new GeoJSON()
-      const tile_copy = { ...this.props.tiles[tile] }
+      const tile_copy: Tile = { ...this.props.tiles[tile] }
 
       console.log('TILE:')
       console.log(tile_copy)
@@ -604,7 +635,7 @@ export default class MapViewer extends Component {
         featureProjection: 'EPSG:3857',
       })
 
-      tile_copy['vector_feature'] = feature
+      tile_copy['vectorFeature'] = feature
 
       promiseArray.push(
         this.getMeta(tile_copy).catch(err => {
@@ -615,7 +646,7 @@ export default class MapViewer extends Component {
     }
 
     Promise.all(promiseArray)
-      .then(values => {
+      .then((values: ImgObject[]) => {
         const tiles = []
 
         for (const val of values) {
@@ -624,7 +655,7 @@ export default class MapViewer extends Component {
           const tile = val.tile
           console.log(tile)
 
-          const feature = tile['vector_feature']
+          const feature = tile['vectorFeature']
           console.log(img)
 
           console.log(tile)
@@ -634,10 +665,8 @@ export default class MapViewer extends Component {
           console.log(img.width, img.height)
 
           if (tile.properties.currentPreviewUrl === imgNotFound) {
-            img = {
-              width: 221,
-              height: 210,
-            }
+            img.width = 221
+            img.height = 210
             opacity = 0.55
           }
 
@@ -651,22 +680,22 @@ export default class MapViewer extends Component {
               url: tile.properties.currentPreviewUrl,
               crossOrigin: '',
               imageSize: [img.width, img.height],
-              projection: 'EPSG:' + tile.properties.proj,
+              projection: 'EPSG:' + tile.properties.projection,
               imageExtent: imageExtent,
             }),
             opacity,
-            name: 'lowres__' + tile.properties.name,
-            id: tile.id,
           })
+
+          s2image_layer.set('name', 'lowresPreview__' + tile.properties.name)
           console.log('trying to add the image layer')
-          tile['raster'] = s2image_layer
+          tile['rasterFeature'] = s2image_layer
 
           tiles.push(tile)
         }
 
         console.log('need to remove existing image layers')
-        const layersToRemove = []
-        let tileLayer
+        const layersToRemove: Array<ImageLayer | VectorLayer> = []
+        let tileLayer: VectorLayer
 
         map.getLayers().forEach(layer => {
           console.log(layer)
@@ -674,10 +703,10 @@ export default class MapViewer extends Component {
           if (name) {
             if (name.search('lowres') !== -1) {
               console.log('have existing image to remove')
-              layersToRemove.push(layer)
+              layersToRemove.push(layer as ImageLayer)
             }
             if (name.search('tileLayer') !== -1) {
-              tileLayer = layer
+              tileLayer = layer as VectorLayer
             }
           }
         })
@@ -689,7 +718,7 @@ export default class MapViewer extends Component {
         console.log(tileLayer)
         // TODO: In the future, try to update the existing layer source, instead of removing it
         if (tileLayer) {
-          const features = tiles.map(t => t.vector_feature)
+          const features = tiles.map(t => t.vectorFeature)
           console.log(features)
           console.log('tile layer exists, clearing and adding features')
           tileLayer.getSource().clear()
@@ -701,6 +730,9 @@ export default class MapViewer extends Component {
             source: new VectorSource({
               features: [],
             }),
+          })
+
+          tileLayer.setProperties({
             name: 'tileLayer',
           })
 
@@ -709,16 +741,16 @@ export default class MapViewer extends Component {
         }
         console.log('tiles: ')
         console.log(tiles)
-        const imageLayers = {}
+        const imageLayers: ImageLayerDict<ImageLayer> = {}
         for (const t of tiles) {
           console.log('adding raster to map')
           console.log(t)
           if (!t.visible) {
-            t.raster.setOpacity(0)
+            t.rasterFeature.setOpacity(0)
           }
-          map.addLayer(t.raster)
-          imageLayers[t.id] = t.raster
-          const vectorFeature = t['vector_feature']
+          map.addLayer(t.rasterFeature)
+          imageLayers[t.id] = t.rasterFeature
+          const vectorFeature = t['vectorFeature']
           vectorFeature.setStyle(this.getStyle(vectorFeature, 'tile'))
           tileLayer.getSource().addFeature(vectorFeature)
         }
@@ -730,10 +762,10 @@ export default class MapViewer extends Component {
       })
   }
 
-  updateStyle(features) {
+  updateStyle(features: string[]) {
     console.log('UPDATE STYLE')
     console.log(features)
-    let tileLayer = this.getLayer('tileLayer')
+    let tileLayer: VectorLayer = this.getLayer('tileLayer')
 
     tileLayer.getSource().forEachFeature(feature => {
       for (const feat of features) {
@@ -748,13 +780,13 @@ export default class MapViewer extends Component {
   }
 
   getImageLayers = () => {
-    let imageLayers = {}
+    let imageLayers: ImageLayerDict<ImageLayer> = {}
 
     this.state.map.getLayers().forEach(layer => {
       const name = layer.get('name')
       if (name) {
         if (name.search('lowres__') !== -1) {
-          imageLayers[layer.get('id')] = layer
+          imageLayers[layer.get('id')] = layer as ImageLayer
         }
       }
     })
@@ -764,7 +796,8 @@ export default class MapViewer extends Component {
   updateAllStyle() {
     console.log('update all styles')
     console.log(this.props.tiles)
-    let tileLayer = this.getLayer('tileLayer')
+    let tileLayer: VectorLayer = this.getLayer('tileLayer')
+    console.log(tileLayer)
 
     let imageLayers = this.getImageLayers()
 
@@ -804,16 +837,18 @@ export default class MapViewer extends Component {
     })
   }
 
-  handleMapClick(event) {
+  handleMapClick(event: MapBrowserEvent) {
     console.log(event)
-    console.log('Mapped was clicked')
+    console.log('Map was clicked')
     const pixel = this.state.map.getEventPixel(event.originalEvent)
-    let selectedFeatures = []
+    let selectedFeatures: string[] = []
 
     this.state.map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-      console.log(layer)
+      console.log(layer.get('name'))
       if (layer.get('name') === 'tileLayer') {
-        selectedFeatures.push(feature.getId())
+        console.log('tileLayer clicked')
+        console.log(feature.getId())
+        selectedFeatures.push(feature.getId() as string)
       }
     })
     this.props.tileSelected(selectedFeatures)
@@ -821,7 +856,7 @@ export default class MapViewer extends Component {
 
   render() {
     return (
-      <div id="mapViewer" className="mapViewer" ref={mapViewer => (this.mapViewer = mapViewer)}>
+      <div id="mapViewer" className="mapViewer" ref={this.mapViewer}>
         <div id="map" className="map" ref="map" onMouseLeave={this.clearOverlay} />
       </div>
     )

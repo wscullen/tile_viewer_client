@@ -163,6 +163,7 @@
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.88.1",
     "semantic-ui-react-input-file": "^1.0.3",
+    "typescript": "^3.7.5",
     "yarn": "^1.15.2",
     "yup": "^0.27.0"
   },
@@ -215,7 +216,6 @@
     "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^8.0.1",
     "tslint-react": "^4.0.0",
-    "typescript": "^3.5.3",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.0",
     "webpack-dev-server": "^3.3.1"
