@@ -12,6 +12,7 @@ import {
 const initialState: MainSessionState = {
   currentAoi: '',
   activeTab: 0,
+  activeJobTab: 0,
   settings: {
     jobManagerUrl: 'http://hal678772.agr.gc.ca:9090',
     s2d2Url: 'http://hal678772.agr.gc.ca:8000',

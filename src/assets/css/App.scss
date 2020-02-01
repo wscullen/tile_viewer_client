@@ -49,9 +49,7 @@ $active-selection: rgba(14, 111, 185, 0.25);
 //   background: '#ffffff -webkit-gradient(linear, left top, left bottom, from(transparent), to(rgba(0, 0, 0, 0.05)))';
 //   background: '#ffffff -webkit-linear-gradient(transparent, rgba(0, 0, 0, 0.05))';
 //   background: '#ffffff linear-gradient(transparent, rgba(0, 0, 0, 0.05))';
-//   border-radius: '100%';
-//   -webkit-box-shadow: '0 1px 2px 0 rgba(34, 36, 38, 0.15), 0 0 0 1px rgba(34, 36, 38, 0.15) inset';
-//   box-shadow: '0 1px 2px 0 rgba(34, 36, 38, 0.15), 0 0 0 1px rgba(34, 36, 38, 0.15) inset';
+//   border-radius: '100%'; 0 0 0 1px rgba(34, 36, 38, 0.15) inset';
 //   margin: '0px';
 //   z-index: 2;
 //   transform: 'translate(-50%, 0%)';
@@ -240,4 +238,8 @@ button.glyphicon-button.active.focus {
 button:focus,
 button:active:focus {
   outline: none !important;
+}
+
+h2 {
+  margin-bottom: 0px;
 }

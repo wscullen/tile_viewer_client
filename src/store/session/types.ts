@@ -4,6 +4,11 @@ export enum NavigationTabs {
   Details,
 }
 
+export enum JobNavigationTabs {
+  All,
+  Sen2Agri,
+}
+
 export interface AuthSettings {
   userEmail: string
   userPassword: string
@@ -51,6 +56,7 @@ export interface FormsUiState {
 export interface MainSessionState {
   currentAoi: string
   activeTab: NavigationTabs
+  activeJobTab: JobNavigationTabs
   csrfTokens: CSRFTokens
   settings: SessionSettings
   forms: FormsUiState

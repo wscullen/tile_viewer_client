@@ -7,6 +7,8 @@ import React, { Component, ReactElement } from 'react'
 import { connect } from 'react-redux'
 import moment from 'moment'
 
+import { Header } from 'semantic-ui-react'
+
 import { AppState } from '../store/'
 
 import { TileState, Tile, TileListByDate } from '../store/tile/types'
@@ -262,9 +264,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     localStorage.removeItem('initial_load')
   }
 
-  saveToLocalStorage = () => {
-    console.log('------------------------->>>>>>>>>>>>>>>>>>>>>>>>>> SAVING TO LOCAL STORAGE')
-  }
+  saveToLocalStorage = () => {}
 
   loadFromLocalStorage = () => {}
 
@@ -289,6 +289,21 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           this.activateAOI(this.props.aois.byId[session.currentAoi].name)
         }
       }, 1000)
+    }
+  }
+
+  public handleJobTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
+    const target = event.currentTarget as HTMLUListElement
+    console.log(target.id)
+    console.log(target)
+    console.log(event.currentTarget)
+    console.log('======================+')
+    console.log('trying to update active Job tab')
+    const session = { ...this.props.session }
+    const prevTab = session.activeJobTab
+    if (prevTab !== parseInt(target.id)) {
+      session.activeJobTab = parseInt(target.id)
+      this.props.updateMainSession(session)
     }
   }
 
@@ -1379,6 +1394,17 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     this.props.thunkAddJob(job)
   }
 
+  switchToSen2AgriPanel = () => {
+    // set active tab to Jobs
+    // and Jobs tab to Sen2Agri
+    const session = { ...this.props.session }
+    if (session.activeTab !== 1) {
+      session.activeTab = 1
+      session.activeJobTab = 1
+      this.props.updateMainSession(session)
+    }
+  }
+
   sortTilesByDate = (tiles: any) => {
     if (tiles) {
       const formatted_tiles = []
@@ -1486,6 +1512,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           <TileList
             settings={currentAoi ? currentAoi.session.settings : { atmosphericCorrection: false }}
             currentAoi={this.props.session.currentAoi}
+            switchToSen2AgriPanel={this.switchToSen2AgriPanel}
             updateSettings={this.updateJobSettings}
             selectedTiles={selectedTiles}
             selectedTilesInList={highlightedTiles}
@@ -1513,14 +1540,14 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     } else if (this.props.session.activeTab === 1) {
       return (
         <div className="jobViewer">
-          <h2>Jobs</h2>
-          <JobViewer />
+          <Header size="large">Jobs</Header>
+          <JobViewer activeTab={this.props.session.activeJobTab} handleTabChange={this.handleJobTabChange} />
         </div>
       )
     } else if (this.props.session.activeTab === 2) {
       return (
         <div>
-          <h2>Details</h2>
+          <Header size="large">Details</Header>
           <AreaOfInterestDetailView />
         </div>
       )

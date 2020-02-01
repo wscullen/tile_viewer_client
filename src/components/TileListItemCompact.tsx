@@ -138,7 +138,7 @@ export default function TileListItemCompact(props: AppProps) {
             basic
             compact
             size="mini"
-            icon="times circle outline"
+            icon="times circle"
             color="red"
             onClick={event => {
               console.log('trying to remove tile, inside tile list')

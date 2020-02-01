@@ -17,6 +17,10 @@
   padding-bottom: 4px;
 }
 
+.tileList .optionsPopup {
+  left: 4px;
+}
+
 .listOfTiles {
   list-style: none;
   padding-left: 0px;
@@ -100,7 +104,7 @@ button {
   font-weight: 600;
   font-size: 15px;
   padding: 5px 10px;
-  margin-left: 3px;
+  margin-right: 3px;
   text-decoration: none;
   outline: none;
 }
@@ -164,7 +168,7 @@ button {
   padding: 5px 10px;
   text-decoration: none;
   outline: none;
-  margin-left: 3px;
+  margin-right: 3px;
   min-height: 31px;
 }
 
@@ -238,4 +242,18 @@ h5.sectionLabel.title.is-5 {
 
 .tileList .ui.segment.pushable {
   margin-top: 0px;
+}
+
+.ui.button {
+  margin-left: 3px;
+  margin-right: 0px;
+}
+
+body > div.ui.bottom.right.flowing.popup.transition.visible.optionsPopup {
+  left: 3px;
+}
+
+.tileList .ui.header.small {
+  padding: 3px;
+  margin-bottom: 0px;
 }

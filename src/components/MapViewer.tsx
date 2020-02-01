@@ -687,6 +687,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
           })
 
           s2image_layer.set('name', 'lowresPreview__' + tile.properties.name)
+          s2image_layer.set('id', tile.id)
           console.log('trying to add the image layer')
           tile['rasterFeature'] = s2image_layer
 
@@ -784,12 +785,15 @@ export default class MapViewer extends Component<AppProps, AppState> {
 
     this.state.map.getLayers().forEach(layer => {
       const name = layer.get('name')
+      console.log(name)
       if (name) {
-        if (name.search('lowres__') !== -1) {
+        if (name.search('lowresPreview__') !== -1) {
           imageLayers[layer.get('id')] = layer as ImageLayer
         }
       }
     })
+
+    console.log(imageLayers)
     return imageLayers
   }
 
@@ -799,6 +803,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
     let tileLayer: VectorLayer = this.getLayer('tileLayer')
     console.log(tileLayer)
 
+    console.log('fetching image layers')
     let imageLayers = this.getImageLayers()
 
     this.props.tiles.forEach(tile => {

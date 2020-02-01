@@ -51,7 +51,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
       <div className="areaOfInterestList">
         <div className="header">
           <div className="topRow">
-            <h5 className="sectionLabel title is-5">Areas of Interest</h5>
+            <Header size="small">Areas of Interest</Header>
             <Button
               className="addAoiButton"
               onClick={e => {
@@ -113,10 +113,6 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
               aoiClassName += ' activeAOI'
             }
 
-            // if (idx % 2 === 0) {
-            //   aoiClassName += ' altBackground'
-            // }
-
             return (
               <li id={'listItem' + idx} key={ele.name}>
                 <div className={aoiClassName} onClick={() => this.props.activateAoi(ele.name)}>
@@ -130,7 +126,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
 
                             event.stopPropagation()
                           }}
-                          icon="times circle outline"
+                          icon="times circle"
                           compact
                           size="mini"
                           color="red"

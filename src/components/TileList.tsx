@@ -43,6 +43,7 @@ interface AppProps {
   removeTile: Function
   toggleTileVisibility: Function
   resubmitLastJob: Function
+  switchToSen2AgriPanel: Function
 }
 
 interface DefaultAppState {
@@ -217,8 +218,11 @@ class TileList extends Component<AppProps, DefaultAppState> {
     return (
       <div className="tileList">
         <div className="header">
-          <h5 className="sectionLabel title is-5">Tiles {currentPlatform !== '' ? '- ' + currentPlatform : ''}</h5>
+          <Header size="small">Tiles {currentPlatform !== '' ? '- ' + currentPlatform : ''}</Header>
           <div className="buttonSection">
+            <Button compact onClick={() => this.props.switchToSen2AgriPanel()}>
+              Sen2Agri
+            </Button>
             <Popup
               trigger={
                 <Button
@@ -235,9 +239,11 @@ class TileList extends Component<AppProps, DefaultAppState> {
               onClose={e => this.handleTileSettingsClose(e)}
               open={!this.state.optionsHide}
               position="bottom right"
+              positionFixed={false}
+              offset={'4px'}
               className="optionsPopup"
             >
-              <Grid divided columns={2}>
+              <Grid divided columns={1}>
                 <Grid.Column>
                   <Header as="h4">Tile Processing Options</Header>
                   <ul>
@@ -262,7 +268,7 @@ class TileList extends Component<AppProps, DefaultAppState> {
                     </li>
                   </ul>
                 </Grid.Column>
-                <Grid.Column>
+                {/* <Grid.Column>
                   <Header as="h4">Sen2Agri</Header>
                   <ul>
                     <li>
@@ -287,7 +293,7 @@ class TileList extends Component<AppProps, DefaultAppState> {
                       </div>
                     </li>
                   </ul>
-                </Grid.Column>
+                </Grid.Column> */}
               </Grid>
             </Popup>
 
