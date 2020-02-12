@@ -5,7 +5,7 @@ import { updateTile } from '../tile/actions'
 import { updateJob, removeJob } from './actions'
 import { Job, JobStatus } from './types'
 import { AppState } from '../index'
-import { Tile } from '../tile/types'
+import { Tile, TileListByDate } from '../tile/types'
 
 import { AreaOfInterest } from '../aoi/types'
 import { updateAoi } from '../aoi/actions'
@@ -15,9 +15,6 @@ import { refreshToken } from '../session/thunks'
 
 //@ts-ignore
 import base64 from 'base-64'
-
-const JOBMANAGER_USERNAME = 'testuser'
-const JOBMANAGER_PASSWORD = 'JumpMan85%'
 
 const checkJobStatus = (
   jobId: string,
@@ -31,7 +28,7 @@ const checkJobStatus = (
   // @ts-ignore
   headers.append('X-CSRFToken', csrfToken)
   headers.append('Content-Type', 'application/json')
-  headers.append('Authorization', `Basic ${base64.encode(`${JOBMANAGER_USERNAME}:${JOBMANAGER_PASSWORD}`)}`)
+  // headers.append('Authorization', `Basic ${base64.encode(`${JOBMANAGER_USERNAME}:${JOBMANAGER_PASSWORD}`)}`)
 
   // @ts-ignore
 
@@ -135,41 +132,117 @@ const checkJobStatus = (
   }
 }
 
-export const thunkResumeCheckingJobsForAoi = (
-  aoiId: string,
-): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
-  console.log('thunk started in func')
+const getJobs = async (
+  jobIdList: string[],
+  jobManagerUrl: string,
+  csrfToken: string,
+  accessToken: string,
+): Promise<any> => {
+  const headers = new Headers()
+  headers.append('X-CSRFToken', csrfToken)
+  headers.append('Content-Type', 'application/json')
+  headers.append('Authorization', `Bearer ${accessToken}`)
+
+  const data = {
+    job_id_list: jobIdList,
+  }
+
+  const searchParams = new URLSearchParams({
+    job_ids: jobIdList.join(),
+  })
+
+  return fetch(`${jobManagerUrl}/jobs/?${searchParams}`, {
+    method: 'GET',
+    headers,
+  })
+    .then(response => {
+      if (response.status === 200) {
+        return response.json()
+      } else if (response.status === 404) {
+        console.log('problem fetching jobs status, removing job')
+
+        throw new Error('no jobs found on job manager!')
+      }
+    })
+    .then(response => {
+      console.log('Success:', JSON.stringify(response))
+      // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
+      // Todo update each tile with job info (id, status, success, workerid)
+
+      console.log(response)
+
+      return response
+    })
+    .catch(err => {
+      console.log(err)
+      console.log('something went wrong when trying to check the job')
+    })
+}
+
+export const thunkCheckJobsForAoi = (aoiId: string): ThunkAction<void, AppState, null, Action<string>> => async (
+  dispatch: any,
+  getState: any,
+) => {
+  console.log('Lets get thunky!!!')
 
   const state = getState()
   if (state.job.byAoiId.hasOwnProperty(aoiId)) {
     const jobsForAoi = [...state.job.byAoiId[aoiId]]
 
     const jobManagerUrl: string = state.session.settings.jobManagerUrl
-    const atmosCorrection: boolean = state.aoi.byId[aoiId].session.atmosCorrection
-
     const csrfToken: string = state.session.csrfTokens.jobManager.key
-    console.log('resuming job status checking ================================')
+    const accessToken: string = state.session.settings.auth.accessToken
+    const jobIdList = []
+
     for (const jobId of jobsForAoi) {
-      if (jobId) {
-        const job = { ...state.job.byId[jobId] }
-        console.log(`job id ${jobId}`)
-        console.log('----------------------------------------')
-        console.log(job.status)
-        console.log(JobStatus.Completed)
-        if (job && job.status !== JobStatus.Completed) {
-          clearInterval(job.setIntervalId)
+      const job = { ...state.job.byId[jobId] }
+      console.log(`job id ${jobId}`)
+      console.log(job.status)
+      console.log(JobStatus.Completed)
+      if (job && job.status !== JobStatus.Completed) {
+        jobIdList.push(job.id)
+      }
+    }
+    if (jobIdList.length > 0) {
+      const jobs = await getJobs(jobIdList, jobManagerUrl, csrfToken, accessToken)
+      for (const job of jobs) {
+        const jobToUpdate = { ...state.job.byId[job.id] }
 
-          const intervalId = setInterval(
-            () => checkJobStatus(job.id, jobManagerUrl, csrfToken, getState, dispatch),
-            1000 * 15,
-          )
+        interface Status {
+          [index: string]: number
+          S: number
+          A: number
+          C: number
+        }
 
-          console.log(`Inverval Id: ${intervalId}`)
-          job.setIntervalId = intervalId
-          console.log('updating job clear interval id')
-          dispatch(updateJob(job))
+        const statusObject: Status = {
+          S: 0,
+          A: 1,
+          C: 2,
+        }
+
+        // convert the response letter into a number that our Enum can work with
+        job.status = statusObject[job.status]
+
+        if (job.status === JobStatus.Assigned && jobToUpdate.status === JobStatus.Submitted) {
+          jobToUpdate.assignedDate = job.assigned
+          jobToUpdate.status = job.status
+          dispatch(updateJob(jobToUpdate))
+        }
+
+        if (job.status === JobStatus.Completed) {
+          jobToUpdate.assignedDate = job.assigned
+          jobToUpdate.completedDate = job.completed
+          jobToUpdate.status = job.status
+          jobToUpdate.success = job.success
+          jobToUpdate.resultMessage = job.result_message
+
+          console.log('status is completed')
+          dispatch(updateJob(jobToUpdate))
         }
       }
+    } else {
+      console.log('No jobs to check for Aoi.')
     }
   }
 }
@@ -179,7 +252,6 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
   getState: any,
 ) => {
   console.log('thunk started in func')
-
   const state = getState()
 
   const jobManagerUrl: string = state.session.settings.jobManagerUrl
@@ -189,38 +261,49 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
 
   const csrfToken: string = state.session.csrfTokens.jobManager.key
 
-  let tile: Tile
-
-  if (newJob.type === 'tile') {
-    tile = { ...state.tile.byId[newJob.tileId] }
-  }
-
   await refreshToken(state.session, dispatch)
 
-  const accessToken: string = state.session.settings.auth.accessToken
+  // const activeAoiName = state.aoi.byId[newJob.aoiId]
 
-  const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken, accessToken)
-  console.log(jobResult)
-  if (jobResult) {
-    console.log('thunk finished in func job submitted successfully')
+  if (newJob.type === 'tile') {
+    let tile: Tile
+    tile = { ...state.tile.byId[newJob.tileId] }
+    const accessToken: string = state.session.settings.auth.accessToken
+    const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken, accessToken)
 
-    const aoi = { ...state.aoi.byId[state.session.currentAoi] }
+    if (jobResult) {
+      console.log('thunk finished in func job submitted successfully')
+      const aoi = { ...state.aoi.byId[state.session.currentAoi] }
 
-    aoi.jobs.push(jobResult.id)
+      aoi.jobs.push(jobResult.id)
+      tile.jobs.push(jobResult.id)
 
-    console.log(jobResult)
-
-    tile.jobs.push(jobResult.id)
-
-    //@ts-ignore
-    newJob.setIntervalId = setInterval(
-      () => checkJobStatus(newJob.id, jobManagerUrl, csrfToken, getState, dispatch),
-      1000 * 15,
+      dispatch(addJob(newJob))
+      dispatch(updateTile(tile))
+      dispatch(updateAoi(aoi))
+    }
+  } else if (newJob.type === 'Sen2Agri_L2A') {
+    console.log(newJob)
+    const accessToken: string = state.session.settings.auth.accessToken
+    // newJob.params['aoiName'] = activeAoiName
+    const jobResult = await submitSen2AgriJobToApi(
+      jobManagerUrl,
+      newJob,
+      newJob.tileDict,
+      newJob.params,
+      csrfToken,
+      accessToken,
     )
+    if (jobResult.errorResult) {
+      console.log('something went terribly wrong while submitting job')
+    } else if (jobResult) {
+      console.log('thunk finished in func')
+      const aoi = { ...state.aoi.byId[state.session.currentAoi] }
+      aoi.jobs.push(jobResult.id)
 
-    dispatch(addJob(newJob))
-    dispatch(updateTile(tile))
-    dispatch(updateAoi(aoi))
+      dispatch(addJob(newJob))
+      dispatch(updateAoi(aoi))
+    }
   }
 }
 
@@ -313,5 +396,88 @@ const submitJobToApi = async (
     .catch(err => {
       console.log(err)
       console.log('something went wrong when trying to submit the job')
+    })
+}
+
+const submitSen2AgriJobToApi = (
+  jobManagerUrl: string,
+  job: Job,
+  tileDict: TileListByDate,
+  parameters: any,
+  csrfToken: string,
+  accessToken: string,
+): Promise<Job> => {
+  console.log(jobManagerUrl)
+  console.log(job)
+  console.log(tileDict)
+
+  let jobType: string
+  let options: any
+
+  switch (job.type) {
+    case 'Sen2Agri_L2A':
+      jobType = 'Sen2Agri_L2A'
+      options = {
+        aoi_name: parameters.l2a.activeAoiName,
+        window_size: parameters.l2a.prevNDays,
+        imagery_list: parameters.l2a.imageryList,
+      }
+      break
+  }
+
+  console.log(options)
+
+  const jobReqBody = {
+    label: `${jobType} ${parameters.l2a.activeAoiName}`,
+    command: 'not used',
+    job_type: jobType,
+    parameters: {
+      options,
+    },
+    priority: '3',
+  }
+
+  const headers = new Headers()
+  headers.append('X-CSRFToken', csrfToken)
+  headers.append('Content-Type', 'application/json')
+  headers.append('Authorization', `Bearer ${accessToken}`)
+
+  return fetch(`${jobManagerUrl}/jobs/`, {
+    method: 'POST',
+    body: JSON.stringify(jobReqBody),
+    headers,
+  })
+    .then(response => {
+      console.log(response)
+      if (response.status === 201) {
+        return response.json()
+      } else {
+        return undefined
+      }
+    })
+    .then(
+      (response): Job => {
+        console.log(response)
+        console.log('Success:', JSON.stringify(response))
+
+        // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
+        // Todo update each tile with job info (id, status, success, workerid)
+
+        job.id = response.id
+
+        job.status = JobStatus.Submitted
+
+        job.submittedDate = response.submitted
+
+        job.checkedCount = 0
+
+        return job
+      },
+    )
+    .catch(err => {
+      console.log(err)
+      console.log('something went wrong when trying to submit the job')
+      job.errorResult = err
+      return job
     })
 }

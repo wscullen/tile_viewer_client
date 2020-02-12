@@ -175,13 +175,6 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
           else return true
         })
         .required('Required.'),
-
-      // password: Yup.string()
-      //   .min(3, 'Password must be 3 characters at minimum')
-      //   .required('Required.'),
-      // url: Yup.string()
-      //   .url('Invalid URL')
-      //   .required('Required.'),
     })
   }
 
@@ -322,10 +315,6 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
     event.preventDefault()
     // process form submission here
     console.log(event)
-    // method="post" enctype="multipart/form-data"
-    // `Selected file - ${
-    //   this.fileInput.current.files[0].name
-    // }`
 
     const nameValid = this.validateName(this.state.name)
 
@@ -435,8 +424,8 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
               this.handleReset = resetForm
 
               return (
-                <FormikForm>
-                  <Form loading={this.props.session.forms.addAoi.submitting}>
+                <div>
+                  <Form loading={this.props.session.forms.addAoi.submitting} onSubmit={handleSubmit}>
                     <FormikField name="siteName">
                       {({ field, form, meta }: { field: any; form: any; meta: any }) => (
                         <Form.Input
@@ -504,7 +493,7 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
                   >
                     <p>{this.props.session.forms.addAoi.msg}</p>
                   </Message>
-                </FormikForm>
+                </div>
               )
             }}
           </Formik>

@@ -1,11 +1,14 @@
 import {
   AreaOfInterest,
+  TileList,
+  DateObject,
   AreaOfInterestState,
   ADD_AOI,
   REMOVE_AOI,
   UPDATE_AOI,
   UPDATE_SESSION,
   AoiActionTypes,
+  DateList,
 } from './types'
 
 import { TileListByDate, Tile } from '../tile/types'
@@ -63,6 +66,32 @@ export function getAoiNames(state = initialState): string[] {
 
 // interface TileStatus
 
+export function getAllSelectedTiles(state: AppState): string[] {
+  let currentAoi: AreaOfInterest
+  console.log(state.session)
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const selectedTiles: string[] = []
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+    if (currentAoi.allTiles[currentPlatform]) {
+      for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+        const tileArray: Tile[] = []
+        value.map((id: string): void => {
+          if (state.tile.byId[id].selected) {
+            selectedTiles.push(id)
+          }
+        })
+      }
+    }
+  }
+  return selectedTiles
+}
+
 export function getSelectedTiles(state: AppState): TileListByDate {
   let currentAoi: AreaOfInterest
   console.log(state.session)
@@ -88,6 +117,38 @@ export function getSelectedTiles(state: AppState): TileListByDate {
     }
   }
   return selectedTiles
+}
+
+export function getImageryListForSen2Agri(state: AppState): TileList {
+  let currentAoi: AreaOfInterest
+  console.log(state.session)
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const imageryList: any = {}
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    const currentPlatform = session.currentPlatform
+    for (const [platform, value] of Object.entries(currentAoi.allTiles)) {
+      console.log(platform)
+      if (currentAoi.allTiles[currentPlatform]) {
+        const selectedTiles: DateObject = {}
+        for (const [d, value] of Object.entries(currentAoi.allTiles[platform])) {
+          const tileArray: string[] = []
+          value.map((id: string): void => {
+            if (state.tile.byId[id].selected) {
+              tileArray.push(state.tile.byId[id].properties.name)
+            }
+          })
+          selectedTiles[d] = tileArray
+        }
+        imageryList[platform] = selectedTiles
+      }
+    }
+  }
+  return imageryList
 }
 
 export function getHighlightedTiles(state: AppState): string[] {

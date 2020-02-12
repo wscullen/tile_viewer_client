@@ -73,7 +73,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                   this.props.handleTabChange(e)
                 }}
                 compact
-                primary
+                basic
               >
                 <Icon disabled name="map" />
                 Map
@@ -85,7 +85,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                   this.props.handleTabChange(e)
                 }}
                 compact
-                primary
+                basic
               >
                 <Icon disabled name="tasks" />
                 Jobs
@@ -97,7 +97,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                   this.props.handleTabChange(e)
                 }}
                 compact
-                primary
+                basic
               >
                 <Icon disabled name="info circle" />
                 Details

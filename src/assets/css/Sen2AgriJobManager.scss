@@ -26,3 +26,40 @@ tbody {
   padding: 15px 10px;
   margin-bottom: 0px;
 }
+
+.sen2agriJobManager .ui.header {
+  margin: 0px 0px;
+}
+
+.sen2agriJobManager .flexContainerHorizontal {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+  justify-content: space-between;
+}
+
+.sen2agriJobManager .flexContainerHorizontalLeftGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-bottom: 5px;
+}
+
+.ui.ui.ui.basic.green.label {
+  vertical-align: bottom;
+  margin-bottom: 3px;
+}
+
+.sen2agriTabs {
+  margin: 0px 4px;
+}
+
+.sen2agriJobManager .sliderField {
+  display: flex;
+  flex-direction: row;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+}

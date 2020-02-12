@@ -8,6 +8,8 @@ import { Slider, Rail, Handles, Tracks, Ticks, SliderItem, GetHandleProps, GetTr
 
 import { Button, Icon, Label } from 'semantic-ui-react'
 
+import CustomSlider from './Slider'
+
 const sliderStyle = {
   position: 'relative' as 'relative',
   top: '10px',

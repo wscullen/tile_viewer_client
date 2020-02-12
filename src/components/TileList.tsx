@@ -22,21 +22,12 @@ interface AppProps {
   currentSession: Session
   currentAoi: string
   updateSettings: Function
-  sen2agriL2AJob: JobObject
-  sen2agriL3AJob: JobObject
-  sen2agriL3BJob: JobObject
   selectedTilesInList: string[]
   settings: AoiSettings
   currentPlatform: string
   submitAllJobs: Function
   saveTileJson: Function
   copyCurrentTilesToClipboard: Function
-  submitSen2agriL2A: Function
-  submitSen2agriL3A: Function
-  submitSen2agriL3B: Function
-  enableSen2agriL2A: boolean
-  enableSen2agriL3A: boolean
-  enableSen2agriL3B: boolean
   selectedTiles: SingleDateTileList
   dateClicked: Function
   tileClicked: Function

@@ -33,7 +33,7 @@ import { SingleDateTileList } from '../store/aoi/types'
 import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
 
-import { thunkAddJob, thunkResumeCheckingJobsForAoi } from '../store/job/thunks'
+import { thunkAddJob, thunkCheckJobsForAoi } from '../store/job/thunks'
 import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { thunkSendMessage } from '../thunks'
@@ -87,11 +87,11 @@ interface AppProps {
   tiles: TileState
   thunkAddJob: any
   thunkUpdateCsrfTokens: any
-  thunkResumeCheckingJobsForAoi: any
   history: History
   aoiNames: string[]
   selectedTiles: TileListByDate
   highlightedTiles: string[]
+  thunkCheckJobsForAoi: Function
 }
 
 interface SelectorFunctions {
@@ -205,11 +205,10 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     // Required for events outside the react lifecycle like refresh and quit
     window.addEventListener('beforeunload', this.cleanUpBeforeClose)
     window.addEventListener('keydown', this.handleKeyPress)
-
+    console.log('=================> Inside component did mount')
     if (this.props.session.currentAoi) {
-      this.activateAOI(this.props.aois.byId[this.props.session.currentAoi].name)
-      console.log('Resuming job status checks')
-      this.props.thunkResumeCheckingJobsForAoi(this.props.session.currentAoi)
+      console.log('activating AOI...')
+      this.activateAoi(this.props.aois.byId[this.props.session.currentAoi].name)
     }
   }
 
@@ -286,7 +285,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
         let initMap
         if (session.currentAoi !== '') {
-          this.activateAOI(this.props.aois.byId[session.currentAoi].name)
+          this.activateAoi(this.props.aois.byId[session.currentAoi].name)
         }
       }, 1000)
     }
@@ -464,12 +463,19 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     this.props.updateTile(relevantTile)
   }
 
-  activateAOI = (aoi_name: string) => {
+  activateAoi = (aoi_name: string) => {
     // When an AOI is clicked in the list, it is made active and passed to the map viewer
     console.log('YOU CLICKED AN AREA OF INTEREST')
     console.log(aoi_name)
     let prevAoiName: string = ''
-    if (this.props.session.currentAoi) prevAoiName = this.props.aois.byId[this.props.session.currentAoi].name
+    if (this.props.session.currentAoi) {
+      prevAoiName = this.props.aois.byId[this.props.session.currentAoi].name
+      console.log('Resuming job status checking for this aoi...')
+      setInterval(() => {
+        console.log('Checking job statuses for current AOI')
+        this.props.thunkCheckJobsForAoi(this.props.session.currentAoi)
+      }, 15000)
+    }
 
     if (prevAoiName === aoi_name) return
 
@@ -490,250 +496,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
     const currentMainSession = { ...this.props.session }
     currentMainSession.currentAoi = areaOfInterest.id
+
     this.props.updateMainSession(currentMainSession)
-  }
-
-  checkJobStatus = (job_id: string, tile_name: string, date: string) => {
-    const jobStatusVerbose = {
-      C: 'completed',
-      A: 'assigned',
-      S: 'submitted',
-    }
-
-    console.log('Checking job status-----------------------------------------------------------')
-
-    console.log(job_id, tile_name, date)
-    // @ts-ignore
-    const tiles = this.state.selectedTiles
-    // @ts-ignore
-
-    if (this.state.job_csrf_token === null) {
-      // this.getCSRFToken(this.checkJobStatus, 'job_manager', [job_id, tile_name, date])
-    } else {
-      const currentTile = tiles[date].find((ele: any) => ele.properties.name == tile_name)
-
-      const headers = new Headers()
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
-        method: 'GET',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          console.log(currentTile)
-          console.log(response)
-
-          currentTile.job_id = response.id
-          currentTile.job_result = response.success ? 'success' : 'failed'
-
-          // @ts-ignore
-          currentTile.job_status = jobStatusVerbose[response.status]
-          currentTile.job_assigned = response.assigned
-          currentTile.job_completed = response.completed
-          currentTile.job_submitted = response.submittedstart
-          currentTile.job_result_message = response.resustart
-          currentTile.times_checked += 1
-
-          console.log(currentTile.job_status)
-          let allJobsDone = false
-
-          if (currentTile.job_status === 'completed') {
-            console.log('clearing the job status check')
-            clearInterval(currentTile.job_check_interval)
-            allJobsDone = true
-
-            Object.keys(tiles).map(ele => {
-              if (tiles[ele].length > 0) {
-                tiles[ele].map((t: any) => {
-                  // @ts-ignore
-                  if (t['job_status'] !== jobStatusVerbose[response['status']] && t['job_result'] !== 'success') {
-                    allJobsDone = false
-                  }
-                })
-              }
-            })
-          }
-
-          this.setState({
-            // @ts-ignore
-            selectedTiles: tiles,
-            enableSen2AgriL2A: allJobsDone,
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when trying to check the job')
-        })
-    }
-  }
-
-  checkSen2AgriL2AJobStatus = (job_id: string) => {
-    const jobStatusVerbose: JobStatusVerbose = {
-      C: 'Completed',
-      A: 'Assigned',
-      S: 'Submitted',
-    }
-
-    // @ts-ignore
-    if (this.state.job_csrf_token === null) {
-      // this.getCSRFToken(this.checkSen2AgriL2AJobStatus, 'job_manager', [job_id])
-    } else {
-      const headers = new Headers()
-
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
-        method: 'GET',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          console.log(response)
-
-          const status: string = response.status
-
-          const sen2agri_job_status: JobObject = this.state.sen2agri_l2a_job
-          sen2agri_job_status.job_id = response.id
-          sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
-          sen2agri_job_status['job_status'] = jobStatusVerbose[status]
-          sen2agri_job_status.job_assigned = response.assigned
-          sen2agri_job_status.job_completed = response.completed
-          sen2agri_job_status.job_submitted = response.submitted
-          sen2agri_job_status.job_result_message = response.result_message
-
-          let enableL3Other = false
-
-          if (sen2agri_job_status.job_status === jobStatusVerbose.C) {
-            enableL3Other = true
-          }
-
-          this.setState({
-            // @ts-ignore
-            sen2agri_l2a_job: sen2agri_job_status,
-            enableSen2AgriL3A: enableL3Other,
-            enableSen2AgriL3B: enableL3Other,
-          })
-        })
-
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when trying to check the job')
-        })
-    }
-  }
-
-  checkSen2AgriL3AJobStatus = (job_id: string) => {
-    const jobStatusVerbose: JobStatusVerbose = {
-      C: 'completed',
-      A: 'assigned',
-      S: 'submitted',
-    }
-
-    // @ts-ignore
-
-    if (this.state.job_csrf_token === null) {
-      // this.getCSRFToken(this.checkSen2AgriL3AJobStatus, 'job_manager', [job_id])
-    } else {
-      const headers = new Headers()
-
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-
-      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
-        method: 'GET',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          console.log(response)
-          // @ts-ignore
-
-          const sen2agri_job_status = this.state.sen2agri_l3a_job
-          sen2agri_job_status.job_id = response.id
-          sen2agri_job_status.job_result = response['success'] ? 'success' : 'failed'
-          sen2agri_job_status['job_status'] = jobStatusVerbose[response.status]
-          sen2agri_job_status.job_assigned = response.assigned
-          sen2agri_job_status.job_completed = response.completed
-          sen2agri_job_status.job_submitted = response.submitted
-          sen2agri_job_status.job_result_message = response.result_message
-          sen2agri_job_status.times_checked += 1
-
-          this.setState({
-            // @ts-ignore
-            sen2agri_l3a_job: sen2agri_job_status,
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when trying to check the job')
-        })
-    }
-  }
-
-  checkSen2AgriL3BJobStatus = (job_id: string) => {
-    const jobStatusVerbose: JobStatusVerbose = {
-      C: 'completed',
-      A: 'assigned',
-      S: 'submitted',
-    }
-
-    // @ts-ignore
-
-    if (this.state.job_csrf_token === null) {
-      // this.getCSRFToken(this.checkSen2AgriL3BJobStatus, 'job_manager', [job_id])
-    } else {
-      const headers = new Headers()
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/jobs/${job_id}/`, {
-        method: 'GET',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          console.log(response)
-          // @ts-ignore
-          const sen2agri_job_status = this.state.sen2agri_l3b_job
-          sen2agri_job_status.job_id = response.id
-          sen2agri_job_status['job_result'] = response['success'] ? 'success' : 'failed'
-          sen2agri_job_status['job_status'] = jobStatusVerbose[response.status]
-          sen2agri_job_status.job_assigned = response.assigned
-          sen2agri_job_status.job_completed = response.completed
-          sen2agri_job_status.job_submitted = response.submitted
-          sen2agri_job_status.job_result_message = response.result_message
-          sen2agri_job_status.times_checked += 1
-
-          this.setState({
-            // @ts-ignore
-            sen2agri_l3b_job: sen2agri_job_status,
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when tupdateSessionob')
-        })
-    }
   }
 
   public selectAllVisibleTiles = (): void => {
@@ -763,11 +527,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('submitting all jobs for selected tiles')
 
     const tiles = this.props.selectedTiles
-
     const highlightedTiles = this.props.highlightedTiles
-    // @ts-ignore
 
-    console.log('iterating over tiles to start jobs...')
     Object.keys(tiles).map(ele => {
       console.log(ele)
       console.log(tiles[ele])
@@ -775,7 +536,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       if (tiles[ele].length > 0) {
         tiles[ele].map((tile: Tile) => {
           console.log(tile)
-          console.log(highlightedTiles.length > 0)
 
           if (highlightedTiles.length > 0) {
             if (tile.highlighted) {
@@ -795,8 +555,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                 resultMessage: '',
               }
               console.log('Submitting job')
-
-              console.log('starting thunk')
               this.props.thunkAddJob(newJob)
             }
           } else {
@@ -816,8 +574,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               resultMessage: '',
             }
             console.log('Submitting job')
-
-            console.log('starting thunk')
             this.props.thunkAddJob(newJob)
           }
         })
@@ -1061,311 +817,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     }
   }
 
-  submitSen2agriL2A = () => {
-    console.log('trying to submit sen2agri l2a job')
-
-    // get tile List
-    const tiles = this.getTileList()
-    // @ts-ignore
-    if (this.state.job_csrf_token === null) {
-      const headers = new Headers()
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'default',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          this.setState({
-            // @ts-ignore
-            job_csrf_token: JSON.stringify(response),
-          })
-          setTimeout(() => this.submitSen2agriL2A, 200)
-        })
-        .catch(err => console.log('something blew up'))
-    } else {
-      const jobReqBody = {
-        label: 'Sen2agri L2A JOb',
-        command: 'na',
-        job_type: 'Sen2Agri_L2A',
-        parameters: {
-          imagery_list: tiles,
-        },
-        priority: '3',
-      }
-
-      const headers = new Headers()
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/jobs/`, {
-        method: 'POST',
-        body: JSON.stringify(jobReqBody),
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-
-          // @ts-ignore
-          const job_status: JobObject = {
-            job_id: '',
-            job_result: '',
-            job_status: '',
-            job_assigned: '',
-            job_completed: '',
-            job_submitted: '',
-          }
-          // @ts-ignore
-          job_status.job_id = response.id
-          // @ts-ignore
-          job_status.job_result = null
-          // @ts-ignore
-          job_status.job_status = 'submitted'
-          // @ts-ignore
-          job_status.job_assigned = null
-          // @ts-ignore
-          job_status.job_completed = null
-          // @ts-ignore
-          job_status.job_submitted = response.submitted
-          console.log(
-            'STARTING PERIODIC JOB CHEKC~!!!!=================================================================',
-          )
-
-          // @ts-ignore
-          job_status.job_check_interval = setInterval(
-            () => this.checkSen2AgriL2AJobStatus(job_status.job_id),
-            1000 * 60,
-          )
-
-          // @ts-ignore
-          job_status.times_checked = 0
-          this.setState({
-            // @ts-ignore
-            sen2agri_l2a_job: job_status,
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when trying to submit the job')
-        })
-    }
-  }
-
-  submitSen2agriL3A = () => {
-    console.log('trying to submit sen2agri l3a job')
-    // get tile List
-    const tiles = this.getTileList()
-
-    // @ts-ignore
-    if (this.state.job_csrf_token === null) {
-      const headers = new Headers()
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'default',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          this.setState({
-            // @ts-ignore
-            job_csrf_token: JSON.stringify(response),
-          })
-          setTimeout(() => this.submitSen2agriL3A, 200)
-        })
-        .catch(err => console.log('something blew up'))
-    } else {
-      const jobReqBody = {
-        label: 'Sen2agri L3A JOb',
-        command: 'na',
-        job_type: 'Sen2Agri_L3A',
-        parameters: {
-          imagery_list: tiles,
-          // @ts-ignore
-          aoi_name: this.state.activeAOI,
-          window_size: 30,
-        },
-        priority: '3',
-      }
-      const headers = new Headers()
-
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/jobs/`, {
-        method: 'POST',
-        body: JSON.stringify(jobReqBody),
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-
-          const job_status: JobObject = {
-            job_id: '',
-            job_result: '',
-            job_status: '',
-            job_assigned: '',
-            job_completed: '',
-            job_submitted: '',
-            job_result_message: '',
-            times_checked: 0,
-          }
-          // @ts-ignore
-          job_status.job_id = response.id
-          // @ts-ignore
-          job_status.job_result = null
-          // @ts-ignore
-          job_status.job_status = 'submitted'
-          // @ts-ignore
-          job_status.job_assigned = null
-          // @ts-ignore
-          job_status.job_completed = null
-          // @ts-ignore
-          job_status.job_submitted = response.submitted
-
-          console.log(
-            'STARTING PERIODIC JOB CHEKC~!!!!==============================================================================',
-          )
-
-          // @ts-ignore
-          job_status.job_check_interval = setInterval(
-            () => this.checkSen2AgriL3AJobStatus(job_status.job_id),
-            1000 * 60,
-          )
-
-          // @ts-ignore
-          job_status.times_checked = 0
-
-          this.setState({
-            // @ts-ignore
-            sen2agri_l3a_job: job_status,
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when trying to submit the job')
-        })
-    }
-  }
-
-  submitSen2agriL3B = () => {
-    console.log('trying to submit sen2agri l3b job')
-    const tiles = this.getTileList()
-
-    // @ts-ignore
-    if (this.state.job_csrf_token === null) {
-      const headers = new Headers()
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/generate_csrf/`, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'default',
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-
-          this.setState({
-            // @ts-ignore
-            job_csrf_token: JSON.stringify(response),
-          })
-
-          setTimeout(() => this.submitSen2agriL3A, 200)
-        })
-
-        .catch(err => console.log('something blew up'))
-    } else {
-      const jobReqBody = {
-        label: 'Sen2agri L3B JOb',
-        command: 'na',
-        job_type: 'Sen2Agri_L3A',
-        parameters: {
-          imagery_list: tiles,
-          // @ts-ignore
-          aoi_name: this.state.activeAOI,
-        },
-        priority: '3',
-      }
-
-      const headers = new Headers()
-
-      // @ts-ignore
-      headers.append('X-CSRFToken', this.state.job_csrf_token)
-      headers.append('Content-Type', 'application/json')
-      headers.append('Authorization', `Basic ${base64.encode(`${'backup'}:${'12341234'}`)}`)
-
-      // @ts-ignore
-      fetch(`${this.props.settings.job_url}/jobs/`, {
-        method: 'POST',
-        body: JSON.stringify(jobReqBody),
-        headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-
-          const job_status: JobObject = {
-            job_id: '',
-            job_result: '',
-            job_status: '',
-            job_assigned: '',
-            job_completed: '',
-            job_submitted: '',
-            job_result_message: '',
-            times_checked: 0,
-          }
-
-          // @ts-ignore
-          job_status.job_id = response.id
-
-          // @ts-ignore
-          job_status.job_result = null
-          // @ts-ignore
-          job_status.job_status = 'submitted'
-          // @ts-ignore
-          job_status.job_assigned = null
-          // @ts-ignore
-          job_status.job_completed = null
-          // @ts-ignore
-          job_status.job_submitted = response.submitted
-
-          console.log('STARTING PERIODIC JOB CHEKC~!!!!===========================================================')
-
-          // @ts-ignore
-          job_status.job_check_interval = setInterval(
-            () => this.checkSen2AgriL3BJobStatus(job_status.job_id),
-            1000 * 60,
-          )
-          // @ts-ignore
-          job_status.times_checked = 0
-
-          this.setState({
-            // @ts-ignore
-            sen2agri_l3b_job: job_status,
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          console.log('something went wrong when trying to submit the job')
-        })
-    }
-  }
-
   public handlePlatformChange = (event: React.SyntheticEvent<HTMLOptionElement>, value: string): void => {
     let aoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
     aoiSession.currentPlatform = value
@@ -1523,15 +974,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
             saveTileJson={this.saveTileJson}
             copyCurrentTilesToClipboard={this.copyCurrentTilesToClipboard}
             currentPlatform={currentPlatform}
-            submitSen2agriL2A={this.submitSen2agriL2A}
-            enableSen2agriL2A={this.state.enableSen2AgriL2A}
-            submitSen2agriL3A={this.submitSen2agriL3A}
-            enableSen2agriL3A={this.state.enableSen2AgriL3A}
-            submitSen2agriL3B={this.submitSen2agriL3B}
-            enableSen2agriL3B={this.state.enableSen2AgriL3B}
-            sen2agriL2AJob={this.state.sen2agri_l2a_job}
-            sen2agriL3AJob={this.state.sen2agri_l3a_job}
-            sen2agriL3BJob={this.state.sen2agri_l3b_job}
             toggleTileVisibility={this.toggleVisibility}
             resubmitLastJob={this.resubmitLastJob}
           />
@@ -1594,7 +1036,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         <AreaOfInterestList
           addAreaModal={this.showModal}
           areasOfInterest={aois}
-          activateAoi={this.activateAOI}
+          activateAoi={this.activateAoi}
           activeAoi={currentAoi ? currentAoi.name : null}
           removeAoi={this.removeAoi}
           activeTab={this.props.session.activeTab}
@@ -1641,7 +1083,7 @@ export default connect(
     updateAddAoiForm,
     thunkSendMessage,
     thunkAddJob,
-    thunkResumeCheckingJobsForAoi,
+    thunkCheckJobsForAoi,
     thunkUpdateCsrfTokens,
   },
 )(MainContainer)

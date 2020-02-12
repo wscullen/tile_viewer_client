@@ -21,7 +21,7 @@ import { addAoi, updateAoi, removeAoi, updateSession } from '../store/aoi/action
 import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
 
-import { thunkAddJob, thunkResumeCheckingJobsForAoi } from '../store/job/thunks'
+import { thunkAddJob } from '../store/job/thunks'
 import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { thunkSendMessage } from '../thunks'
@@ -169,7 +169,6 @@ export default connect(
     removeJob,
     thunkSendMessage,
     thunkAddJob,
-    thunkResumeCheckingJobsForAoi,
     thunkUpdateCsrfTokens,
   },
 )(AreaOfInterestDetailView)

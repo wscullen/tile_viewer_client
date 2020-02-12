@@ -51,6 +51,7 @@ export interface FormsUiState {
   [index: string]: FormUi
   addAoi: FormUi
   login: FormUi
+  createL2AJob: FormUi
 }
 
 export interface MainSessionState {

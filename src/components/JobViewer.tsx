@@ -23,7 +23,7 @@ import { addAoi, updateAoi, removeAoi, updateSession } from '../store/aoi/action
 import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
 
-import { thunkAddJob, thunkResumeCheckingJobsForAoi } from '../store/job/thunks'
+import { thunkAddJob } from '../store/job/thunks'
 import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { thunkSendMessage } from '../thunks'
@@ -178,8 +178,9 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
                         abreviatedDisplayName = displayName.slice(10, 25)
                       }
                     } else {
-                      jobType = 'Aoi'
-                      displayName = 'na'
+                      jobType = job.type
+                      displayName = 'n/a'
+                      abreviatedDisplayName = 'n/a'
                     }
                     console.log(job)
                     return (
@@ -284,7 +285,6 @@ export default connect(
     removeJob,
     thunkSendMessage,
     thunkAddJob,
-    thunkResumeCheckingJobsForAoi,
     thunkUpdateCsrfTokens,
   },
 )(JobViewer)

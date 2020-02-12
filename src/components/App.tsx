@@ -17,69 +17,6 @@ interface Props {
   history: History
 }
 
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { fab } from '@fortawesome/free-brands-svg-icons'
-import {
-  faCheckSquare,
-  faCoffee,
-  faPlus,
-  faWindowClose,
-  faArrowRight,
-  faArrowLeft,
-  faTimes,
-  faTimesCircle,
-  faHammer,
-  faInfo,
-  faRedoAlt,
-  faDownload,
-  faCheck,
-  faHourglass,
-  faHourglassStart,
-  faHourglassHalf,
-  faHourglassEnd,
-  faCircle,
-  faCog,
-  faEye,
-  faEyeSlash,
-  faGlobeAmericas,
-  faInfoCircle,
-  faToolbox,
-  faSpinner,
-} from '@fortawesome/free-solid-svg-icons'
-
-import { faHourglass as farHourglass, faCircle as farCircle } from '@fortawesome/free-regular-svg-icons'
-
-// @ts-ignore
-library.add(
-  fab,
-  faCheckSquare,
-  faCoffee,
-  faPlus,
-  faWindowClose,
-  faArrowRight,
-  faArrowLeft,
-  faTimes,
-  faTimesCircle,
-  faInfo,
-  faRedoAlt,
-  faDownload,
-  faCheck,
-  faHourglass,
-  farHourglass,
-  faHourglassStart,
-  faHourglassHalf,
-  faHourglassEnd,
-  faInfoCircle,
-  faGlobeAmericas,
-  faCircle,
-  farCircle,
-  faCog,
-  faEye,
-  faEyeSlash,
-  faToolbox,
-  faSpinner,
-)
-
 import { Switch } from 'react-router-dom'
 import { Route, HashRouter } from 'react-router-dom'
 

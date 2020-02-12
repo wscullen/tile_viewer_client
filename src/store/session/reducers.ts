@@ -38,6 +38,12 @@ const initialState: MainSessionState = {
       success: false,
       msg: '',
     },
+    createL2AJob: {
+      submitting: false,
+      finished: false,
+      success: false,
+      msg: '',
+    },
   },
   csrfTokens: {
     s2d2: {
