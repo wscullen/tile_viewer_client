@@ -20,8 +20,126 @@ import { addAoi } from './actions'
 
 import { RawTile, Tile } from '../tile/types'
 
-import { addTile } from '../tile/actions'
+import { addTile, updateTile } from '../tile/actions'
 import { updateAddAoiForm } from '../session/actions'
+
+export const thunkCheckImageryStatus = (
+  tileIdList: string[],
+  imageryType: string,
+  aoiName: string,
+): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
+  console.log('Inside thunk getting checking S3 imagery status')
+
+  const state = getState()
+  console.log(state)
+
+  interface StringIndexObject {
+    [index: string]: string
+  }
+
+  const imageryNameDict: StringIndexObject = {}
+
+  tileIdList.map(id => {
+    imageryNameDict[state.tile.byId[id].properties.name] = id
+  })
+
+  const imageryNameList = Object.keys(imageryNameDict)
+
+  console.log(imageryNameList)
+  const headers = new Headers()
+
+  headers.append('Content-Type', 'application/json')
+  headers.append('Authorization', `Bearer ${state.session.settings.auth.accessToken}`)
+
+  const searchParams = new URLSearchParams({
+    imagery_list: imageryNameList.join(','),
+    data_type: imageryType,
+    aoi_name: aoiName,
+  })
+
+  fetch(`${state.session.settings.jobManagerUrl}/imagerystatus/?${searchParams}`, {
+    method: 'GET',
+    headers: headers,
+  })
+    .then(response => {
+      if ([200, 201].includes(response.status)) {
+        return response.json()
+      } else {
+        console.log(response.status)
+
+        throw new Error(response.status.toString())
+      }
+    })
+    .then(response => {
+      if (!response.hasOwnProperty('data')) throw response['error']
+      interface DataResponse {
+        [index: string]: any
+        esa?: string
+        usgs?: string
+      }
+
+      const data = response['data'] as DataResponse
+
+      for (const [key, value] of Object.entries(data)) {
+        const existingTile = { ...state.tile.byId[imageryNameDict[key]] }
+        console.log(existingTile)
+
+        if (imageryType === 's2_l1c')
+          existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.esa + '.zip'}`
+
+        dispatch(updateTile(existingTile))
+        console.log(existingTile)
+      }
+
+      console.log(data)
+    })
+    .catch(reason => {
+      console.log(reason)
+    })
+
+  // const aoi = {
+  //   id: data['id'],
+  //   name: addAoiFormData.get('name'),
+  //   startDate: addAoiFormData.get('startDate'),
+  //   endDate: addAoiFormData.get('endDate'),
+  //   shapefile: Array(addAoiFormData.get('shapefiles')).filter(ele => path.extname(ele.toString()) === '.shp'),
+  //   wkt_footprint: data['wkt_footprint'],
+  //   mgrs_list: data['mgrs_list'],
+  //   wrs_list: data['wrs_list'],
+  //   raw_tile_list: data['tile_results'],
+  //   wrs_overlay: data['wrs_geojson'],
+  //   sensor_list: data['sensor_list'],
+  // }
+
+  // console.log(aoi)
+
+  // console.log('Adding area of interest...')
+
+  // const allTileId: TileListInterface = {}
+
+  // const currentDates: CurrentDates = {}
+
+  // const sensorList: string[] = []
+
+  // const selectedTileId: TileListInterface = {}
+
+  // for (const key of Object.keys(aoi.raw_tile_list)) {
+  //   console.log(key)
+  //   const tiles = data['tile_results'][key]
+  //   const sortedTiles = sortTilesByDate(tiles)
+
+  //   const dateList = Object.keys(sortedTiles.datesObject)
+  //   sensorList.push(key)
+  //   const datesObjectWithIds: DateObject = {}
+  //   const selectedInit: DateObject = {}
+
+  //   allTileId[key] = {}
+  //   selectedTileId[key] = {}
+  //   currentDates[key] = {
+  //     dates: [],
+  //     currentDate: '',
+  //   }
+}
 
 export const thunkStartAddAoi = (
   addAoiFormData: FormData,
@@ -134,6 +252,8 @@ export const thunkStartAddAoi = (
                 vendorName: t.geojson.properties.vendor_name,
                 lowresPreviewUrl: t.geojson.properties.lowres_preview_url,
                 projection: t.proj,
+                l1cS3Url: '',
+                l2aS3Url: '',
               },
 
               selected: false,
@@ -264,6 +384,7 @@ const sortTilesByDate = (tiles: any) => {
   }
   return { datesArray: [], datesObject: {} }
 }
+
 // export const thunkAttemptLogin = ({
 //   email,
 //   password,

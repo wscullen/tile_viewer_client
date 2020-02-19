@@ -9,11 +9,14 @@ import {
   UPDATE_SESSION,
   AoiActionTypes,
   DateList,
+  ImageryListByTile,
+  ImageryDates,
 } from './types'
 
 import { TileListByDate, Tile } from '../tile/types'
 
 import { AppState } from '../index'
+import { ImageryList } from '../job/types'
 
 const initialState: AreaOfInterestState = {
   byId: {},
@@ -58,9 +61,6 @@ export function getAoiNames(state = initialState): string[] {
 //           if (this.props.tiles.byId[id].selected) {
 //             tileArray.push(this.props.tiles.byId[id])
 //           }
-
-//         })
-//         selectedTiles[key] = tileArray
 //       }
 //     }
 
@@ -143,6 +143,56 @@ export function getImageryListForSen2Agri(state: AppState): TileList {
             }
           })
           selectedTiles[d] = tileArray
+        }
+        imageryList[platform] = selectedTiles
+      }
+    }
+  }
+
+  return imageryList
+}
+
+export function getImageryListByTile(state: AppState): ImageryListByTile {
+  let currentAoi: AreaOfInterest
+  console.log(state.session)
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const imageryList: any = {}
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    for (const [platform, value] of Object.entries(currentAoi.allTiles)) {
+      if (currentAoi.allTiles[platform]) {
+        const selectedTiles: ImageryListByTile = {}
+
+        for (const [d, value] of Object.entries(currentAoi.allTiles[platform])) {
+          const imageryDates: ImageryDates = {}
+          console.log(d)
+
+          value.map((id: string): void => {
+            if (state.tile.byId[id].selected) {
+              const tile = state.tile.byId[id]
+              const tileName = tile.properties.name
+              const platformName = tile.properties.platformName
+              const s3Url = tile.properties.l1cS3Url
+              let gridTile = ''
+
+              if (platformName === 'Landsat-8') {
+                gridTile = tileName.split('_')[2]
+              } else {
+                gridTile = tileName.split('_')[5].substring(1)
+              }
+
+              if (selectedTiles.hasOwnProperty(gridTile)) {
+                selectedTiles[gridTile][d] = id
+              } else {
+                selectedTiles[gridTile] = {}
+                selectedTiles[gridTile][d] = id
+              }
+            }
+          })
         }
         imageryList[platform] = selectedTiles
       }

@@ -13,6 +13,8 @@ import { tsImportEqualsDeclaration } from '@babel/types'
 
 import { refreshToken } from '../session/thunks'
 
+import { updateMainSession } from '../session/actions'
+
 //@ts-ignore
 import base64 from 'base-64'
 
@@ -296,10 +298,35 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
     )
     if (jobResult.errorResult) {
       console.log('something went terribly wrong while submitting job')
+      let newL2AFormState = {
+        submitting: false,
+        finished: true,
+        success: false,
+        msg: `Something went wrong while trying to submit the job (${jobResult.errorResult})`,
+      }
+
+      let mainSession = state.session
+
+      mainSession.forms.createL2AJob = newL2AFormState
+
+      dispatch(updateMainSession(mainSession))
     } else if (jobResult) {
       console.log('thunk finished in func')
       const aoi = { ...state.aoi.byId[state.session.currentAoi] }
       aoi.jobs.push(jobResult.id)
+
+      let newL2AFormState = {
+        submitting: false,
+        finished: true,
+        success: true,
+        msg: 'Successfully submitted job.',
+      }
+
+      let mainSession = state.session
+
+      mainSession.forms.createL2AJob = newL2AFormState
+
+      dispatch(updateMainSession(mainSession))
 
       dispatch(addJob(newJob))
       dispatch(updateAoi(aoi))

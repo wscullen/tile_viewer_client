@@ -50,7 +50,8 @@ import {
 } from '../store/aoi/types'
 
 import { addAoi, updateAoi, removeAoi, updateSession } from '../store/aoi/actions'
-import { TileList } from '../store/aoi/types'
+import { TileList, ImageryListByTile } from '../store/aoi/types'
+import { thunkCheckImageryStatus } from '../store/aoi/thunks'
 
 import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
@@ -69,6 +70,7 @@ import {
   getHighlightedTiles,
   getAllSelectedTiles,
   getImageryListForSen2Agri,
+  getImageryListByTile,
 } from '../store/aoi/reducers'
 import { TileListByDate } from '../store/tile/types'
 
@@ -80,6 +82,8 @@ interface AppProps {
   allSelectedTiles: string[]
   aois: AreaOfInterestState
   imageryList: TileList
+  imageryListByTile: ImageryListByTile
+  thunkCheckImageryStatus: Function
 }
 
 interface JobStatusVerbose {
@@ -129,7 +133,18 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     console.log(this.state)
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    // Refresh tile status check when component mounts
+    // Check for tile status using /imagerystatus thunk
+    console.log('Inside sen2agri job manager component did mount')
+    if (this.props.session.currentAoi) {
+      this.props.thunkCheckImageryStatus(
+        this.props.allSelectedTiles,
+        's2_l1c',
+        this.props.aois.byId[this.props.session.currentAoi].name,
+      )
+    }
+  }
 
   componentWillUnmount() {}
 
@@ -150,6 +165,21 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
   }
 
   render() {
+    console.log('Imagery List by Tile')
+    console.log(this.props.imageryListByTile)
+
+    const allDates = []
+
+    for (let value of Object.values(this.props.imageryListByTile.sentinel2)) {
+      for (let v of Object.keys(value)) {
+        console.log(v)
+        allDates.push(v)
+      }
+    }
+
+    // Get all dates set
+    let dates = new Set(allDates)
+
     const domain = [0, 3]
     const sliderStyle = {
       position: 'relative' as 'relative',
@@ -364,13 +394,14 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                   <Table.Row>
                     <Table.HeaderCell>Tiles</Table.HeaderCell>
                     <Table.HeaderCell>Status</Table.HeaderCell>
-                    <Table.HeaderCell>Date 1</Table.HeaderCell>
-                    <Table.HeaderCell>Date 2</Table.HeaderCell>
-                    <Table.HeaderCell>Date 3</Table.HeaderCell>
+                    {[...dates].map(item => {
+                      return <Table.HeaderCell>{item}</Table.HeaderCell>
+                    })}
                   </Table.Row>
                 </Table.Header>
 
                 <Table.Body>
+                  {}
                   <Table.Row>
                     <Table.Cell>12UPR</Table.Cell>
                     <Table.Cell>
@@ -435,6 +466,7 @@ const mapStateToProps = (state: AppState) => ({
   highlightedTiles: getHighlightedTiles(state),
   allSelectedTiles: getAllSelectedTiles(state),
   imageryList: getImageryListForSen2Agri(state),
+  imageryListByTile: getImageryListByTile(state),
 })
 
 export default connect(
@@ -450,5 +482,6 @@ export default connect(
     thunkAddJob,
     thunkUpdateCsrfTokens,
     updateMainSession,
+    thunkCheckImageryStatus,
   },
 )(Sen2AgriJobManager)

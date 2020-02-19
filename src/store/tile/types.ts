@@ -28,6 +28,8 @@ export interface Properties {
   summary: string //"Entity ID: S2A_OPER_MSI_L1C_TL_MTI__20160412T185546_20160412T220337_A004214_T12UUA_N02_01_01, Acquisition Date: 12-APR-16, Start Date: 12-APR-16, End Date: 12-APR-16"
   vendorName: string // name specific to the API source"S2A_OPER_PRD_MSIL1C_PDMC_T12UUA_R070_V20160412T184855_20160412T184855"
   projection: string
+  l1cS3Url: string
+  l2aS3Url: string
 }
 
 export interface Tile extends GeoJsonFeature {

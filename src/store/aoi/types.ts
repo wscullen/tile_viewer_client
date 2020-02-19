@@ -42,6 +42,14 @@ export interface TileList {
   landsat8?: DateObject
 }
 
+export interface ImageryDates {
+  [index: string]: String
+}
+
+export interface ImageryListByTile {
+  [index: string]: ImageryDates
+}
+
 export interface AreaOfInterest {
   id: string
   endDate: string

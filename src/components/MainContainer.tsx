@@ -164,6 +164,8 @@ const defaultState: DefaultAppState = {
   initMap: false,
 }
 
+const JOB_CHECK_FREQUENCY = 30000
+
 class MainContainer extends Component<AppProps, AppState & DefaultAppState & SelectorFunctions> {
   constructor(props: AppProps) {
     super(props)
@@ -474,7 +476,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       setInterval(() => {
         console.log('Checking job statuses for current AOI')
         this.props.thunkCheckJobsForAoi(this.props.session.currentAoi)
-      }, 15000)
+      }, JOB_CHECK_FREQUENCY)
     }
 
     if (prevAoiName === aoi_name) return
