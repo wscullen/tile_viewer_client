@@ -47,6 +47,7 @@ import {
   Session,
   CurrentDates,
   DateObject,
+  ImageryDates,
 } from '../store/aoi/types'
 
 import { addAoi, updateAoi, removeAoi, updateSession } from '../store/aoi/actions'
@@ -63,6 +64,8 @@ import { MainSessionState } from '../store/session/types'
 import { updateMainSession } from '../store/session/actions'
 
 import { thunkSendMessage } from '../thunks'
+
+import { TileState } from '../store/tile/types'
 
 import {
   getAoiNames,
@@ -84,6 +87,7 @@ interface AppProps {
   imageryList: TileList
   imageryListByTile: ImageryListByTile
   thunkCheckImageryStatus: Function
+  tiles: TileState
 }
 
 interface JobStatusVerbose {
@@ -167,6 +171,8 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
   render() {
     console.log('Imagery List by Tile')
     console.log(this.props.imageryListByTile)
+
+    const imageryListByTile = this.props.imageryListByTile.sentinel2
 
     const allDates = []
 
@@ -387,38 +393,81 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                   </Modal.Content>
                 </Modal>
               </div>
-              <Progress percent={55}>Overall Progress</Progress>
+              <Progress size="large" percent={55}>
+                Overall Progress
+              </Progress>
+              <div className="imageryStatusTable">
+                <Table singleLine compact size="small">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell>Tiles</Table.HeaderCell>
+                      <Table.HeaderCell>Status</Table.HeaderCell>
+                      <Table.HeaderCell>Progress</Table.HeaderCell>
 
-              <Table definition celled>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.HeaderCell>Tiles</Table.HeaderCell>
-                    <Table.HeaderCell>Status</Table.HeaderCell>
-                    {[...dates].map(item => {
-                      return <Table.HeaderCell>{item}</Table.HeaderCell>
-                    })}
-                  </Table.Row>
-                </Table.Header>
+                      {[...dates].sort().map(item => {
+                        return (
+                          <Table.HeaderCell className="dateHeader">
+                            <h5>{item}</h5>
+                          </Table.HeaderCell>
+                        )
+                      })}
+                    </Table.Row>
+                  </Table.Header>
 
-                <Table.Body>
-                  {}
-                  <Table.Row>
-                    <Table.Cell>12UPR</Table.Cell>
-                    <Table.Cell>
-                      <Label>In Progress</Label>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Label circular color="green" empty basic></Label>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Label circular color="black" empty></Label>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Label circular color="grey" empty></Label>
-                    </Table.Cell>
-                  </Table.Row>
-                </Table.Body>
-              </Table>
+                  <Table.Body>
+                    {Object.keys(imageryListByTile)
+                      .sort()
+                      .map(tile => {
+                        console.log(imageryListByTile[tile])
+                        const datesList: ImageryDates = imageryListByTile[tile]
+                        console.log('dates list ')
+                        console.log(datesList)
+                        return (
+                          <Table.Row textAlign="center">
+                            <Table.Cell>{tile}</Table.Cell>
+                            <Table.Cell>
+                              <Label>In Progress</Label>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Progress size="small" percent={55}></Progress>
+                            </Table.Cell>
+                            {[...dates].sort().map((d: string) => {
+                              if (Object.keys(imageryListByTile[tile]).includes(d)) {
+                                const tileId = datesList[d]
+                                const tileInfo = this.props.tiles.byId[imageryListByTile[tile][d]]
+
+                                console.log(tileId)
+                                console.log(tileInfo)
+                                let tileL1CS3Url = undefined
+
+                                if (tileInfo.properties.hasOwnProperty('l1cS3Url'))
+                                  tileL1CS3Url = tileInfo.properties['l1cS3Url']
+
+                                return (
+                                  <Table.Cell className="statusCell">
+                                    <Label color={tileL1CS3Url ? 'green' : 'red'} size="mini">
+                                      L1C
+                                    </Label>
+                                    <Label size="mini">L2A</Label>
+                                  </Table.Cell>
+                                )
+                              } else {
+                                return <Table.Cell className="noImageryCell" disabled></Table.Cell>
+                              }
+                            })}
+
+                            {/* <Table.Cell>
+                            <Label circular color="black" empty></Label>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Label circular color="grey" empty></Label>
+                          </Table.Cell> */}
+                          </Table.Row>
+                        )
+                      })}
+                  </Table.Body>
+                </Table>
+              </div>
               <Header>Previous Jobs</Header>
               <Table celled>
                 <Table.Header>

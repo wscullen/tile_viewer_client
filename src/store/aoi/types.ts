@@ -43,11 +43,17 @@ export interface TileList {
 }
 
 export interface ImageryDates {
-  [index: string]: String
+  [index: string]: string
+}
+
+export interface TileObject {
+  [index: string]: ImageryDates
 }
 
 export interface ImageryListByTile {
-  [index: string]: ImageryDates
+  [index: string]: TileObject
+  sentinel2?: TileObject
+  landsat8?: TileObject
 }
 
 export interface AreaOfInterest {

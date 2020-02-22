@@ -11,6 +11,7 @@ import {
   DateList,
   ImageryListByTile,
   ImageryDates,
+  TileObject,
 } from './types'
 
 import { TileListByDate, Tile } from '../tile/types'
@@ -165,7 +166,7 @@ export function getImageryListByTile(state: AppState): ImageryListByTile {
     const session = { ...currentAoi.session }
     for (const [platform, value] of Object.entries(currentAoi.allTiles)) {
       if (currentAoi.allTiles[platform]) {
-        const selectedTiles: ImageryListByTile = {}
+        const selectedTiles: TileObject = {}
 
         for (const [d, value] of Object.entries(currentAoi.allTiles[platform])) {
           const imageryDates: ImageryDates = {}
@@ -175,13 +176,15 @@ export function getImageryListByTile(state: AppState): ImageryListByTile {
             if (state.tile.byId[id].selected) {
               const tile = state.tile.byId[id]
               const tileName = tile.properties.name
-              const platformName = tile.properties.platformName
+              let platformName = tile.properties.platformName
               const s3Url = tile.properties.l1cS3Url
               let gridTile = ''
 
               if (platformName === 'Landsat-8') {
                 gridTile = tileName.split('_')[2]
+                platformName = 'landsat8'
               } else {
+                platformName = 'sentinel2'
                 gridTile = tileName.split('_')[5].substring(1)
               }
 

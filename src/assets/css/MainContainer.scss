@@ -15,8 +15,10 @@ button {
 }
 
 .rightContainer {
-  width: 100%;
   flex-grow: 3;
+  display: flex;
+  max-width: auto;
+  overflow: auto;
 }
 
 .contentContainer {

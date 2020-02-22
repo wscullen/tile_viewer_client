@@ -84,8 +84,17 @@ export const thunkCheckImageryStatus = (
         const existingTile = { ...state.tile.byId[imageryNameDict[key]] }
         console.log(existingTile)
 
-        if (imageryType === 's2_l1c')
-          existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.esa + '.zip'}`
+        if (imageryType === 's2_l1c') {
+          if (value.esa !== 'object does not exist') {
+            existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.esa +
+              '.zip'}`
+          } else if (value.usgs !== 'object does not exist') {
+            existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.usgs +
+              '.zip'}`
+          } else {
+            existingTile.properties['l1cS3Url'] = undefined
+          }
+        }
 
         dispatch(updateTile(existingTile))
         console.log(existingTile)

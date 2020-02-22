@@ -1,5 +1,6 @@
 .jobViewer {
-  height: 100%;
+  flex-grow: 1;
+  max-width: 100%;
 }
 .jobViewerTable {
   //   overflow-y: scroll;
@@ -62,4 +63,52 @@ tbody {
 .iconContainer {
   display: flex;
   align-items: center;
+}
+
+.sen2agriJobManager .mini.label {
+  margin: 0px;
+  margin-right: 2px;
+}
+
+.imageryStatusTable {
+  overflow-x: scroll;
+  // height: 0;
+}
+
+.imageryStatusTable td {
+  padding: 2px;
+}
+
+th.dateHeader {
+  padding: 10px 0px;
+}
+
+.dateHeader h5 {
+  margin-bottom: 0px;
+  font-size: 12px;
+  transform: rotate(-45deg) translate(15px, 0px);
+}
+
+.ui.table > thead > tr > th.dateHeader {
+  padding: 25px 2px;
+  max-width: 50px;
+}
+
+.ui.celled.table > tbody > tr > td.statusCell {
+  padding: 2px;
+  max-width: 50px;
+}
+
+.ui.celled.table > tbody > tr > td.noImageryCell {
+  background-color: #ededed;
+  padding: 2px;
+  max-width: 50px;
+}
+
+.ui.compact.table > tbody > tr > td {
+  padding: 2px 4px;
+}
+
+.ui.small.progress {
+  margin-bottom: 0px;
 }
