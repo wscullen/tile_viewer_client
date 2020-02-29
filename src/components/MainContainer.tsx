@@ -164,7 +164,7 @@ const defaultState: DefaultAppState = {
   initMap: false,
 }
 
-const JOB_CHECK_FREQUENCY = 30000
+const JOB_CHECK_FREQUENCY = 15000
 
 class MainContainer extends Component<AppProps, AppState & DefaultAppState & SelectorFunctions> {
   constructor(props: AppProps) {
@@ -548,7 +548,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                 completedDate: '',
                 id: '',
                 setIntervalId: 0,
-                status: 0,
+                status: JobStatus.Submitted,
                 submittedDate: '',
                 success: false,
                 type: 'tile',
@@ -567,7 +567,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               completedDate: '',
               id: '',
               setIntervalId: 0,
-              status: 0,
+              status: JobStatus.Submitted,
               submittedDate: '',
               success: false,
               type: 'tile',

@@ -1,8 +1,8 @@
 import './../assets/css/TileListItemCompact.scss'
 
 import React, { Component } from 'react'
-import { Icon, Button, SemanticCOLORS, SemanticICONS, Label } from 'semantic-ui-react'
-import { Job } from '../store/job/types'
+import { Icon, Button, SemanticCOLORS, SemanticICONS, Label, Progress, Segment } from 'semantic-ui-react'
+import { Job, JobStatus } from '../store/job/types'
 import { Tile } from '../store/tile/types'
 
 interface AppProps {
@@ -24,22 +24,22 @@ export default function TileListItemCompact(props: AppProps) {
 
   console.log(props.job)
   if (props.job) {
-    if (props.job.status === 0) {
+    if (props.job.status === JobStatus.Submitted) {
       jobProgressColor = 'grey'
-    } else if (props.job.status === 1) {
+    } else if (props.job.status === JobStatus.Assigned) {
       jobProgressIcon = 'hourglass half'
       jobProgressColor = 'black'
-    } else if (props.job.status === 2) {
+    } else if (props.job.status === JobStatus.Completed) {
       jobProgressIcon = 'hourglass end'
     }
 
     if (props.job.success === true) {
       jobProgressColor = 'green'
-    } else if (props.job.success === false && props.job.status === 2) {
+    } else if (props.job.success === false && props.job.status === JobStatus.Completed) {
       jobProgressColor = 'red'
     }
 
-    if (props.job.status !== 2 && props.job.success !== true) {
+    if (props.job.status !== JobStatus.Completed && props.job.success !== true) {
       downloadButtonClass += 'disabledIcon'
     }
 

@@ -62,11 +62,15 @@
 // }
 
 .tileListItem {
-  padding: 6px 2px;
-  border-bottom: 2px #eee solid;
+  padding: 6px 1px;
+  // border-bottom: 2px #eee solid;
 }
 
-.activeSelection {
+.ui.vertical.segment.tileListItem.activeSelection.altBackground {
+  background: $active-selection;
+}
+
+.ui.vertical.segment.tileListItem.activeSelection {
   background: $active-selection;
 }
 

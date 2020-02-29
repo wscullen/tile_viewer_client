@@ -3,7 +3,7 @@ import './../assets/css/TileList.scss'
 import React, { Component } from 'react'
 import moment from 'moment'
 
-import { Icon, Button, Checkbox, Popup, Grid, Header } from 'semantic-ui-react'
+import { Icon, Button, Checkbox, Popup, Grid, Header, Progress, Segment } from 'semantic-ui-react'
 
 import TileListItemCompact from './TileListItemCompact'
 
@@ -95,6 +95,20 @@ class TileList extends Component<AppProps, DefaultAppState> {
     this.setState({
       optionsHide: !this.state.optionsHide,
     })
+  }
+
+  progressBar = (job: Job) => {
+    if (job && job.status === JobStatus.Assigned) {
+      if (job.hasOwnProperty('progressInfo')) {
+        let task_progress = job.progressInfo['task_progress']
+
+        if (task_progress.hasOwnProperty('upload_progress')) {
+          return <Progress percent={task_progress['upload_progress']} color="green" attached="bottom" active />
+        } else if (task_progress.hasOwnProperty('download_progress')) {
+          return <Progress percent={task_progress['download_progress']} color="green" attached="bottom" active />
+        }
+      }
+    }
   }
 
   // job_verified_icon_l2a = () => {
@@ -259,35 +273,8 @@ class TileList extends Component<AppProps, DefaultAppState> {
                     </li>
                   </ul>
                 </Grid.Column>
-                {/* <Grid.Column>
-                  <Header as="h4">Sen2Agri</Header>
-                  <ul>
-                    <li>
-                      <div className="menuItem">
-                        <Button onClick={e => this.props.submitSen2agriL2A()} disabled={!this.props.enableSen2agriL2A}>
-                          Generate Atmos. Corrected (L2A)
-                        </Button>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="menuItem">
-                        <Button onClick={e => this.props.submitSen2agriL3A()} disabled={!this.props.enableSen2agriL3A}>
-                          Generate Cloudfree Composites (L3A)
-                        </Button>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="menuItem">
-                        <Button onClick={e => this.props.submitSen2agriL3B()} disabled={!this.props.enableSen2agriL3B}>
-                          Generate LAI/NDVI For Each Date (L3B)
-                        </Button>
-                      </div>
-                    </li>
-                  </ul>
-                </Grid.Column> */}
               </Grid>
             </Popup>
-
             <Button color="green" compact onClick={() => this.props.submitAllJobs()}>
               {this.props.selectedTilesInList.length === 0 ? 'Start All' : 'Start Highlighted'}
             </Button>
@@ -296,68 +283,69 @@ class TileList extends Component<AppProps, DefaultAppState> {
         <div className={optionsHeaderClass}></div>
         <div className="listOfTiles">
           <div className="listWrapper">
-            <ul>
-              {Object.keys(this.props.selectedTiles).map((d: string) => {
-                const listElements = []
+            {Object.keys(this.props.selectedTiles).map((d: string) => {
+              const listElements = []
 
-                if (this.props.selectedTiles[d].length > 0) {
-                  const headerEle = (
-                    <li
-                      className={dateSectionHeaderClassname}
-                      onClick={() => this.props.dateClicked(moment(d).format('YYYYMMDD'))}
-                      key={d}
-                    >
-                      {moment(d).format('MMMM DD YYYY')}
-                    </li>
-                  )
-                  listElements.push(headerEle)
-                  let counter = 0
-                  for (const tile of this.props.selectedTiles[d]) {
-                    let clsName = 'tileListItem'
+              if (this.props.selectedTiles[d].length > 0) {
+                const headerEle = (
+                  <Header
+                    as="h5"
+                    className={dateSectionHeaderClassname}
+                    onClick={() => this.props.dateClicked(moment(d).format('YYYYMMDD'))}
+                    key={d}
+                  >
+                    {moment(d).format('MMMM DD YYYY')}
+                  </Header>
+                )
+                listElements.push(headerEle)
+                let counter = 0
+                for (const tile of this.props.selectedTiles[d]) {
+                  let clsName = 'tileListItem'
 
-                    if (this.props.selectedTilesInList.includes(tile.id)) {
-                      clsName = 'tileListItem activeSelection'
-                    }
-
-                    if (counter % 2 === 0) {
-                      clsName += ' altBackground'
-                    }
-
-                    counter++
-
-                    let job
-
-                    if (tile.jobs.length > 0) {
-                      console.log('tile has jobs')
-                      const lastJobId = tile.jobs[tile.jobs.length - 1]
-
-                      job = this.props.jobs.byId[lastJobId]
-
-                      console.log('most recent job for tile')
-                      console.log(job)
-                    }
-
-                    const tileEle = (
-                      <li
-                        className={clsName}
-                        key={tile.properties.name}
-                        onClick={event => this.props.tileClicked(event, tile.id)}
-                      >
-                        <TileListItemCompact
-                          tile={tile}
-                          job={job}
-                          removeTile={this.props.removeTile}
-                          toggleVisibility={this.props.toggleTileVisibility}
-                          resubmitLastJob={this.props.resubmitLastJob}
-                        />
-                      </li>
-                    )
-                    listElements.push(tileEle)
+                  if (this.props.selectedTilesInList.includes(tile.id)) {
+                    clsName = 'tileListItem activeSelection'
                   }
+
+                  if (counter % 2 === 0) {
+                    clsName += ' altBackground'
+                  }
+
+                  counter++
+
+                  let job
+
+                  if (tile.jobs.length > 0) {
+                    console.log('tile has jobs')
+                    const lastJobId = tile.jobs[tile.jobs.length - 1]
+
+                    job = this.props.jobs.byId[lastJobId]
+
+                    console.log('most recent job for tile')
+                    console.log(job)
+                  }
+
+                  const tileEle = (
+                    <Segment
+                      vertical
+                      className={clsName}
+                      key={tile.properties.name}
+                      onClick={(event: any) => this.props.tileClicked(event, tile.id)}
+                    >
+                      {this.progressBar(job)}
+                      <TileListItemCompact
+                        tile={tile}
+                        job={job}
+                        removeTile={this.props.removeTile}
+                        toggleVisibility={this.props.toggleTileVisibility}
+                        resubmitLastJob={this.props.resubmitLastJob}
+                      />
+                    </Segment>
+                  )
+                  listElements.push(tileEle)
                 }
-                return listElements
-              })}
-            </ul>
+              }
+              return listElements
+            })}
           </div>
         </div>
       </div>

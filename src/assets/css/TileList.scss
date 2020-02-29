@@ -249,6 +249,11 @@ h5.sectionLabel.title.is-5 {
   margin-right: 0px;
 }
 
+.ui.header.dateSection {
+  margin: 1px 4px;
+  margin-top: 4px;
+}
+
 body > div.ui.bottom.right.flowing.popup.transition.visible.optionsPopup {
   left: 3px;
 }
@@ -256,4 +261,9 @@ body > div.ui.bottom.right.flowing.popup.transition.visible.optionsPopup {
 .tileList .ui.header.small {
   padding: 3px;
   margin-bottom: 0px;
+}
+
+.ui.vertical.segment.tileListItem {
+  padding: 4px 6px;
+  // margin-bottom: 4px;
 }

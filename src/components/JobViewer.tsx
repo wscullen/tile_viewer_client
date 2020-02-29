@@ -134,6 +134,12 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
       jobIds = []
     }
 
+    const jobStatusVerbose: JobStatusVerbose = {
+      C: 'Completed',
+      A: 'Assigned',
+      S: 'Submitted',
+    }
+
     if (this.props.activeTab === 0) {
       return (
         <div>
@@ -192,7 +198,7 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
                         <Table.Cell>
                           <abbr title={displayName}>{abreviatedDisplayName}</abbr>
                         </Table.Cell>
-                        <Table.Cell>{JobStatus[job.status]}</Table.Cell>
+                        <Table.Cell>{jobStatusVerbose[job.status]}</Table.Cell>
                         <Table.Cell>
                           {job.submittedDate !== '' ? moment(job.submittedDate).format('MMM DD YYYY - HH:mm:ss') : ''}
                         </Table.Cell>

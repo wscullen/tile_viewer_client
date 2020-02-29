@@ -1,19 +1,17 @@
 import { TileListByDate } from '../tile/types'
 
 export enum JobStatus {
-  Submitted,
-  Assigned,
-  Completed,
+  Submitted = 'S',
+  Assigned = 'A',
+  Completed = 'C',
 }
 
-// "aoi_name": "Test Area 2",
-// "window_size": 3,
-// "imagery_list": {
-//     "sentinel2": {
-//         "20190613": [
-//             "S2A_MSIL1C_20190613T182921_N0207_R027_T12UUA_20190613T220508"
-//         ],
-//         "20190616": [],
+export interface JobStatusVerbose {
+  [index: string]: string
+  A: string
+  S: string
+  C: string
+}
 
 export interface ImageryByDate {
   [index: string]: string[]
@@ -35,6 +33,26 @@ export interface JobParameters {
   l2a?: L2AJobParameters
 }
 
+export interface JobInfoObject {
+  [index: string]: any
+  name: string
+  kwargs: any
+  args: any
+  status: string
+  progress: any
+}
+
+export interface UploadDownloadProgress {
+  [index: string]: number
+  upload_progress?: number
+  download_progress?: number
+}
+
+export interface JobProgress {
+  task_progress?: UploadDownloadProgress | JobInfoObject
+  task_ids?: Array<Array<string>>
+}
+
 export interface Job {
   id: string
   type: string
@@ -50,6 +68,7 @@ export interface Job {
   checkedCount: number
   setIntervalId: any
   resultMessage: string
+  progressInfo?: JobProgress
   params?: JobParameters
   errorResult?: any
 }

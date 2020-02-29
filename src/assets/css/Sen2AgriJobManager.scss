@@ -2,6 +2,13 @@
   flex-grow: 1;
   max-width: 100%;
 }
+
+.jobViewer {
+  .segment {
+    padding: 4px 4px;
+  }
+}
+
 .jobViewerTable {
   //   overflow-y: scroll;
   margin: 0px 4px;
@@ -30,13 +37,20 @@ tbody {
 
 .sen2agriJobManager .ui.header {
   margin: 0px 0px;
+  margin-top: 10px;
 }
 
 .sen2agriJobManager .flexContainerHorizontal {
   display: flex;
   flex-direction: row;
   margin-bottom: 5px;
+  margin-top: 1em;
   justify-content: space-between;
+}
+
+.sen2agriJobManager > .header {
+  margin: 0px;
+  padding: 4px;
 }
 
 .sen2agriJobManager .flexContainerHorizontalLeftGroup {
@@ -71,7 +85,7 @@ tbody {
 }
 
 .imageryStatusTable {
-  overflow-x: scroll;
+  overflow-x: auto;
   // height: 0;
 }
 
@@ -85,12 +99,12 @@ th.dateHeader {
 
 .dateHeader h5 {
   margin-bottom: 0px;
-  font-size: 12px;
-  transform: rotate(-45deg) translate(15px, 0px);
+  // font-size: 12px;
+  // transform: rotate(-45deg) translate(15px, 0px);
 }
 
-.ui.table > thead > tr > th.dateHeader {
-  padding: 25px 2px;
+th.dateHeader {
+  padding: 5px 2px;
   max-width: 50px;
 }
 

@@ -21,6 +21,7 @@ import {
   Message,
   Form,
   Popup,
+  Segment,
 } from 'semantic-ui-react'
 
 import {
@@ -88,6 +89,7 @@ interface AppProps {
   imageryListByTile: ImageryListByTile
   thunkCheckImageryStatus: Function
   tiles: TileState
+  jobs: JobState
 }
 
 interface JobStatusVerbose {
@@ -173,6 +175,21 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     console.log(this.props.imageryListByTile)
 
     const imageryListByTile = this.props.imageryListByTile.sentinel2
+    let recentJob: Job
+    let previousJobs: Job[]
+
+    if (this.props.session.currentAoi) {
+      const aoiJobs = this.props.jobs.byAoiId[this.props.session.currentAoi].filter((jobId: string): string => {
+        const job = this.props.jobs.byId[jobId]
+        if (job.type === 'Sen2Agri_L2A') {
+          return jobId
+        }
+      })
+      recentJob = this.props.jobs.byId[aoiJobs[aoiJobs.length - 1]]
+      previousJobs = aoiJobs.slice(0, -1).map(jobId => {
+        return this.props.jobs.byId[jobId]
+      })
+    }
 
     const allDates = []
 
@@ -210,282 +227,324 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
       prevNDays: 3,
     }
 
+    const jobStatusVerbose: JobStatusVerbose = {
+      A: 'Assigned',
+      S: 'Submitted',
+      C: 'Completed',
+    }
+
     const panes = [
       {
         menuItem: 'Atmospheric Correction',
         render: () => (
           <Tab.Pane>
-            <div>
-              <Header>Most Recent Job</Header>
-              <div className="flexContainerHorizontal">
-                <div className="flexContainerHorizontalLeftGroup">
-                  <div>
-                    <p>Job ID: </p> <Label>UUID GOES HERE</Label>
-                  </div>
-                  <div>
-                    <p>Status:</p>
-                    <Label>JOB STATUS HERE</Label>
-                  </div>
-                  <div>
-                    <Button>Cancel</Button>
-                  </div>
-                </div>
-
-                <Modal
-                  trigger={
-                    <Button
-                      color="green"
-                      size="large"
-                      className="runL2AJobButton"
-                      onClick={() => console.log(this.props.allSelectedTiles.length)}
-                      disabled={this.props.session.currentAoi === '' || this.props.allSelectedTiles.length === 0}
-                    >
-                      Create New L2A Job
-                    </Button>
-                  }
-                  closeIcon
-                  size="tiny"
-                  onClose={() => {
-                    let newL2AFormState = {
-                      submitting: false,
-                      finished: false,
-                      success: false,
-                      msg: '',
-                    }
-                    let mainSession = this.props.session
-
-                    mainSession.forms.createL2AJob = newL2AFormState
-
-                    this.props.updateMainSession(mainSession)
-                  }}
-                >
-                  <Header icon="hammer" content="Create L2A Job" />
-                  <Modal.Content>
+            <div className="currentJobPanel">
+              <Header as="h3">Most Recent Job</Header>
+              <div>
+                <div className="flexContainerHorizontal">
+                  <div className="flexContainerHorizontalLeftGroup">
                     <div>
-                      <Formik
-                        initialValues={initialValues}
-                        onSubmit={(values, actions) => {
-                          console.log({ values, actions })
-
-                          let newL2AFormState = {
-                            submitting: true,
-                            finished: false,
-                            success: false,
-                            msg: 'Submitting job to server...',
-                          }
-                          let mainSession = this.props.session
-                          mainSession.forms.createL2AJob = newL2AFormState
-                          this.props.updateMainSession(mainSession)
-
-                          console.log(this.props.selectedTiles)
-                          console.log(this.props.imageryList)
-                          const newJob: Job = {
-                            aoiId: this.props.session.currentAoi,
-                            assignedDate: '',
-                            checkedCount: 0,
-                            completedDate: '',
-                            id: '',
-                            setIntervalId: 0,
-                            status: 0,
-                            submittedDate: '',
-                            success: false,
-                            type: 'Sen2Agri_L2A',
-                            workerId: '',
-                            tileDict: this.props.selectedTiles,
-                            resultMessage: '',
-                            params: {
-                              l2a: {
-                                prevNDays: values.prevNDays,
-                                activeAoiName: this.props.aois.byId[this.props.session.currentAoi].name,
-                                imageryList: this.props.imageryList,
-                              },
-                            },
-                          }
-                          console.log('Submitting L2A job')
-                          this.props.thunkAddJob(newJob)
-                        }}
-                        validationSchema={this.createL2ASchema}
-                      >
-                        {({
-                          values,
-                          handleSubmit,
-                          setFieldValue,
-                          setFieldTouched,
-                          errors,
-                          touched,
-                          validateField,
-                          resetForm,
-                        }) => {
-                          return (
-                            <div>
-                              <Form
-                                size="large"
-                                onSubmit={handleSubmit}
-                                loading={this.props.session.forms.createL2AJob.submitting}
-                              >
-                                <FormikField name="prevNDays">
-                                  {({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                                    <Form.Field>
-                                      <label>Previous L2A Dates to Use</label>
-                                      <Form.Group>
-                                        <Slider
-                                          mode={1}
-                                          step={1}
-                                          domain={domain}
-                                          rootStyle={sliderStyle}
-                                          onChange={(value: number) => {
-                                            setFieldValue('prevNDays', value)
-                                          }}
-                                          onUpdate={(value: number) => {
-                                            setFieldValue('prevNDays', value)
-                                          }}
-                                          values={[values.prevNDays]}
-                                          initialValue={values.prevNDays}
-                                          tickValues={[0, 1, 2, 3]}
-                                        ></Slider>
-                                        <Form.Input
-                                          {...field}
-                                          type="number"
-                                          width={3}
-                                          error={meta.touched && meta.error && meta.error}
-                                        />
-                                        <Popup
-                                          trigger={
-                                            <div className="iconContainer">
-                                              <Icon color="grey" size="large" name="question circle outline" />
-                                            </div>
-                                          }
-                                          content={`This is how many L2A products from previous dates will be used in
-                                                the atmospheric correction. 2-3 works the best.`}
-                                          inverted
-                                          position="right center"
-                                          mouseEnterDelay={250}
-                                        />
-                                      </Form.Group>
-                                    </Form.Field>
-                                  )}
-                                </FormikField>
-
-                                <div className="buttonAndStatus">
-                                  <Button type="submit" className="flexItem" primary>
-                                    Submit L2A Job
-                                  </Button>
-                                </div>
-                              </Form>
-                              <Message
-                                hidden={this.props.session.forms.createL2AJob.msg === ''}
-                                positive={
-                                  this.props.session.forms.createL2AJob.finished &&
-                                  this.props.session.forms.createL2AJob.success
-                                }
-                                negative={
-                                  this.props.session.forms.createL2AJob.finished &&
-                                  !this.props.session.forms.createL2AJob.success
-                                }
-                              >
-                                <p>{this.props.session.forms.createL2AJob.msg}</p>
-                              </Message>
-                            </div>
-                          )
-                        }}
-                      </Formik>
+                      <Header as="h5">Job ID:</Header>
+                      <Label size="large">{recentJob.id}</Label>
                     </div>
-                  </Modal.Content>
-                </Modal>
-              </div>
-              <Progress size="large" percent={55}>
-                Overall Progress
-              </Progress>
-              <div className="imageryStatusTable">
-                <Table singleLine compact size="small">
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.HeaderCell>Tiles</Table.HeaderCell>
-                      <Table.HeaderCell>Status</Table.HeaderCell>
-                      <Table.HeaderCell>Progress</Table.HeaderCell>
+                    <div>
+                      <Header as="h5">Status:</Header>
+                      <Label size="large">{jobStatusVerbose[recentJob.status]}</Label>
+                    </div>
+                    <div>
+                      <Button negative>Cancel</Button>
+                    </div>
+                  </div>
 
-                      {[...dates].sort().map(item => {
-                        return (
-                          <Table.HeaderCell className="dateHeader">
-                            <h5>{item}</h5>
-                          </Table.HeaderCell>
-                        )
-                      })}
-                    </Table.Row>
-                  </Table.Header>
+                  <Modal
+                    trigger={
+                      <Button
+                        color="green"
+                        size="large"
+                        className="runL2AJobButton"
+                        onClick={() => console.log(this.props.allSelectedTiles.length)}
+                        disabled={this.props.session.currentAoi === '' || this.props.allSelectedTiles.length === 0}
+                      >
+                        Create New L2A Job
+                      </Button>
+                    }
+                    closeIcon
+                    size="tiny"
+                    onClose={() => {
+                      let newL2AFormState = {
+                        submitting: false,
+                        finished: false,
+                        success: false,
+                        msg: '',
+                      }
+                      let mainSession = this.props.session
 
-                  <Table.Body>
-                    {Object.keys(imageryListByTile)
-                      .sort()
-                      .map(tile => {
-                        console.log(imageryListByTile[tile])
-                        const datesList: ImageryDates = imageryListByTile[tile]
-                        console.log('dates list ')
-                        console.log(datesList)
-                        return (
-                          <Table.Row textAlign="center">
-                            <Table.Cell>{tile}</Table.Cell>
-                            <Table.Cell>
-                              <Label>In Progress</Label>
-                            </Table.Cell>
-                            <Table.Cell>
-                              <Progress size="small" percent={55}></Progress>
-                            </Table.Cell>
-                            {[...dates].sort().map((d: string) => {
-                              if (Object.keys(imageryListByTile[tile]).includes(d)) {
-                                const tileId = datesList[d]
-                                const tileInfo = this.props.tiles.byId[imageryListByTile[tile][d]]
+                      mainSession.forms.createL2AJob = newL2AFormState
 
-                                console.log(tileId)
-                                console.log(tileInfo)
-                                let tileL1CS3Url = undefined
+                      this.props.updateMainSession(mainSession)
+                    }}
+                  >
+                    <Header icon="hammer" content="Create L2A Job" />
+                    <Modal.Content>
+                      <div>
+                        <Formik
+                          initialValues={initialValues}
+                          onSubmit={(values, actions) => {
+                            console.log({ values, actions })
 
-                                if (tileInfo.properties.hasOwnProperty('l1cS3Url'))
-                                  tileL1CS3Url = tileInfo.properties['l1cS3Url']
+                            let newL2AFormState = {
+                              submitting: true,
+                              finished: false,
+                              success: false,
+                              msg: 'Submitting job to server...',
+                            }
+                            let mainSession = this.props.session
+                            mainSession.forms.createL2AJob = newL2AFormState
+                            this.props.updateMainSession(mainSession)
 
-                                return (
-                                  <Table.Cell className="statusCell">
-                                    <Label color={tileL1CS3Url ? 'green' : 'red'} size="mini">
-                                      L1C
-                                    </Label>
-                                    <Label size="mini">L2A</Label>
-                                  </Table.Cell>
-                                )
-                              } else {
-                                return <Table.Cell className="noImageryCell" disabled></Table.Cell>
-                              }
-                            })}
+                            console.log(this.props.selectedTiles)
+                            console.log(this.props.imageryList)
+                            const newJob: Job = {
+                              aoiId: this.props.session.currentAoi,
+                              assignedDate: '',
+                              checkedCount: 0,
+                              completedDate: '',
+                              id: '',
+                              setIntervalId: 0,
+                              status: JobStatus.Submitted,
+                              submittedDate: '',
+                              success: false,
+                              type: 'Sen2Agri_L2A',
+                              workerId: '',
+                              tileDict: this.props.selectedTiles,
+                              resultMessage: '',
+                              params: {
+                                l2a: {
+                                  prevNDays: values.prevNDays,
+                                  activeAoiName: this.props.aois.byId[this.props.session.currentAoi].name,
+                                  imageryList: this.props.imageryList,
+                                },
+                              },
+                            }
+                            console.log('Submitting L2A job')
+                            this.props.thunkAddJob(newJob)
+                          }}
+                          validationSchema={this.createL2ASchema}
+                        >
+                          {({
+                            values,
+                            handleSubmit,
+                            setFieldValue,
+                            setFieldTouched,
+                            errors,
+                            touched,
+                            validateField,
+                            resetForm,
+                          }) => {
+                            return (
+                              <div>
+                                <Form
+                                  size="large"
+                                  onSubmit={handleSubmit}
+                                  loading={this.props.session.forms.createL2AJob.submitting}
+                                >
+                                  <FormikField name="prevNDays">
+                                    {({ field, form, meta }: { field: any; form: any; meta: any }) => (
+                                      <Form.Field>
+                                        <label>Previous L2A Dates to Use</label>
+                                        <Form.Group>
+                                          <Slider
+                                            mode={1}
+                                            step={1}
+                                            domain={domain}
+                                            rootStyle={sliderStyle}
+                                            onChange={(value: number) => {
+                                              setFieldValue('prevNDays', value)
+                                            }}
+                                            onUpdate={(value: number) => {
+                                              setFieldValue('prevNDays', value)
+                                            }}
+                                            values={[values.prevNDays]}
+                                            initialValue={values.prevNDays}
+                                            tickValues={[0, 1, 2, 3]}
+                                          ></Slider>
+                                          <Form.Input
+                                            {...field}
+                                            type="number"
+                                            width={3}
+                                            error={meta.touched && meta.error && meta.error}
+                                          />
+                                          <Popup
+                                            trigger={
+                                              <div className="iconContainer">
+                                                <Icon color="grey" size="large" name="question circle outline" />
+                                              </div>
+                                            }
+                                            content={`This is how many L2A products from previous dates will be used in
+                                                the atmospheric correction. 2-3 works the best.`}
+                                            inverted
+                                            position="right center"
+                                            mouseEnterDelay={250}
+                                          />
+                                        </Form.Group>
+                                      </Form.Field>
+                                    )}
+                                  </FormikField>
 
-                            {/* <Table.Cell>
+                                  <div className="buttonAndStatus">
+                                    <Button type="submit" className="flexItem" primary>
+                                      Submit L2A Job
+                                    </Button>
+                                  </div>
+                                </Form>
+                                <Message
+                                  hidden={this.props.session.forms.createL2AJob.msg === ''}
+                                  positive={
+                                    this.props.session.forms.createL2AJob.finished &&
+                                    this.props.session.forms.createL2AJob.success
+                                  }
+                                  negative={
+                                    this.props.session.forms.createL2AJob.finished &&
+                                    !this.props.session.forms.createL2AJob.success
+                                  }
+                                >
+                                  <p>{this.props.session.forms.createL2AJob.msg}</p>
+                                </Message>
+                              </div>
+                            )
+                          }}
+                        </Formik>
+                      </div>
+                    </Modal.Content>
+                  </Modal>
+                </div>
+                <Progress size="large" percent={55}>
+                  Overall Progress
+                </Progress>
+                <div className="imageryStatusTable">
+                  <Table celled compact size="small">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.HeaderCell>Tiles</Table.HeaderCell>
+                        <Table.HeaderCell>Task ID</Table.HeaderCell>
+                        <Table.HeaderCell>Status</Table.HeaderCell>
+                        <Table.HeaderCell>Progress</Table.HeaderCell>
+
+                        {[...dates].sort().map(item => {
+                          return (
+                            <Table.HeaderCell className="dateHeader">
+                              <p>{`${item.substring(0, 4)}-${item.substring(4, 6)}-${item.substring(6, 8)}`}</p>
+                            </Table.HeaderCell>
+                          )
+                        })}
+                      </Table.Row>
+                    </Table.Header>
+
+                    <Table.Body>
+                      {Object.keys(imageryListByTile)
+                        .sort()
+                        .map(tile => {
+                          console.log(imageryListByTile[tile])
+                          const datesList: ImageryDates = imageryListByTile[tile]
+                          console.log('dates list ')
+                          console.log(datesList)
+
+                          let taskIdForTile: string
+                          recentJob.progressInfo.task_ids.map((item: string[]) => {
+                            if (item[0] === tile) taskIdForTile = item[1]
+                          })
+                          console.log(`Tile: ${tile}`)
+                          console.log(`Task ID: ${taskIdForTile}`)
+
+                          const progressInfo = recentJob.progressInfo.task_progress[taskIdForTile]
+                          console.log(progressInfo)
+
+                          return (
+                            <Table.Row textAlign="center">
+                              <Table.Cell>{tile}</Table.Cell>
+                              <Table.Cell>
+                                <abbr title={taskIdForTile}>{taskIdForTile.slice(0, 8)}</abbr>
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Label>{progressInfo.status}</Label>
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Progress size="small" percent={55}></Progress>
+                              </Table.Cell>
+                              {[...dates].sort().map((d: string) => {
+                                if (Object.keys(imageryListByTile[tile]).includes(d)) {
+                                  const tileId = datesList[d]
+                                  const tileInfo = this.props.tiles.byId[imageryListByTile[tile][d]]
+
+                                  console.log(tileId)
+                                  console.log(tileInfo)
+                                  let tileL1CS3Url = undefined
+
+                                  if (tileInfo.properties.hasOwnProperty('l1cS3Url'))
+                                    tileL1CS3Url = tileInfo.properties['l1cS3Url']
+
+                                  return (
+                                    <Table.Cell className="statusCell">
+                                      <Label color={tileL1CS3Url ? 'green' : 'red'} size="mini">
+                                        L1C
+                                      </Label>
+                                      <Label size="mini">L2A</Label>
+                                    </Table.Cell>
+                                  )
+                                } else {
+                                  return <Table.Cell className="noImageryCell" disabled></Table.Cell>
+                                }
+                              })}
+
+                              {/* <Table.Cell>
                             <Label circular color="black" empty></Label>
                           </Table.Cell>
                           <Table.Cell>
                             <Label circular color="grey" empty></Label>
                           </Table.Cell> */}
-                          </Table.Row>
-                        )
-                      })}
-                  </Table.Body>
-                </Table>
+                            </Table.Row>
+                          )
+                        })}
+                    </Table.Body>
+                  </Table>
+                </div>
               </div>
-              <Header>Previous Jobs</Header>
+            </div>
+            <div className="previousJobsPanel">
+              <Header as="h3">Previous Jobs</Header>
               <Table celled>
                 <Table.Header>
                   <Table.Row>
                     <Table.HeaderCell>Job ID</Table.HeaderCell>
                     <Table.HeaderCell>Overall Status</Table.HeaderCell>
+                    <Table.HeaderCell>Success</Table.HeaderCell>
                     <Table.HeaderCell>Date Submitted</Table.HeaderCell>
+                    <Table.HeaderCell>Date Started</Table.HeaderCell>
                     <Table.HeaderCell>Date Completed</Table.HeaderCell>
                   </Table.Row>
                 </Table.Header>
 
                 <Table.Body>
-                  <Table.Row>
-                    <Table.Cell>Job ID HERE</Table.Cell>
-                    <Table.Cell>Overall Status Here</Table.Cell>
-                    <Table.Cell>Date Started here</Table.Cell>
-                    <Table.Cell>Date Completed here</Table.Cell>
-                  </Table.Row>
+                  {previousJobs.map(job => {
+                    return (
+                      <Table.Row>
+                        <Table.Cell>
+                          <Label>
+                            <abbr title={job.id}>{job.id.slice(0, 8)}</abbr>
+                          </Label>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Label>{jobStatusVerbose[job.status]}</Label>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {job.success ? <Icon color="green" name="checkmark" /> : <Icon color="red" name="times" />}
+                        </Table.Cell>
+                        <Table.Cell>{job.submittedDate}</Table.Cell>
+                        <Table.Cell>{job.assignedDate}</Table.Cell>
+                        <Table.Cell>{job.completedDate}</Table.Cell>
+                      </Table.Row>
+                    )
+                  })}
                 </Table.Body>
               </Table>
             </div>
@@ -498,7 +557,7 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
 
     return (
       <div className="sen2agriJobManager">
-        <Header size="medium">Sen2Agri Job Manager</Header>
+        <Header as="h3">Sen2Agri Job Manager</Header>
         <Tab panes={panes} className="sen2agriTabs" />
       </div>
     )
