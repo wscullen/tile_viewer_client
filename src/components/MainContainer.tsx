@@ -779,7 +779,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     const { dialog } = require('electron').remote
     console.log(dialog)
 
-    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename): void => {
+    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename: String[]): void => {
       if (filename) {
         const tileList = this.getTileList(true)
         console.log(filename)
