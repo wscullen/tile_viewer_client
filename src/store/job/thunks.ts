@@ -210,26 +210,13 @@ export const thunkCheckJobsForAoi = (aoiId: string): ThunkAction<void, AppState,
       for (const job of jobs) {
         const jobToUpdate = { ...state.job.byId[job.id] }
 
-        interface Status {
-          [index: string]: number
-          S: number
-          A: number
-          C: number
+        if (job.status === JobStatus.Assigned && jobToUpdate.status === JobStatus.Assigned) {
+          jobToUpdate.progressInfo = job.info
         }
-
-        const statusObject: Status = {
-          S: 0,
-          A: 1,
-          C: 2,
-        }
-
-        // convert the response letter into a number that our Enum can work with
-        job.status = statusObject[job.status]
 
         if (job.status === JobStatus.Assigned && jobToUpdate.status === JobStatus.Submitted) {
           jobToUpdate.assignedDate = job.assigned
           jobToUpdate.status = job.status
-          dispatch(updateJob(jobToUpdate))
         }
 
         if (job.status === JobStatus.Completed) {
@@ -238,10 +225,8 @@ export const thunkCheckJobsForAoi = (aoiId: string): ThunkAction<void, AppState,
           jobToUpdate.status = job.status
           jobToUpdate.success = job.success
           jobToUpdate.resultMessage = job.result_message
-
-          console.log('status is completed')
-          dispatch(updateJob(jobToUpdate))
         }
+        dispatch(updateJob(jobToUpdate))
       }
     } else {
       console.log('No jobs to check for Aoi.')
