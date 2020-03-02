@@ -175,11 +175,12 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     console.log(this.props.imageryListByTile)
 
     const imageryListByTile = this.props.imageryListByTile.sentinel2
-    let recentJob: Job
+    let recentJob: Job = undefined
     let previousJobs: Job[]
 
     if (this.props.session.currentAoi) {
-      const aoiJobs = this.props.jobs.byAoiId[this.props.session.currentAoi].filter((jobId: string): string => {
+      const allJobsForAoi = this.props.jobs.byAoiId.hasOwnProperty(this.props.session.currentAoi) ? this.props.jobs.byAoiId[this.props.session.currentAoi] : []
+      const aoiJobs = allJobsForAoi.filter((jobId: string): string => {
         const job = this.props.jobs.byId[jobId]
         if (job.type === 'Sen2Agri_L2A') {
           return jobId
@@ -245,11 +246,11 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                   <div className="flexContainerHorizontalLeftGroup">
                     <div>
                       <Header as="h5">Job ID:</Header>
-                      <Label size="large">{recentJob.id}</Label>
+                      <Label size="large">{recentJob ? recentJob.id : ""}</Label>
                     </div>
                     <div>
                       <Header as="h5">Status:</Header>
-                      <Label size="large">{jobStatusVerbose[recentJob.status]}</Label>
+                      <Label size="large">{recentJob ? jobStatusVerbose[recentJob.status] : ""}</Label>
                     </div>
                     <div>
                       <Button negative>Cancel</Button>
@@ -448,25 +449,28 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                           const datesList: ImageryDates = imageryListByTile[tile]
                           console.log('dates list ')
                           console.log(datesList)
-
-                          let taskIdForTile: string
-                          recentJob.progressInfo.task_ids.map((item: string[]) => {
-                            if (item[0] === tile) taskIdForTile = item[1]
-                          })
-                          console.log(`Tile: ${tile}`)
-                          console.log(`Task ID: ${taskIdForTile}`)
-
-                          const progressInfo = recentJob.progressInfo.task_progress[taskIdForTile]
-                          console.log(progressInfo)
-
+                          let taskIdForTile: string = undefined
+                          let progressInfo = undefined
+                          
+                          if (recentJob) {
+                            recentJob.progressInfo.task_ids.map((item: string[]) => {
+                              if (item[0] === tile) taskIdForTile = item[1]
+                            })
+                            console.log(`Tile: ${tile}`)
+                            console.log(`Task ID: ${taskIdForTile}`)
+  
+                            progressInfo = recentJob.progressInfo.task_progress[taskIdForTile]
+                            console.log(progressInfo)
+                          }
+                          
                           return (
                             <Table.Row textAlign="center">
                               <Table.Cell>{tile}</Table.Cell>
                               <Table.Cell>
-                                <abbr title={taskIdForTile}>{taskIdForTile.slice(0, 8)}</abbr>
+                                {taskIdForTile ? <abbr title={taskIdForTile}>{taskIdForTile.slice(0, 8)}</abbr> : ""}
                               </Table.Cell>
                               <Table.Cell>
-                                <Label>{progressInfo.status}</Label>
+                                <Label>{progressInfo ? progressInfo.status : ""}</Label>
                               </Table.Cell>
                               <Table.Cell>
                                 <Progress size="small" percent={55}></Progress>
