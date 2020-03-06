@@ -22,6 +22,8 @@ import {
   Form,
   Popup,
   Segment,
+  Dimmer,
+  Loader,
 } from 'semantic-ui-react'
 
 import {
@@ -62,7 +64,7 @@ import { thunkAddJob } from '../store/job/thunks'
 import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { MainSessionState } from '../store/session/types'
-import { updateMainSession } from '../store/session/actions'
+import { updateMainSession, updateImageryStatusForm } from '../store/session/actions'
 
 import { thunkSendMessage } from '../thunks'
 
@@ -90,6 +92,7 @@ interface AppProps {
   thunkCheckImageryStatus: Function
   tiles: TileState
   jobs: JobState
+  updateImageryStatusForm: Function
 }
 
 interface JobStatusVerbose {
@@ -143,10 +146,19 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     // Refresh tile status check when component mounts
     // Check for tile status using /imagerystatus thunk
     console.log('Inside sen2agri job manager component did mount')
-    if (this.props.session.currentAoi) {
+    if (this.props.session.currentAoi && this.props.allSelectedTiles.length > 0) {
+      let newUpdateTileStatus = {
+        submitting: true,
+        finished: false,
+        success: false,
+        msg: '',
+      }
+
+      this.props.updateImageryStatusForm(newUpdateTileStatus)
+
       this.props.thunkCheckImageryStatus(
         this.props.allSelectedTiles,
-        's2_l1c',
+        'sen2agri_l2a',
         this.props.aois.byId[this.props.session.currentAoi].name,
       )
     }
@@ -179,7 +191,9 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     let previousJobs: Job[]
 
     if (this.props.session.currentAoi) {
-      const allJobsForAoi = this.props.jobs.byAoiId.hasOwnProperty(this.props.session.currentAoi) ? this.props.jobs.byAoiId[this.props.session.currentAoi] : []
+      const allJobsForAoi = this.props.jobs.byAoiId.hasOwnProperty(this.props.session.currentAoi)
+        ? this.props.jobs.byAoiId[this.props.session.currentAoi]
+        : []
       const aoiJobs = allJobsForAoi.filter((jobId: string): string => {
         const job = this.props.jobs.byId[jobId]
         if (job.type === 'Sen2Agri_L2A') {
@@ -187,9 +201,15 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
         }
       })
       recentJob = this.props.jobs.byId[aoiJobs[aoiJobs.length - 1]]
-      previousJobs = aoiJobs.slice(0, -1).map(jobId => {
-        return this.props.jobs.byId[jobId]
-      })
+      previousJobs = aoiJobs
+        .slice(0, -1)
+        .map(jobId => {
+          return this.props.jobs.byId[jobId]
+        })
+        .sort((a, b) => {
+          if (a.submittedDate > b.submittedDate) return 0
+          else return 1
+        })
     }
 
     const allDates = []
@@ -199,6 +219,12 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
         console.log(v)
         allDates.push(v)
       }
+    }
+
+    // Disable scrolling of tile table if tile status is being updated
+    let tileTableClass = 'imageryStatusTable'
+    if (this.props.session.forms.updateTileStatus.submitting) {
+      tileTableClass += ' noScroll'
     }
 
     // Get all dates set
@@ -239,18 +265,31 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
         menuItem: 'Atmospheric Correction',
         render: () => (
           <Tab.Pane>
-            <div className="currentJobPanel">
+            <Segment basic className="currentJobPanel">
               <Header as="h3">Most Recent Job</Header>
               <div>
-                <div className="flexContainerHorizontal">
+                <Segment basic className="flexContainerHorizontal">
                   <div className="flexContainerHorizontalLeftGroup">
                     <div>
                       <Header as="h5">Job ID:</Header>
-                      <Label size="large">{recentJob ? recentJob.id : ""}</Label>
+                      <Label size="large">{recentJob ? recentJob.id : ''}</Label>
                     </div>
                     <div>
                       <Header as="h5">Status:</Header>
-                      <Label size="large">{recentJob ? jobStatusVerbose[recentJob.status] : ""}</Label>
+                      <Label
+                        size="large"
+                        color={
+                          recentJob
+                            ? recentJob.status === JobStatus.Completed
+                              ? recentJob.success
+                                ? 'green'
+                                : 'red'
+                              : undefined
+                            : undefined
+                        }
+                      >
+                        {recentJob ? jobStatusVerbose[recentJob.status] : ''}
+                      </Label>
                     </div>
                     <div>
                       <Button negative>Cancel</Button>
@@ -418,11 +457,14 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                       </div>
                     </Modal.Content>
                   </Modal>
-                </div>
+                </Segment>
                 <Progress size="large" percent={55}>
                   Overall Progress
                 </Progress>
-                <div className="imageryStatusTable">
+                <Segment basic className={tileTableClass}>
+                  <Dimmer inverted active={this.props.session.forms.updateTileStatus.submitting}>
+                    <Loader active>Loading Tile Statuses</Loader>
+                  </Dimmer>
                   <Table celled compact size="small">
                     <Table.Header>
                       <Table.Row>
@@ -451,26 +493,26 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                           console.log(datesList)
                           let taskIdForTile: string = undefined
                           let progressInfo = undefined
-                          
-                          if (recentJob) {
+
+                          if (recentJob && recentJob.hasOwnProperty('progressInfo')) {
                             recentJob.progressInfo.task_ids.map((item: string[]) => {
                               if (item[0] === tile) taskIdForTile = item[1]
                             })
                             console.log(`Tile: ${tile}`)
                             console.log(`Task ID: ${taskIdForTile}`)
-  
+
                             progressInfo = recentJob.progressInfo.task_progress[taskIdForTile]
                             console.log(progressInfo)
                           }
-                          
+
                           return (
                             <Table.Row textAlign="center">
                               <Table.Cell>{tile}</Table.Cell>
                               <Table.Cell>
-                                {taskIdForTile ? <abbr title={taskIdForTile}>{taskIdForTile.slice(0, 8)}</abbr> : ""}
+                                {taskIdForTile ? <abbr title={taskIdForTile}>{taskIdForTile.slice(0, 8)}</abbr> : ''}
                               </Table.Cell>
                               <Table.Cell>
-                                <Label>{progressInfo ? progressInfo.status : ""}</Label>
+                                <Label>{progressInfo ? progressInfo.status : ''}</Label>
                               </Table.Cell>
                               <Table.Cell>
                                 <Progress size="small" percent={55}></Progress>
@@ -483,16 +525,25 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                                   console.log(tileId)
                                   console.log(tileInfo)
                                   let tileL1CS3Url = undefined
+                                  let tileSen2AgriL2aS3Url = undefined
 
-                                  if (tileInfo.properties.hasOwnProperty('l1cS3Url'))
+                                  if (tileInfo.properties.hasOwnProperty('l1cS3Url') && tileInfo.properties.l1cS3Url)
                                     tileL1CS3Url = tileInfo.properties['l1cS3Url']
+
+                                  if (
+                                    tileInfo.properties.hasOwnProperty('sen2agriL2aS3Url') &&
+                                    tileInfo.properties.sen2agriL2aS3Url
+                                  )
+                                    tileSen2AgriL2aS3Url = tileInfo.properties['sen2agriL2aS3Url']
 
                                   return (
                                     <Table.Cell className="statusCell">
                                       <Label color={tileL1CS3Url ? 'green' : 'red'} size="mini">
                                         L1C
                                       </Label>
-                                      <Label size="mini">L2A</Label>
+                                      <Label color={tileSen2AgriL2aS3Url ? 'green' : 'red'} size="mini">
+                                        L2A
+                                      </Label>
                                     </Table.Cell>
                                   )
                                 } else {
@@ -511,10 +562,10 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                         })}
                     </Table.Body>
                   </Table>
-                </div>
+                </Segment>
               </div>
-            </div>
-            <div className="previousJobsPanel">
+            </Segment>
+            <Segment basic className="previousJobsPanel">
               <Header as="h3">Previous Jobs</Header>
               <Table celled>
                 <Table.Header>
@@ -551,7 +602,7 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                   })}
                 </Table.Body>
               </Table>
-            </div>
+            </Segment>
           </Tab.Pane>
         ),
       },
@@ -595,5 +646,6 @@ export default connect(
     thunkUpdateCsrfTokens,
     updateMainSession,
     thunkCheckImageryStatus,
+    updateImageryStatusForm,
   },
 )(Sen2AgriJobManager)

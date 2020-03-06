@@ -311,49 +311,7 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
     return valid
   }
 
-  handleSubmit = (event: any) => {
-    event.preventDefault()
-    // process form submission here
-    console.log(event)
-
-    const nameValid = this.validateName(this.state.name)
-
-    if (!nameValid) {
-      return
-    }
-
-    for (const f of Array.from(this.fileInput.current.files)) {
-      console.log(f.name)
-    }
-
-    this.setState({
-      nameErrorMessage: '',
-    })
-
-    const headers = new Headers()
-
-    if (this.state.csrfToken === null) {
-      console.log('fetching csrf token')
-      fetch(`${this.props.settings.s2d2Url}/generate_csrf/`, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'default',
-        headers: headers,
-      })
-        .then(response => response.json())
-        .then(response => {
-          console.log('Success:', JSON.stringify(response))
-          this.setState({
-            csrfToken: JSON.stringify(response),
-          })
-
-          this.submitAreaOfInterest()
-        })
-        .catch(error => console.error('Error:', error))
-    } else {
-      this.submitAreaOfInterest()
-    }
-  }
+  handleSubmit = (event: any) => {}
 
   render() {
     const { focusedInput, startDate, endDate } = this.state

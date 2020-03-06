@@ -82,12 +82,19 @@ export interface StateById {
 export interface JobState extends StateById {}
 
 export const ADD_JOB = 'ADD_JOB'
+export const ADD_JOBS = 'ADD_JOBS'
 export const UPDATE_JOB = 'UPDATE_JOB'
+export const UPDATE_JOBS = 'UPDATE_JOBS'
 export const REMOVE_JOB = 'REMOVE_JOB'
 
 interface AddJobAction {
   type: typeof ADD_JOB
   payload: Job
+}
+
+interface AddJobsAction {
+  type: typeof ADD_JOBS
+  payload: Job[]
 }
 
 interface RemoveJobAction {
@@ -100,4 +107,9 @@ interface UpdateJobAction {
   payload: Job
 }
 
-export type JobActionTypes = AddJobAction | UpdateJobAction | RemoveJobAction
+interface UpdateJobsAction {
+  type: typeof UPDATE_JOBS
+  payload: Job[]
+}
+
+export type JobActionTypes = AddJobAction | AddJobsAction | UpdateJobAction | RemoveJobAction | UpdateJobsAction

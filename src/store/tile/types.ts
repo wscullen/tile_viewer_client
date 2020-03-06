@@ -30,6 +30,7 @@ export interface Properties {
   projection: string
   l1cS3Url: string
   l2aS3Url: string
+  sen2agriL2aS3Url: string
 }
 
 export interface Tile extends GeoJsonFeature {
@@ -69,6 +70,7 @@ export interface TileState extends StateById {}
 
 export const ADD_TILE = 'ADD_TILE'
 export const UPDATE_TILE = 'UPDATE_TILE'
+export const UPDATE_TILES = 'UPDATE_TILES'
 
 interface AddTileAction {
   type: typeof ADD_TILE
@@ -80,4 +82,9 @@ interface UpdateTileAction {
   payload: Tile
 }
 
-export type TileActionTypes = AddTileAction | UpdateTileAction
+interface UpdateTilesAction {
+  type: typeof UPDATE_TILES
+  payload: Tile[]
+}
+
+export type TileActionTypes = AddTileAction | UpdateTileAction | UpdateTilesAction

@@ -6,6 +6,7 @@ import {
   RESET_STATE,
   UPDATE_ADD_AOI_FORM,
   UPDATE_LOGIN_FORM,
+  UPDATE_IMAGERY_STATUS_FORM,
   SessionActionTypes,
   SessionSettings,
   MainSessionState,
@@ -24,6 +25,13 @@ export function updateAddAoiForm(updatedFormUi: FormUi): SessionActionTypes {
 export function updateLoginForm(updatedFormUi: FormUi): SessionActionTypes {
   return {
     type: UPDATE_LOGIN_FORM,
+    payload: updatedFormUi,
+  }
+}
+
+export function updateImageryStatusForm(updatedFormUi: FormUi): SessionActionTypes {
+  return {
+    type: UPDATE_IMAGERY_STATUS_FORM,
     payload: updatedFormUi,
   }
 }

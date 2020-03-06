@@ -1,4 +1,4 @@
-import { JobState, ADD_JOB, REMOVE_JOB, UPDATE_JOB, JobActionTypes } from './types'
+import { JobState, ADD_JOB, ADD_JOBS, REMOVE_JOB, UPDATE_JOB, UPDATE_JOBS, JobActionTypes } from './types'
 
 import { AppState } from '../index'
 
@@ -26,6 +26,36 @@ export function jobReducer(state = initialState, action: JobActionTypes): JobSta
         ...jobs,
       }
     }
+    case ADD_JOBS: {
+      const jobs = { ...state }
+
+      for (const job of action.payload) {
+        jobs.byId[job.id] = { ...job }
+        jobs.allIds.push(job.id)
+
+        if (jobs.byAoiId[job.aoiId]) {
+          jobs.byAoiId[job.aoiId].push(job.id)
+        } else {
+          jobs.byAoiId[job.aoiId] = []
+          jobs.byAoiId[job.aoiId].push(job.id)
+        }
+      }
+
+      return {
+        ...jobs,
+      }
+    }
+    case UPDATE_JOBS: {
+      const jobs = { ...state }
+
+      for (const job of action.payload) {
+        jobs.byId[job.id] = { ...job }
+      }
+
+      return {
+        ...jobs,
+      }
+    }
     case UPDATE_JOB: {
       const jobs = { ...state }
       const jobToUpdate = jobs.byId[action.payload.id]
@@ -44,8 +74,6 @@ export function jobReducer(state = initialState, action: JobActionTypes): JobSta
 
       const jobToDelete = jobs.byId[action.payload]
       const aoiId = jobToDelete.aoiId
-
-      clearInterval(jobToDelete.setIntervalId)
 
       delete jobs.byId[action.payload]
       jobs.allIds.splice(jobs.allIds.indexOf(action.payload), 1)

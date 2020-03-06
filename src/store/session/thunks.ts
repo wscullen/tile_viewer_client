@@ -156,9 +156,11 @@ export const thunkAuthenticate = ({
   let currentSession = state.session
 
   let tokens = await authenticate({ email, password, url }, dispatch, currentSession)
+
+  console.log(tokens)
 }
 
-async function authenticate(
+export async function authenticate(
   {
     email,
     password,
@@ -176,37 +178,56 @@ async function authenticate(
     email,
     password,
   })
-
-  const result = await fetch(`${url}/api/token/`, {
-    method: 'POST',
-    mode: 'cors',
-    cache: 'default',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body,
-  })
-    .then(response => response.json())
-    .then(response => {
-      console.log('Success:', JSON.stringify(response))
-
-      const now = Date.now().toString()
-      session.settings.jobManagerUrl = url
-      session.settings.auth.userEmail = email
-      session.settings.auth.userPassword = password
-
-      // Immediately after we login we want to refresh the token
-      refreshToken(session, dispatch)
-
-      dispatch(updateMainSession(session))
+  try {
+    const data = await fetch(`${url}/api/token/`, {
+      method: 'POST',
+      mode: 'cors',
+      cache: 'default',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body,
     })
-    .then(response => {
-      console.log(response)
-    })
-    .catch(err => {
-      console.log('Something blew up while verifying the API')
-      return err
-    })
+
+    const response = await data.json()
+
+    const refreshResult = await refreshToken(session, dispatch)
+
+    return refreshResult
+  } catch {
+    return 'BOOM GOES THE DYNAMITE'
+  }
+  // return fetch(`${url}/api/token/`, {
+  //   method: 'POST',
+  //   mode: 'cors',
+  //   cache: 'default',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body,
+  // })
+  //   .then(response => response.json())
+  //   .then(response => {
+  //     console.log('Success:', JSON.stringify(response))
+
+  //     const now = Date.now().toString()
+  //     session.settings.jobManagerUrl = url
+  //     session.settings.auth.userEmail = email
+  //     session.settings.auth.userPassword = password
+
+  //     // Immediately after we login we want to refresh the token
+  //     await refreshToken(session, dispatch)
+  //     console.log('------------------------------------ first then')
+  //   })
+  //   .then(response => {
+  //     console.log(response)
+  //     console.log('------------------------------- second then')
+  //     return response
+  //   })
+  //   .catch(err => {
+  //     console.log('Something blew up while verifying the API')
+  //     return err
+  //   })
 }
 
 async function getCSRFTokens(session: MainSessionState, dispatch: any) {
@@ -248,14 +269,20 @@ export async function refreshToken(session: MainSessionState, dispatch: any) {
       console.log('Success:', JSON.stringify(response))
 
       const now = Date.now().toString()
+
       session.settings.auth.accessToken = response.access
       session.settings.auth.dateVerified = now
+
       dispatch(updateMainSession(session))
+
+      return true
     })
     .catch(err => {
       console.log('Something blew up while trying to refresh the access token')
       return err
     })
+
+  return result
 }
 
 export async function getCSRFToken(apiRootUrl: string): Promise<string> {

@@ -89,12 +89,21 @@ tbody {
   // height: 0;
 }
 
+.imageryStatusTable.noScroll {
+  overflow: hidden;
+}
+
 .imageryStatusTable td {
   padding: 2px;
 }
 
 th.dateHeader {
   padding: 10px 0px;
+}
+
+.dateHeader p {
+  padding: 0px;
+  font-size: 11px;
 }
 
 .dateHeader h5 {

@@ -103,106 +103,15 @@ class TileList extends Component<AppProps, DefaultAppState> {
         let task_progress = job.progressInfo['task_progress']
 
         if (task_progress.hasOwnProperty('upload_progress')) {
-          return <Progress percent={task_progress['upload_progress']} color="green" attached="bottom" active />
+          return <Progress percent={50 + task_progress['upload_progress'] / 2} color="green" attached="bottom" active />
         } else if (task_progress.hasOwnProperty('download_progress')) {
-          return <Progress percent={task_progress['download_progress']} color="green" attached="bottom" active />
+          return <Progress percent={task_progress['download_progress'] / 2} color="green" attached="bottom" active />
         }
       }
     }
   }
 
-  // job_verified_icon_l2a = () => {
-  //   let jobProgressIcon = 'hourglass outline'
-  //   let jobProgressClass = 'tileActionIndicator disabledIcon'
-  //   if (this.props.sen2agriL2AJob) {
-  //     if (this.props.sen2agriL2AJob.status === JobStatus.Submitted) {
-  //       jobProgressIcon = 'hourglass start'
-  //       jobProgressClass = 'tileActionIndicator grey'
-  //     } else if (this.props.sen2agriL2AJob.status === JobStatus.Assigned) {
-  //       jobProgressIcon = 'hourglass half'
-  //       jobProgressClass = 'tileActionIndicator '
-  //     } else if (this.props.sen2agriL2AJob.status === JobStatus.Completed) {
-  //       jobProgressIcon = 'hourglass end'
-  //       jobProgressClass = 'tileActionIndicator '
-  //     }
-
-  //     if (this.props.sen2agriL2AJob.success) {
-  //       jobProgressClass += 'jobSuccess'
-  //     } else if (!!!this.props.sen2agriL2AJob.success && this.props.sen2agriL2AJob.status === JobStatus.Completed) {
-  //       jobProgressClass += 'jobFailed'
-  //     }
-
-  //     return (
-  //       <div className={jobProgressClass}>
-  //         <Icon type={jobProgressIcon} />
-  //       </div>
-  //     )
-  //   }
-  // }
-
-  // job_verified_icon_l3a = () => {
-  //   let jobProgressIcon = 'hourglass outline'
-  //   let jobProgressClass = 'tileActionIndicator disabledIcon'
-  //   if (this.props.sen2agriL3AJob) {
-  //     if (this.props.sen2agriL3AJob.status === JobStatus.Submitted) {
-  //       jobProgressIcon = 'hourglass start'
-  //       jobProgressClass = 'tileActionIndicator grey'
-  //     } else if (this.props.sen2agriL3AJob.status === JobStatus.Assigned) {
-  //       jobProgressIcon = 'hourglass half'
-  //       jobProgressClass = 'tileActionIndicator '
-  //     } else if (this.props.sen2agriL3AJob.status === JobSsystemtatus.Completed) {
-  //       jobProgressIcon = 'hourglass end'
-  //       jobProgressClass = 'tileActionIndicator '
-  //     }
-
-  //     if (this.props.sen2agriL3AJob.success) {
-  //       jobProgressClass += 'jobSuccess'
-  //     } else if (!!!this.props.sen2agriL3AJob.success && this.props.sen2agriL3AJob.status === JobStatus.Completed) {
-  //       jobProgressClass += 'jobFailed'
-  //     }
-
-  //     return (
-  //       <div className={jobProgressClass}>
-  //         <Icon type={jobProgressIcon} />
-  //       </div>
-  //     )
-  //   }
-  // }
-
-  // job_verified_icon_l3b = () => {
-  //   let jobProgressIcon = 'hourglass outline'
-  //   let jobProgressClass = 'tileActionIndicator disabledIcon'
-  //   if (this.props.sen2agriL3BJob) {
-  //     if (this.props.sen2agriL3BJob.status === JobStatus.Submitted) {
-  //       jobProgressIcon = 'hourglass start'
-  //       jobProgressClass = 'tileActionIndicator grey'
-  //     } else if (this.props.sen2agriL3BJob.status === JobStatus.Assigned) {
-  //       jobProgressIcon = 'hourglass half'
-  //       jobProgressClass = 'tileActionIndicator '
-  //     } else if (this.props.sen2agriL3BJob.status === JobStatus.Completed) {
-  //       jobProgressIcon = 'hourglass end'
-  //       jobProgressClass = 'tileActionIndicator '
-  //     }
-
-  //     if (this.props.sen2agriL3BJob.success) {
-  //       jobProgressClass += 'jobSuccess'
-  //     } else if (!!!this.props.sen2agriL3BJob.success && this.props.sen2agriL3BJob.status === JobStatus.Completed) {
-  //       jobProgressClass += 'jobFailed'
-  //     }
-
-  //     return (
-  //       <div className={jobProgressClass}>
-  //         <Icon type={jobProgressIcon} />
-  //       </div>
-  //     )
-  //   }
-  // }
-
   render() {
-    console.log('Tile List -----')
-    console.log(this.props.selectedTilesInList)
-    console.log(this.props.settings)
-
     let dateSectionHeaderClassname = 'dateSection'
 
     let optionsHeaderClass = 'optionsWrapper'

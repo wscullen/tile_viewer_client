@@ -261,7 +261,7 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
       )
     } else if (this.props.activeTab === 1) {
       return (
-        <div className="jobViewer">
+        <div className="jobViewerMainContent">
           {this.navigationPanel()}
           <Sen2AgriJobManager />
         </div>

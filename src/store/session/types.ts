@@ -52,6 +52,7 @@ export interface FormsUiState {
   addAoi: FormUi
   login: FormUi
   createL2AJob: FormUi
+  updateTileStatus: FormUi
 }
 
 export interface MainSessionState {
@@ -70,6 +71,7 @@ export const FINISH_LOGIN = 'FINISH_LOGIN'
 
 export const UPDATE_ADD_AOI_FORM = 'UPDATE_ADD_AOI_FORM'
 export const UPDATE_LOGIN_FORM = 'UPDATE_LOGIN_FORM'
+export const UPDATE_IMAGERY_STATUS_FORM = 'UPDATE_IMAGERY_STATUS_FORM'
 
 export const RESET_STATE = 'RESET_STATE'
 
@@ -85,6 +87,11 @@ interface UpdateAddAoiFormAction {
 
 interface UpdateLoginFormAction {
   type: typeof UPDATE_LOGIN_FORM
+  payload: FormUi
+}
+
+interface UpdateImageryStatusFormAction {
+  type: typeof UPDATE_IMAGERY_STATUS_FORM
   payload: FormUi
 }
 
@@ -114,3 +121,4 @@ export type SessionActionTypes =
   | ResetStateAction
   | UpdateAddAoiFormAction
   | UpdateLoginFormAction
+  | UpdateImageryStatusFormAction

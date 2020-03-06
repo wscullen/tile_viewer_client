@@ -1,8 +1,8 @@
 import { Action } from 'redux'
 import { ThunkAction } from 'redux-thunk'
 import { addJob } from './actions'
-import { updateTile } from '../tile/actions'
-import { updateJob, removeJob } from './actions'
+import { updateTile, updateTiles } from '../tile/actions'
+import { updateJob, updateJobs, removeJob, addJobs } from './actions'
 import { Job, JobStatus } from './types'
 import { AppState } from '../index'
 import { Tile, TileListByDate } from '../tile/types'
@@ -14,9 +14,6 @@ import { tsImportEqualsDeclaration } from '@babel/types'
 import { refreshToken } from '../session/thunks'
 
 import { updateMainSession } from '../session/actions'
-
-//@ts-ignore
-import base64 from 'base-64'
 
 const checkJobStatus = (
   jobId: string,
@@ -162,8 +159,7 @@ const getJobs = async (
         return response.json()
       } else if (response.status === 404) {
         console.log('problem fetching jobs status, removing job')
-
-        throw new Error('no jobs found on job manager!')
+        return []
       }
     })
     .then(response => {
@@ -207,27 +203,31 @@ export const thunkCheckJobsForAoi = (aoiId: string): ThunkAction<void, AppState,
     }
     if (jobIdList.length > 0) {
       const jobs = await getJobs(jobIdList, jobManagerUrl, csrfToken, accessToken)
+      const jobsToUpdate: Job[] = []
       for (const job of jobs) {
+        console.log(job)
+
         const jobToUpdate = { ...state.job.byId[job.id] }
 
         if (job.status === JobStatus.Assigned && jobToUpdate.status === JobStatus.Assigned) {
           jobToUpdate.progressInfo = job.info
-        }
-
-        if (job.status === JobStatus.Assigned && jobToUpdate.status === JobStatus.Submitted) {
+          jobsToUpdate.push(jobToUpdate)
+        } else if (job.status === JobStatus.Assigned && jobToUpdate.status === JobStatus.Submitted) {
           jobToUpdate.assignedDate = job.assigned
           jobToUpdate.status = job.status
-        }
-
-        if (job.status === JobStatus.Completed) {
+          jobToUpdate.progressInfo = job.info
+          jobsToUpdate.push(jobToUpdate)
+        } else if (job.status === JobStatus.Completed) {
           jobToUpdate.assignedDate = job.assigned
+          jobToUpdate.progressInfo = job.info
           jobToUpdate.completedDate = job.completed
           jobToUpdate.status = job.status
           jobToUpdate.success = job.success
           jobToUpdate.resultMessage = job.result_message
+          jobsToUpdate.push(jobToUpdate)
         }
-        dispatch(updateJob(jobToUpdate))
       }
+      dispatch(updateJobs(jobsToUpdate))
     } else {
       console.log('No jobs to check for Aoi.')
     }
@@ -317,6 +317,98 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
       dispatch(updateAoi(aoi))
     }
   }
+}
+
+export const thunkAddJobs = (
+  newJobs: Job[],
+  aoiId: string,
+): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
+  console.log('thunk started in func')
+  const state = getState()
+
+  const jobManagerUrl: string = state.session.settings.jobManagerUrl
+  const atmosCorrection: boolean = state.aoi.byId[aoiId].session.settings.atmosphericCorrection
+
+  console.log(atmosCorrection)
+
+  const csrfToken: string = state.session.csrfTokens.jobManager.key
+  await refreshToken(state.session, dispatch)
+
+  const aoi = { ...state.aoi.byId[aoiId] }
+  const tilesToUpdate: Tile[] = []
+  const jobsToAdd: Job[] = []
+
+  for (const job of newJobs) {
+    if (job.type === 'tile') {
+      let tile: Tile
+      tile = { ...state.tile.byId[job.tileId] }
+
+      const accessToken: string = state.session.settings.auth.accessToken
+
+      const jobResult = await submitJobToApi(jobManagerUrl, job, tile, atmosCorrection, csrfToken, accessToken)
+
+      if (jobResult) {
+        console.log('thunk finished in func job submitted successfully')
+
+        aoi.jobs.push(jobResult.id)
+        tile.jobs.push(jobResult.id)
+
+        tilesToUpdate.push(tile)
+        jobsToAdd.push(job)
+      } else {
+        // TODO: Need to add a notification when submitting jobs fails
+      }
+    } else if (job.type === 'Sen2Agri_L2A') {
+      console.log(job)
+      const accessToken: string = state.session.settings.auth.accessToken
+      // newJob.params['aoiName'] = activeAoiName
+      const jobResult = await submitSen2AgriJobToApi(
+        jobManagerUrl,
+        job,
+        job.tileDict,
+        job.params,
+        csrfToken,
+        accessToken,
+      )
+      if (jobResult.errorResult) {
+        console.log('something went terribly wrong while submitting job')
+        let newL2AFormState = {
+          submitting: false,
+          finished: true,
+          success: false,
+          msg: `Something went wrong while trying to submit the job (${jobResult.errorResult})`,
+        }
+
+        let mainSession = state.session
+
+        mainSession.forms.createL2AJob = newL2AFormState
+
+        dispatch(updateMainSession(mainSession))
+      } else if (jobResult) {
+        console.log('thunk finished in func')
+        aoi.jobs.push(jobResult.id)
+
+        let newL2AFormState = {
+          submitting: false,
+          finished: true,
+          success: true,
+          msg: 'Successfully submitted job.',
+        }
+
+        let mainSession = state.session
+
+        mainSession.forms.createL2AJob = newL2AFormState
+
+        dispatch(updateMainSession(mainSession))
+
+        jobsToAdd.push(job)
+      }
+    }
+  }
+
+  dispatch(updateTiles(tilesToUpdate))
+  dispatch(addJobs(jobsToAdd))
+  dispatch(updateAoi(aoi))
 }
 
 const submitJobToApi = async (

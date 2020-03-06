@@ -7,6 +7,7 @@ import {
   SessionActionTypes,
   UPDATE_ADD_AOI_FORM,
   UPDATE_LOGIN_FORM,
+  UPDATE_IMAGERY_STATUS_FORM,
 } from './types'
 
 const initialState: MainSessionState = {
@@ -44,6 +45,12 @@ const initialState: MainSessionState = {
       success: false,
       msg: '',
     },
+    updateTileStatus: {
+      submitting: false,
+      finished: false,
+      success: false,
+      msg: '',
+    },
   },
   csrfTokens: {
     s2d2: {
@@ -76,6 +83,14 @@ export function sessionReducer(state = initialState, action: SessionActionTypes)
       const sessionState = { ...state }
       sessionState.forms.login = {
         ...sessionState.forms.login,
+        ...action.payload,
+      }
+      return sessionState
+    }
+    case UPDATE_IMAGERY_STATUS_FORM: {
+      const sessionState = { ...state }
+      sessionState.forms.updateTileStatus = {
+        ...sessionState.forms.updateTileStatus,
         ...action.payload,
       }
       return sessionState

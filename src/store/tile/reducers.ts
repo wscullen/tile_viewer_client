@@ -1,4 +1,4 @@
-import { TileState, ADD_TILE, UPDATE_TILE, TileActionTypes } from './types'
+import { TileState, ADD_TILE, UPDATE_TILE, UPDATE_TILES, TileActionTypes } from './types'
 
 const initialState: TileState = {
   byId: {},
@@ -21,6 +21,19 @@ export function tileReducer(state = initialState, action: TileActionTypes): Tile
 
       if (state.allIds.includes(action.payload.id)) {
         tiles.byId[action.payload.id] = { ...action.payload }
+      }
+
+      return {
+        ...tiles,
+      }
+    }
+    case UPDATE_TILES: {
+      const tiles = { ...state }
+
+      for (const tile of action.payload) {
+        if (tiles.allIds.includes(tile.id)) {
+          tiles.byId[tile.id] = { ...tile }
+        }
       }
 
       return {

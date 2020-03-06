@@ -20,18 +20,27 @@ import { addAoi } from './actions'
 
 import { RawTile, Tile } from '../tile/types'
 
-import { addTile, updateTile } from '../tile/actions'
-import { updateAddAoiForm } from '../session/actions'
+import { addTile, updateTile, updateTiles } from '../tile/actions'
+import { updateAddAoiForm, updateMainSession, updateImageryStatusForm } from '../session/actions'
+import { authenticate } from '../session/thunks'
 
 export const thunkCheckImageryStatus = (
   tileIdList: string[],
   imageryType: string,
   aoiName: string,
 ): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
-  console.log('Inside thunk getting checking S3 imagery status')
-
   const state = getState()
-  console.log(state)
+  const session = state.session
+  const email = session.settings.auth.userEmail
+  const password = session.settings.auth.userPassword
+  const url = session.settings.jobManagerUrl
+
+  const authResult = await authenticate({ email, password, url }, dispatch, session)
+
+  console.log('AUTHING FOR THUNK REQUEST')
+  console.log(authResult)
+
+  console.log('Inside thunk getting checking S3 imagery status')
 
   interface StringIndexObject {
     [index: string]: string
@@ -72,82 +81,76 @@ export const thunkCheckImageryStatus = (
     })
     .then(response => {
       if (!response.hasOwnProperty('data')) throw response['error']
-      interface DataResponse {
+
+      interface ImageryStatus {
+        [index: string]: any
+      }
+
+      interface L1CImageryStatus {
         [index: string]: any
         esa?: string
         usgs?: string
       }
 
-      const data = response['data'] as DataResponse
+      const data = response['data'] as ImageryStatus
+      console.log(data)
 
+      const tilesToUpdate: Tile[] = []
       for (const [key, value] of Object.entries(data)) {
-        const existingTile = { ...state.tile.byId[imageryNameDict[key]] }
-        console.log(existingTile)
+        if (key === 'l1c') {
+          for (let [k, v] of Object.entries(value as L1CImageryStatus)) {
+            const existingTile = { ...state.tile.byId[imageryNameDict[k]] }
+            console.log(existingTile)
+            if (v.esa !== 'object does not exist') {
+              existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.esa +
+                '.zip'}`
+            } else if (v.usgs !== 'object does not exist') {
+              existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.usgs +
+                '.zip'}`
+            } else {
+              existingTile.properties['l1cS3Url'] = undefined
+            }
+            tilesToUpdate.push(existingTile)
+          }
+        } else if (key === 'sen2agri_l2a') {
+          for (let [k, v] of Object.entries(value as L1CImageryStatus)) {
+            const existingTile = { ...state.tile.byId[imageryNameDict[k]] }
 
-        if (imageryType === 's2_l1c') {
-          if (value.esa !== 'object does not exist') {
-            existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.esa +
-              '.zip'}`
-          } else if (value.usgs !== 'object does not exist') {
-            existingTile.properties['l1cS3Url'] = `http://zeus684440.agr.gc.ca:9000/s2-l1c-archive/${value.usgs +
-              '.zip'}`
-          } else {
-            existingTile.properties['l1cS3Url'] = undefined
+            if (v !== 'object does not exist') {
+              existingTile.properties[
+                'sen2agriL2aS3Url'
+              ] = `http://zeus684440.agr.gc.ca:9000/sen2agri-l2a/${aoiName}/'sentinel2'/${value + '.zip'}`
+            } else {
+              existingTile.properties['sen2agriL2aS3Url'] = undefined
+            }
+
+            tilesToUpdate.push(existingTile)
           }
         }
-
-        dispatch(updateTile(existingTile))
-        console.log(existingTile)
       }
 
-      console.log(data)
+      dispatch(updateTiles(tilesToUpdate))
+
+      let newUpdateTileStatus = {
+        submitting: false,
+        finished: true,
+        success: true,
+        msg: 'Retrieved tile status okay',
+      }
+
+      dispatch(updateImageryStatusForm(newUpdateTileStatus))
     })
     .catch(reason => {
       console.log(reason)
+      let newUpdateTileStatus = {
+        submitting: false,
+        finished: true,
+        success: false,
+        msg: 'Failed to retrieve status',
+      }
+
+      dispatch(updateImageryStatusForm(newUpdateTileStatus))
     })
-
-  // const aoi = {
-  //   id: data['id'],
-  //   name: addAoiFormData.get('name'),
-  //   startDate: addAoiFormData.get('startDate'),
-  //   endDate: addAoiFormData.get('endDate'),
-  //   shapefile: Array(addAoiFormData.get('shapefiles')).filter(ele => path.extname(ele.toString()) === '.shp'),
-  //   wkt_footprint: data['wkt_footprint'],
-  //   mgrs_list: data['mgrs_list'],
-  //   wrs_list: data['wrs_list'],
-  //   raw_tile_list: data['tile_results'],
-  //   wrs_overlay: data['wrs_geojson'],
-  //   sensor_list: data['sensor_list'],
-  // }
-
-  // console.log(aoi)
-
-  // console.log('Adding area of interest...')
-
-  // const allTileId: TileListInterface = {}
-
-  // const currentDates: CurrentDates = {}
-
-  // const sensorList: string[] = []
-
-  // const selectedTileId: TileListInterface = {}
-
-  // for (const key of Object.keys(aoi.raw_tile_list)) {
-  //   console.log(key)
-  //   const tiles = data['tile_results'][key]
-  //   const sortedTiles = sortTilesByDate(tiles)
-
-  //   const dateList = Object.keys(sortedTiles.datesObject)
-  //   sensorList.push(key)
-  //   const datesObjectWithIds: DateObject = {}
-  //   const selectedInit: DateObject = {}
-
-  //   allTileId[key] = {}
-  //   selectedTileId[key] = {}
-  //   currentDates[key] = {
-  //     dates: [],
-  //     currentDate: '',
-  //   }
 }
 
 export const thunkStartAddAoi = (
@@ -263,6 +266,7 @@ export const thunkStartAddAoi = (
                 projection: t.proj,
                 l1cS3Url: '',
                 l2aS3Url: '',
+                sen2agriL2aS3Url: '',
               },
 
               selected: false,
@@ -331,14 +335,7 @@ export const thunkStartAddAoi = (
         submitting: false,
       }
       dispatch(updateAddAoiForm(newFormStatus))
-
-      //   this.setState({
-      //     loading: false,
-      //     areaCreated: false,
-      //     message: 'Something went wrong, unable to create area!',
-      //   })
     })
-  // done submitting, set submitting to false
 }
 
 const sortTilesByDate = (tiles: any) => {

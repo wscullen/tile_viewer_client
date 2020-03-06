@@ -33,7 +33,7 @@ import { SingleDateTileList } from '../store/aoi/types'
 import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
 
-import { thunkAddJob, thunkCheckJobsForAoi } from '../store/job/thunks'
+import { thunkAddJob, thunkAddJobs, thunkCheckJobsForAoi } from '../store/job/thunks'
 import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { thunkSendMessage } from '../thunks'
@@ -92,6 +92,7 @@ interface AppProps {
   selectedTiles: TileListByDate
   highlightedTiles: string[]
   thunkCheckJobsForAoi: Function
+  thunkAddJobs: Function
 }
 
 interface SelectorFunctions {
@@ -139,6 +140,7 @@ interface DefaultAppState {
   sen2agri_l3a_job: JobObject
   sen2agri_l3b_job: JobObject
   initMap: boolean
+  jobCheckIntervalId: number
 }
 
 const defaultState: DefaultAppState = {
@@ -162,9 +164,10 @@ const defaultState: DefaultAppState = {
   sen2agri_l3a_job: null,
   sen2agri_l3b_job: null,
   initMap: false,
+  jobCheckIntervalId: -1,
 }
 
-const JOB_CHECK_FREQUENCY = 15000
+const JOB_CHECK_FREQUENCY = 30000
 
 class MainContainer extends Component<AppProps, AppState & DefaultAppState & SelectorFunctions> {
   constructor(props: AppProps) {
@@ -232,18 +235,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     this.props.updateAddAoiForm(newAoiFormState)
 
     window.removeEventListener('beforeunload', this.cleanUpBeforeClose)
-
-    // @ts-ignore
-    const selectedTiles = this.state.selectedTiles
-
-    Object.keys(selectedTiles).map(date => {
-      selectedTiles[date].map((tile: any) => {
-        if (tile.hasOwnProperty('job_check_interval')) {
-          console.log('CLEARING INTERVAL')
-          clearInterval(tile.job_check_interval)
-        }
-      })
-    })
   }
 
   public removeAoi = (aoiName: string): void => {
@@ -260,10 +251,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     this.props.removeAoi(aoiName)
   }
 
-  cleanUpBeforeClose = () => {
-    this.saveToLocalStorage()
-    localStorage.removeItem('initial_load')
-  }
+  cleanUpBeforeClose = () => {}
 
   saveToLocalStorage = () => {}
 
@@ -351,6 +339,11 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         case 'ArrowLeft': {
           console.log('Left arrow pressed, decrementing date')
           this.decrementDate()
+          break
+        }
+        case 'a': {
+          console.log('Spacebar pressed, selecting all visible for current date')
+          this.selectAllVisibleTiles()
           break
         }
       }
@@ -473,10 +466,15 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     if (this.props.session.currentAoi) {
       prevAoiName = this.props.aois.byId[this.props.session.currentAoi].name
       console.log('Resuming job status checking for this aoi...')
-      setInterval(() => {
+      if (this.state.jobCheckIntervalId !== -1) window.clearInterval(this.state.jobCheckIntervalId)
+      let jobCheckIntervalId = window.setInterval(() => {
         console.log('Checking job statuses for current AOI')
         this.props.thunkCheckJobsForAoi(this.props.session.currentAoi)
       }, JOB_CHECK_FREQUENCY)
+
+      this.setState({
+        jobCheckIntervalId,
+      })
     }
 
     if (prevAoiName === aoi_name) return
@@ -531,6 +529,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     const tiles = this.props.selectedTiles
     const highlightedTiles = this.props.highlightedTiles
 
+    const newJobs: Job[] = []
+
     Object.keys(tiles).map(ele => {
       console.log(ele)
       console.log(tiles[ele])
@@ -556,8 +556,9 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                 tileId: tile.id,
                 resultMessage: '',
               }
-              console.log('Submitting job')
-              this.props.thunkAddJob(newJob)
+              // console.log('Submitting job')
+              // this.props.thunkAddJob(newJob)
+              newJobs.push(newJob)
             }
           } else {
             const newJob: Job = {
@@ -575,12 +576,15 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               tileId: tile.id,
               resultMessage: '',
             }
-            console.log('Submitting job')
-            this.props.thunkAddJob(newJob)
+            // console.log('Submitting job')
+            // this.props.thunkAddJob(newJob)
+            newJobs.push(newJob)
           }
         })
       }
     })
+    console.log('Submitting all jobs at once...')
+    this.props.thunkAddJobs(newJobs, this.props.session.currentAoi)
   }
 
   getAoiIndex = (aoi_name: string): number => {
@@ -663,6 +667,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log(tileId)
     const relevantTile: Tile = { ...this.props.tiles.byId[tileId] }
     relevantTile.selected = !relevantTile.selected
+    relevantTile.highlighted = false
     this.props.updateTile(relevantTile)
   }
 
@@ -779,7 +784,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     const { dialog } = require('electron').remote
     console.log(dialog)
 
-    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename: String[]): void => {
+    dialog.showSaveDialog({ defaultPath: 'tilelist.json' }, (filename: string): void => {
       if (filename) {
         const tileList = this.getTileList(true)
         console.log(filename)
@@ -1087,5 +1092,6 @@ export default connect(
     thunkAddJob,
     thunkCheckJobsForAoi,
     thunkUpdateCsrfTokens,
+    thunkAddJobs,
   },
 )(MainContainer)
