@@ -301,7 +301,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   showModal = () => {
-    // @ts-ignore
     this.setState({ show: true })
   }
 
@@ -317,7 +316,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log(newAoiFormState)
 
     this.props.updateAddAoiForm(newAoiFormState)
-    // @ts-ignore
     this.setState({ show: false })
   }
 
@@ -329,7 +327,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
     console.log('key pressed')
     console.log(event.key)
 
-    if (this.state.activeAOI !== '') {
+    if (this.state.activeAOI !== '' && this.props.session.activeTab === 0 && !this.state.show) {
       switch (event.key) {
         case 'ArrowRight': {
           console.log('Right arrow pressed, incrementing date')
@@ -1038,8 +1036,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           settings={this.props.session.settings}
           aoiNames={this.props.aoiNames}
         />
-        {/*
-        // @ts-ignore */}
         <AreaOfInterestList
           addAreaModal={this.showModal}
           areasOfInterest={aois}

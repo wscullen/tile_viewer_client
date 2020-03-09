@@ -146,6 +146,12 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     // Refresh tile status check when component mounts
     // Check for tile status using /imagerystatus thunk
     console.log('Inside sen2agri job manager component did mount')
+    this.checkImageryStatus('sen2agri_l2a')
+  }
+
+  componentWillUnmount() {}
+
+  checkImageryStatus(imageryName: string) {
     if (this.props.session.currentAoi && this.props.allSelectedTiles.length > 0) {
       let newUpdateTileStatus = {
         submitting: true,
@@ -158,13 +164,11 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
 
       this.props.thunkCheckImageryStatus(
         this.props.allSelectedTiles,
-        'sen2agri_l2a',
+        imageryName,
         this.props.aois.byId[this.props.session.currentAoi].name,
       )
     }
   }
-
-  componentWillUnmount() {}
 
   jobSuccessIcon = (jobSuccess: boolean, jobStatus: JobStatus) => {
     if (jobSuccess && jobStatus === JobStatus.Completed) {
@@ -189,6 +193,7 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
     const imageryListByTile = this.props.imageryListByTile.sentinel2
     let recentJob: Job = undefined
     let previousJobs: Job[]
+    let overallProgressPercent: number = 0
 
     if (this.props.session.currentAoi) {
       const allJobsForAoi = this.props.jobs.byAoiId.hasOwnProperty(this.props.session.currentAoi)
@@ -201,6 +206,24 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
         }
       })
       recentJob = this.props.jobs.byId[aoiJobs[aoiJobs.length - 1]]
+
+      let overallProgress = 0
+      let overallTotal = 0
+
+      if (recentJob.hasOwnProperty('progressInfo') && recentJob.progressInfo.hasOwnProperty('task_progress')) {
+        Object.entries(recentJob.progressInfo.task_progress).map(([key, value]) => {
+          let progressItem = value.progress
+          overallProgress += progressItem.dates_completed // TODO: Change on sen2agri task and here to just progress
+          overallTotal += progressItem.dates_total
+        })
+      }
+
+      overallProgressPercent = (overallProgress / overallTotal) * 100
+
+      // if (overallProgressPercent === 100) {
+      //   this.checkImageryStatus('sen2agri_l2a')
+      // }
+
       previousJobs = aoiJobs
         .slice(0, -1)
         .map(jobId => {
@@ -458,7 +481,18 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                     </Modal.Content>
                   </Modal>
                 </Segment>
-                <Progress size="large" percent={55}>
+                <Progress
+                  size="large"
+                  percent={overallProgressPercent}
+                  active={recentJob ? recentJob.status === JobStatus.Assigned : undefined}
+                  color={
+                    recentJob
+                      ? recentJob.success && recentJob.status === JobStatus.Completed
+                        ? 'green'
+                        : undefined
+                      : undefined
+                  }
+                >
                   Overall Progress
                 </Progress>
                 <Segment basic className={tileTableClass}>
@@ -493,6 +527,8 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                           console.log(datesList)
                           let taskIdForTile: string = undefined
                           let progressInfo = undefined
+                          let progressPercent = undefined
+                          let progressStatus = undefined
 
                           if (recentJob && recentJob.hasOwnProperty('progressInfo')) {
                             recentJob.progressInfo.task_ids.map((item: string[]) => {
@@ -502,7 +538,15 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                             console.log(`Task ID: ${taskIdForTile}`)
 
                             progressInfo = recentJob.progressInfo.task_progress[taskIdForTile]
-                            console.log(progressInfo)
+                            if (progressInfo) {
+                              if (progressInfo.hasOwnProperty('status')) {
+                                progressStatus = progressInfo.status
+                              }
+                              if (progressInfo.hasOwnProperty('progress')) {
+                                progressPercent =
+                                  (progressInfo.progress.dates_completed / progressInfo.progress.dates_total) * 100
+                              }
+                            }
                           }
 
                           return (
@@ -515,7 +559,20 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                                 <Label>{progressInfo ? progressInfo.status : ''}</Label>
                               </Table.Cell>
                               <Table.Cell>
-                                <Progress size="small" percent={55}></Progress>
+                                <Progress
+                                  size="small"
+                                  percent={progressPercent ? progressPercent : 0}
+                                  active={progressStatus ? (progressStatus === 'STARTED' ? true : false) : true}
+                                  color={
+                                    progressStatus
+                                      ? progressInfo.status === 'STARTED'
+                                        ? 'grey'
+                                        : progressInfo.status === 'SUCCESS'
+                                        ? 'green'
+                                        : 'red'
+                                      : undefined
+                                  }
+                                ></Progress>
                               </Table.Cell>
                               {[...dates].sort().map((d: string) => {
                                 if (Object.keys(imageryListByTile[tile]).includes(d)) {
@@ -550,13 +607,6 @@ class Sen2AgriJobManager extends Component<AppProps, AppState & DefaultAppState>
                                   return <Table.Cell className="noImageryCell" disabled></Table.Cell>
                                 }
                               })}
-
-                              {/* <Table.Cell>
-                            <Label circular color="black" empty></Label>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Label circular color="grey" empty></Label>
-                          </Table.Cell> */}
                             </Table.Row>
                           )
                         })}
