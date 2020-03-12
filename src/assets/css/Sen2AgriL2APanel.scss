@@ -1,0 +1,137 @@
+.jobViewer {
+  flex-grow: 1;
+  max-width: 100%;
+}
+
+.jobViewer {
+  .segment {
+    padding: 4px 4px;
+  }
+}
+
+.jobViewerTable {
+  //   overflow-y: scroll;
+  margin: 0px 4px;
+}
+
+table {
+  height: 100%;
+}
+
+tbody {
+  height: 100%;
+}
+
+.jobViewer .jobsMainMenu {
+  margin: 4px;
+}
+
+.ui.table > tfoot > tr > th {
+  font-weight: 700;
+}
+
+.sen2agriJobManager .ui.header.medium {
+  padding: 15px 10px;
+  margin-bottom: 0px;
+}
+
+.sen2agriJobManager .ui.header {
+  margin: 0px 0px;
+  margin-top: 10px;
+}
+
+.sen2agriJobManager .flexContainerHorizontal {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+  margin-top: 1em;
+  justify-content: space-between;
+}
+
+.sen2agriJobManager > .header {
+  margin: 0px;
+  padding: 4px;
+}
+
+.sen2agriJobManager .flexContainerHorizontalLeftGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-bottom: 5px;
+}
+
+.ui.ui.ui.basic.green.label {
+  vertical-align: bottom;
+  margin-bottom: 3px;
+}
+
+.sen2agriTabs {
+  margin: 0px 4px;
+}
+
+.sen2agriJobManager .sliderField {
+  display: flex;
+  flex-direction: row;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+}
+
+.sen2agriJobManager .mini.label {
+  margin: 0px;
+  margin-right: 2px;
+}
+
+.imageryStatusTable {
+  overflow-x: auto;
+  // height: 0;
+}
+
+.imageryStatusTable.noScroll {
+  overflow: hidden;
+}
+
+.imageryStatusTable td {
+  padding: 2px;
+}
+
+th.dateHeader {
+  padding: 10px 0px;
+}
+
+.dateHeader p {
+  padding: 0px;
+  font-size: 11px;
+}
+
+.dateHeader h5 {
+  margin-bottom: 0px;
+  // font-size: 12px;
+  // transform: rotate(-45deg) translate(15px, 0px);
+}
+
+th.dateHeader {
+  padding: 5px 2px;
+  max-width: 50px;
+}
+
+.ui.celled.table > tbody > tr > td.statusCell {
+  padding: 2px;
+  max-width: 50px;
+}
+
+.ui.celled.table > tbody > tr > td.noImageryCell {
+  background-color: #ededed;
+  padding: 2px;
+  max-width: 50px;
+}
+
+.ui.compact.table > tbody > tr > td {
+  padding: 2px 4px;
+}
+
+.ui.small.progress {
+  margin-bottom: 0px;
+}

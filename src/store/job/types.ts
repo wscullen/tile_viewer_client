@@ -27,10 +27,30 @@ export interface L2AJobParameters {
   imageryList: ImageryList
 }
 
+export interface L3BJobParameters {
+  prevNDays: number
+  activeAoiName: string
+  imageryList: ImageryList
+  processingType: 'MONO' | 'N-DAYS' | 'ENDOFSEASON'
+  generateModel: boolean
+  minLai?: number
+  maxLai?: number
+  stdLai?: number
+  modLai?: number
+  minAla?: number
+  maxAla?: number
+  modAla?: number
+  stdAla?: number
+  useInra: boolean
+  generateFcover: boolean
+  generateFapar: boolean
+}
+
 export interface JobParameters {
   ac?: boolean
   acRes?: number[]
   l2a?: L2AJobParameters
+  l3b?: L3BJobParameters
 }
 
 export interface JobInfoObject {
