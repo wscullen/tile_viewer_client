@@ -11,7 +11,7 @@ import { Header } from 'semantic-ui-react'
 
 import { AppState } from '../store/'
 
-import { TileState, Tile, TileListByDate } from '../store/tile/types'
+import { TileState, Tile, TileListByDate, SimpleTile, SimpleTileByDate } from '../store/tile/types'
 import { addTile, updateTile } from '../store/tile/actions'
 
 import {
@@ -33,7 +33,7 @@ import { SingleDateTileList } from '../store/aoi/types'
 import { JobState, Job, JobStatus } from '../store/job/types'
 import { addJob, removeJob, updateJob } from '../store/job/actions'
 
-import { thunkAddJob, thunkAddJobs, thunkCheckJobsForAoi } from '../store/job/thunks'
+import { thunkSubmitJob, thunkAddJobs, thunkCheckJobsForAoi } from '../store/job/thunks'
 import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { thunkSendMessage } from '../thunks'
@@ -85,7 +85,6 @@ interface AppProps {
   session: MainSessionState
   jobs: JobState
   tiles: TileState
-  thunkAddJob: any
   thunkUpdateCsrfTokens: any
   history: History
   aoiNames: string[]
@@ -93,6 +92,7 @@ interface AppProps {
   highlightedTiles: string[]
   thunkCheckJobsForAoi: Function
   thunkAddJobs: Function
+  thunkSubmitJob: Function
 }
 
 interface SelectorFunctions {
@@ -522,74 +522,92 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   public handleSubmitAllJobs = (): void => {
-    console.log('submitting all jobs for selected tiles')
+   
+    if (this.props.session.currentAoi !== '') {
+      console.log('submitting all jobs for selected tiles')
 
-    const tiles = this.props.selectedTiles
-    const highlightedTiles = this.props.highlightedTiles
+      const currentAoiSession = { ...this.props.aois.byId[this.props.session.currentAoi].session }
 
-    const newJobs: Job[] = []
+      const tiles = this.props.selectedTiles
+      const highlightedTiles = this.props.highlightedTiles
+      const currentPlatform = currentAoiSession.currentPlatform
+      let jobType = ""
 
-    Object.keys(tiles).map(ele => {
-      console.log(ele)
-      console.log(tiles[ele])
-
-      if (tiles[ele].length > 0) {
-        tiles[ele].map((tile: Tile) => {
-          console.log(tile)
-
-          if (highlightedTiles.length > 0) {
-            if (tile.highlighted) {
-              const newJob: Job = {
-                aoiId: this.props.session.currentAoi,
-                assignedDate: '',
-                checkedCount: 0,
-                completedDate: '',
-                id: '',
-                setIntervalId: 0,
-                status: JobStatus.Submitted,
-                submittedDate: '',
-                success: false,
-                type: 'tile',
-                workerId: '',
-                tileId: tile.id,
-                resultMessage: '',
-              }
-              // console.log('Submitting job')
-              // this.props.thunkAddJob(newJob)
-              newJobs.push(newJob)
-            }
-          } else {
-            const newJob: Job = {
-              aoiId: this.props.session.currentAoi,
-              assignedDate: '',
-              checkedCount: 0,
-              completedDate: '',
-              id: '',
-              setIntervalId: 0,
-              status: JobStatus.Submitted,
-              submittedDate: '',
-              success: false,
-              type: 'tile',
-              workerId: '',
-              tileId: tile.id,
-              resultMessage: '',
-            }
-            // console.log('Submitting job')
-            // this.props.thunkAddJob(newJob)
-            newJobs.push(newJob)
-          }
-        })
+      if (currentPlatform === 'sentinel2') {
+        jobType = "S2BatchDownload"
+      } else if (currentPlatform === 'landsat8') {
+        jobType = "L8BatchDownload"
       }
-    })
-    console.log('Submitting all jobs at once...')
-    this.props.thunkAddJobs(newJobs, this.props.session.currentAoi)
+    
+      const newJob: Job = {  
+        aoiId: this.props.session.currentAoi,
+        assignedDate: '',
+        completedDate: '',
+        id: '',
+        status: JobStatus.Submitted,
+        submittedDate: '',
+        success: false,
+        type: jobType,
+        workerId: '',
+        resultMessage: '',
+      }
+
+      const imageryListByDate: SimpleTileByDate = {}
+
+      Object.keys(tiles).map(ele => {
+        console.log(ele)
+        console.log(tiles[ele])
+
+        if (tiles[ele].length > 0) {
+          
+          imageryListByDate[ele] = []
+
+          tiles[ele].map((tile: Tile) => {
+            console.log(tile)
+
+            if (highlightedTiles.length > 0) {
+              if (tile.highlighted) {
+                const simpleTile: SimpleTile = {
+                  name: tile.properties.name,
+                  entityId: tile.properties.entityId,
+                  api: tile.properties.apiSource,
+                  acquisitionDate: tile.date,
+                  tileId: tile.id,
+                  mgrs: tile.properties.mgrs
+                }
+                imageryListByDate[ele].push(simpleTile)
+              }
+            } else {
+              const simpleTile: SimpleTile = {
+                name: tile.properties.name,
+                entityId: tile.properties.entityId,
+                api: tile.properties.apiSource,
+                acquisitionDate: tile.date,
+                tileId: tile.id,
+                mgrs: tile.properties.mgrs
+              }
+              imageryListByDate[ele].push(simpleTile)
+            }
+          })
+        }
+      })
+      console.log('Submitting jobs...')
+      newJob.tileDict = imageryListByDate
+
+      newJob.params = {
+        tileList: imageryListByDate,
+        ac: currentAoiSession.settings.atmosphericCorrection,
+        acRes: [10],
+      }
+      this.props.thunkSubmitJob(newJob, this.props.session.currentAoi)
+    } else {
+      console.log('AoI not active, not submitting job')
+    }
   }
 
   getAoiIndex = (aoi_name: string): number => {
     // returning index instead of the object itself
-    // @ts-ignore
     console.log(this.state.aoi_list)
-    // @ts-ignore
     const name_list = this.state.aoi_list.map((ele: any) => ele.name)
     const index = name_list.indexOf(aoi_name)
     return index
@@ -830,24 +848,24 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   public resubmitLastJob = (tile: Tile): void => {
-    console.log('Trying to submit most recent job for this tile again.')
+    // console.log('Trying to submit most recent job for this tile again.')
 
-    // steps, from the tile, get the last entry in the jobId list
-    // look up job info, recreate job,
-    // submit again.
+    // // steps, from the tile, get the last entry in the jobId list
+    // // look up job info, recreate job,
+    // // submit again.
 
-    console.log(tile)
-    const jobId = tile.jobs[tile.jobs.length - 1]
-    const job = this.props.jobs.byId[jobId]
+    // console.log(tile)
+    // const jobId = tile.jobs[tile.jobs.length - 1]
+    // const job = this.props.jobs.byId[jobId]
 
-    job.assignedDate = ''
-    job.completedDate = ''
-    job.submittedDate = ''
-    job.success = false
-    job.workerId = ''
-    job.resultMessage = ''
+    // job.assignedDate = ''
+    // job.completedDate = ''
+    // job.submittedDate = ''
+    // job.success = false
+    // job.workerId = ''
+    // job.resultMessage = ''
 
-    this.props.thunkAddJob(job)
+    // this.props.thunkAddJob(job)
   }
 
   switchToSen2AgriPanel = () => {
@@ -1085,7 +1103,7 @@ export default connect(
     resetSessionState,
     updateAddAoiForm,
     thunkSendMessage,
-    thunkAddJob,
+    thunkSubmitJob,
     thunkCheckJobsForAoi,
     thunkUpdateCsrfTokens,
     thunkAddJobs,

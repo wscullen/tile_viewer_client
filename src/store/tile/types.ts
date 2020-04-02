@@ -57,6 +57,20 @@ export interface RawTile {
   geojson: GeoJsonFeature
 }
 
+export interface SimpleTile {
+  name: string
+  api: string
+  entityId: string
+  tileId: string
+  acquisitionDate: string
+  mgrs?: string
+  wrs2?: string
+}
+
+export interface SimpleTileByDate {
+  [index: string]: SimpleTile[]
+}
+
 export interface TileListByDate {
   [index: string]: Tile[]
 }

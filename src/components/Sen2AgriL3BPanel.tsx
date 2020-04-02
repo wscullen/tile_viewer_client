@@ -374,10 +374,8 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                         const newJob: Job = {
                           aoiId: this.props.session.currentAoi,
                           assignedDate: '',
-                          checkedCount: 0,
                           completedDate: '',
                           id: '',
-                          setIntervalId: 0,
                           status: JobStatus.Submitted,
                           submittedDate: '',
                           success: false,

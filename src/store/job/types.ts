@@ -1,4 +1,4 @@
-import { TileListByDate } from '../tile/types'
+import { TileListByDate, SimpleTileByDate } from '../tile/types'
 
 export enum JobStatus {
   Submitted = 'S',
@@ -51,6 +51,7 @@ export interface JobParameters {
   acRes?: number[]
   l2a?: L2AJobParameters
   l3b?: L3BJobParameters
+  tileList?: SimpleTileByDate
 }
 
 export interface JobInfoObject {
@@ -78,15 +79,13 @@ export interface Job {
   type: string
   aoiId: string
   tileId?: string
-  tileDict?: TileListByDate
+  tileDict?: TileListByDate | SimpleTileByDate
   submittedDate: string
   assignedDate: string
   completedDate: string
   workerId: string
   success: boolean
   status: JobStatus
-  checkedCount: number
-  setIntervalId: any
   resultMessage: string
   progressInfo?: JobProgress
   params?: JobParameters

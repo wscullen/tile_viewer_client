@@ -3,9 +3,9 @@ import { ThunkAction } from 'redux-thunk'
 import { addJob } from './actions'
 import { updateTile, updateTiles } from '../tile/actions'
 import { updateJob, updateJobs, removeJob, addJobs } from './actions'
-import { Job, JobStatus } from './types'
+import { Job, JobStatus, JobParameters } from './types'
 import { AppState } from '../index'
-import { Tile, TileListByDate } from '../tile/types'
+import { Tile, TileListByDate, SimpleTileByDate } from '../tile/types'
 
 import { AreaOfInterest } from '../aoi/types'
 import { updateAoi } from '../aoi/actions'
@@ -319,6 +319,145 @@ export const thunkAddJob = (newJob: Job): ThunkAction<void, AppState, null, Acti
   }
 }
 
+export const thunkSubmitJob = (
+  newJob: Job,
+  aoiId: string
+): ThunkAction<void, AppState, null, Action<string>> => async (dispatch: any, getState: any) => {
+  console.log('Started submit job thunk')
+  const state = getState()
+
+  const jobManagerUrl: string = state.session.settings.jobManagerUrl
+  const atmosCorrection: boolean = state.aoi.byId[aoiId].session.settings.atmosphericCorrection
+
+  console.log(atmosCorrection)
+
+  const csrfToken: string = state.session.csrfTokens.jobManager.key
+  await refreshToken(state.session, dispatch)
+
+  const aoi = { ...state.aoi.byId[aoiId] }
+  const tilesToUpdate: Tile[] = []
+  const jobsToAdd: Job[] = []
+  console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+  console.log(newJob)
+  if (newJob.type === 'tile') {
+    let tile: Tile
+    tile = { ...state.tile.byId[newJob.tileId] }
+
+    const accessToken: string = state.session.settings.auth.accessToken
+
+    const jobResult = await submitJobToApi(jobManagerUrl, newJob, tile, atmosCorrection, csrfToken, accessToken)
+
+    if (jobResult) {
+      console.log('thunk finished in func job submitted successfully')
+
+      aoi.jobs.push(jobResult.id)
+      tile.jobs.push(jobResult.id)
+
+      tilesToUpdate.push(tile)
+      jobsToAdd.push(newJob)
+    } else {
+      // TODO: Need to add a notification when submitting jobs fails
+    }
+  } else if (newJob.type === 'Sen2Agri_L2A') {
+    console.log(newJob)
+    const accessToken: string = state.session.settings.auth.accessToken
+    // newJob.params['aoiName'] = activeAoiName
+    const jobResult = await submitSen2AgriJobToApi(
+      jobManagerUrl,
+      newJob,
+      newJob.tileDict,
+      newJob.params,
+      csrfToken,
+      accessToken,
+    )
+
+    if (jobResult.errorResult) {
+      console.log('something went terribly wrong while submitting job')
+      let newL2AFormState = {
+        submitting: false,
+        finished: true,
+        success: false,
+        msg: `Something went wrong while trying to submit the job (${jobResult.errorResult})`,
+      }
+
+      let mainSession = state.session
+
+      mainSession.forms.createL2AJob = newL2AFormState
+
+      dispatch(updateMainSession(mainSession))
+    } else if (jobResult) {
+      console.log('thunk finished in func')
+      aoi.jobs.push(jobResult.id)
+
+      let newL2AFormState = {
+        submitting: false,
+        finished: true,
+        success: true,
+        msg: 'Successfully submitted job.',
+      }
+
+      let mainSession = state.session
+
+      mainSession.forms.createL2AJob = newL2AFormState
+
+      dispatch(updateMainSession(mainSession))
+
+      jobsToAdd.push(newJob)
+    }
+  
+  } else if (newJob.type === 'S2BatchDownload') {
+    console.log('S2BatchJobSubmission')
+    console.log(newJob)
+    console.log(newJob)
+    const accessToken: string = state.session.settings.auth.accessToken
+
+    const jobResult = await submitBatchDownloadJobToApi(
+      jobManagerUrl,
+      newJob,
+      newJob.tileDict,
+      newJob.params,
+      csrfToken,
+      accessToken,
+    )
+
+    if (jobResult.errorResult) {
+      console.log('something went terribly wrong while submitting job')
+      // let newL2AFormState = {
+      //   submitting: false,
+      //   finished: true,
+      //   success: false,
+      //   msg: `Something went wrong while trying to submit the job (${jobResult.errorResult})`,
+      // }
+
+      // let mainSession = state.session
+
+      // mainSession.forms.createL2AJob = newL2AFormState
+
+      // dispatch(updateMainSession(mainSession))
+    } else if (jobResult) {
+      console.log('thunk finished in func')
+      aoi.jobs.push(jobResult.id)
+
+      // let newL2AFormState = {
+      //   submitting: false,
+      //   finished: true,
+      //   success: true,
+      //   msg: 'Successfully submitted job.',
+      // }
+
+      // let mainSession = state.session
+
+      // mainSession.forms.createL2AJob = newL2AFormState
+
+      // dispatch(updateMainSession(mainSession))
+      dispatch(updateTiles(tilesToUpdate))
+      dispatch(addJob(newJob))
+      dispatch(updateAoi(aoi))
+    }
+  }
+
+}
+
 export const thunkAddJobs = (
   newJobs: Job[],
   aoiId: string,
@@ -411,6 +550,70 @@ export const thunkAddJobs = (
   dispatch(updateAoi(aoi))
 }
 
+const submitBatchDownloadJobToApi = async (
+  jobManagerUrl: string,
+  job: Job,
+  simpleTileByDate: SimpleTileByDate | TileListByDate,
+  jobParams: JobParameters,
+  csrfToken: string,
+  accessToken: string,
+): Promise<Job> => {
+  console.log(jobManagerUrl)
+  console.log(job)
+  console.log(simpleTileByDate)
+  console.log('!!!')
+  console.log(jobParams)
+
+  const jobReqBody = {
+    label: job.type,
+    command: 'not used',
+    job_type: job.type,
+    parameters: jobParams,
+    priority: '3',
+  }
+
+  const headers = new Headers()
+
+  // @ts-ignore
+  headers.append('X-CSRFToken', csrfToken)
+  headers.append('Content-Type', 'application/json')
+  headers.append('Authorization', `Bearer ${accessToken}`)
+
+  // @ts-ignore
+
+  return fetch(`${jobManagerUrl}/jobs/`, {
+    method: 'POST',
+    body: JSON.stringify(jobReqBody),
+    headers,
+  })
+    .then(response => {
+      console.log(response)
+      if (response.status === 201) {
+        return response.json()
+      } else {
+        return undefined
+      }
+    })
+    .then(response => {
+      console.log(response)
+      console.log('Success:', JSON.stringify(response))
+      // Success: {"url":"http://localhost:9090/jobs/7b34635e-7d4b-45fc-840a-8c9de3251abc/","id":"7b34635e-7d4b-45fc-840a-8c9de3251abc","submitted":"2019-05-09T21:49:36.023959Z","label":"S2Download L1C_T12UUA_A015468_20180608T183731","command":"not used","job_type":"S2Download","parameters":{"options":{"tile":"L1C_T12UUA_A015468_20180608T183731","ac":true,"ac_res":10}},"priority":"3","owner":"backup"}
+      // Todo update each tile with job info (id, status, success, workerid)
+
+      job.id = response.id
+
+      job.status = JobStatus.Submitted
+
+      job.submittedDate = response.submitted
+
+      return job
+    })
+    .catch(err => {
+      console.log(err)
+      console.log('something went wrong when trying to submit the job')
+    })
+}
+
 const submitJobToApi = async (
   jobManagerUrl: string,
   job: Job,
@@ -493,8 +696,6 @@ const submitJobToApi = async (
 
       job.submittedDate = response.submitted
 
-      job.checkedCount = 0
-
       return job
     })
     .catch(err => {
@@ -506,7 +707,7 @@ const submitJobToApi = async (
 const submitSen2AgriJobToApi = (
   jobManagerUrl: string,
   job: Job,
-  tileDict: TileListByDate,
+  tileDict: TileListByDate | SimpleTileByDate,
   parameters: any,
   csrfToken: string,
   accessToken: string,
@@ -572,8 +773,6 @@ const submitSen2AgriJobToApi = (
         job.status = JobStatus.Submitted
 
         job.submittedDate = response.submitted
-
-        job.checkedCount = 0
 
         return job
       },
