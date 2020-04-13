@@ -1,9 +1,17 @@
-import { TileListByDate, SimpleTileByDate } from '../tile/types'
+import { TileListByDate, SimpleTileByDate, SimpleTile } from '../tile/types'
 
 export enum JobStatus {
   Submitted = 'S',
   Assigned = 'A',
   Completed = 'C',
+}
+
+export enum TaskStatus {
+  Pending = 'PENDING',
+  Received = 'RECEIVED',
+  Started = 'STARTED',
+  Success = 'SUCCESS',
+  Failure = 'FAILURE',
 }
 
 export interface JobStatusVerbose {
@@ -51,7 +59,7 @@ export interface JobParameters {
   acRes?: number[]
   l2a?: L2AJobParameters
   l3b?: L3BJobParameters
-  tileList?: SimpleTileByDate
+  tileList?: SimpleTileByDate | SimpleTile[]
 }
 
 export interface JobInfoObject {
@@ -59,19 +67,25 @@ export interface JobInfoObject {
   name: string
   kwargs: any
   args: any
-  status: string
-  progress: any
+  status: TaskStatus
+  progress?: any
+  result?: any
 }
 
 export interface UploadDownloadProgress {
   [index: string]: number
-  upload_progress?: number
-  download_progress?: number
+  upload?: number
+  download?: number
+}
+
+export interface TileIdTaskIdMap {
+  [index: string]: string
 }
 
 export interface JobProgress {
-  task_progress?: UploadDownloadProgress | JobInfoObject
+  task_progress?: JobInfoObject
   task_ids?: Array<Array<string>>
+  tile_ids?: TileIdTaskIdMap
 }
 
 export interface Job {
@@ -80,6 +94,7 @@ export interface Job {
   aoiId: string
   tileId?: string
   tileDict?: TileListByDate | SimpleTileByDate
+  tileList?: Array<SimpleTile>
   submittedDate: string
   assignedDate: string
   completedDate: string
@@ -91,6 +106,7 @@ export interface Job {
   params?: JobParameters
   errorResult?: any
 }
+
 
 export interface StateById {
   byId: Record<string, Job>

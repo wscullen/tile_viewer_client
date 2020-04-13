@@ -5,7 +5,7 @@ import { updateTile, updateTiles } from '../tile/actions'
 import { updateJob, updateJobs, removeJob, addJobs } from './actions'
 import { Job, JobStatus, JobParameters } from './types'
 import { AppState } from '../index'
-import { Tile, TileListByDate, SimpleTileByDate } from '../tile/types'
+import { Tile, TileListByDate, SimpleTileByDate, SimpleTile } from '../tile/types'
 
 import { AreaOfInterest } from '../aoi/types'
 import { updateAoi } from '../aoi/actions'
@@ -334,11 +334,11 @@ export const thunkSubmitJob = (
   const csrfToken: string = state.session.csrfTokens.jobManager.key
   await refreshToken(state.session, dispatch)
 
-  const aoi = { ...state.aoi.byId[aoiId] }
+  const aoi: AreaOfInterest = { ...state.aoi.byId[aoiId] }
+  const aoiName = aoi.name
   const tilesToUpdate: Tile[] = []
   const jobsToAdd: Job[] = []
-  console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-  console.log(newJob)
+  
   if (newJob.type === 'tile') {
     let tile: Tile
     tile = { ...state.tile.byId[newJob.tileId] }
@@ -359,7 +359,6 @@ export const thunkSubmitJob = (
       // TODO: Need to add a notification when submitting jobs fails
     }
   } else if (newJob.type === 'Sen2Agri_L2A') {
-    console.log(newJob)
     const accessToken: string = state.session.settings.auth.accessToken
     // newJob.params['aoiName'] = activeAoiName
     const jobResult = await submitSen2AgriJobToApi(
@@ -406,18 +405,17 @@ export const thunkSubmitJob = (
     }
   
   } else if (newJob.type === 'S2BatchDownload') {
-    console.log('S2BatchJobSubmission')
-    console.log(newJob)
+    console.log('S2BatchDownload job being dispatched')
     console.log(newJob)
     const accessToken: string = state.session.settings.auth.accessToken
 
     const jobResult = await submitBatchDownloadJobToApi(
       jobManagerUrl,
       newJob,
-      newJob.tileDict,
       newJob.params,
       csrfToken,
       accessToken,
+      aoiName
     )
 
     if (jobResult.errorResult) {
@@ -435,27 +433,22 @@ export const thunkSubmitJob = (
 
       // dispatch(updateMainSession(mainSession))
     } else if (jobResult) {
-      console.log('thunk finished in func')
+
       aoi.jobs.push(jobResult.id)
 
-      // let newL2AFormState = {
-      //   submitting: false,
-      //   finished: true,
-      //   success: true,
-      //   msg: 'Successfully submitted job.',
-      // }
+      const simpleTileArray = newJob.params.tileList as Array<SimpleTile>
 
-      // let mainSession = state.session
-
-      // mainSession.forms.createL2AJob = newL2AFormState
-
-      // dispatch(updateMainSession(mainSession))
-      dispatch(updateTiles(tilesToUpdate))
+      simpleTileArray.map((tile: SimpleTile) => {
+        const tileToUpdate = { ...state.tile.byId[tile.tileId] }
+        tileToUpdate.jobs.push(jobResult.id)
+        tilesToUpdate.push(tileToUpdate)
+      })
+     
       dispatch(addJob(newJob))
       dispatch(updateAoi(aoi))
+      dispatch(updateTiles(tilesToUpdate))
     }
   }
-
 }
 
 export const thunkAddJobs = (
@@ -553,15 +546,13 @@ export const thunkAddJobs = (
 const submitBatchDownloadJobToApi = async (
   jobManagerUrl: string,
   job: Job,
-  simpleTileByDate: SimpleTileByDate | TileListByDate,
   jobParams: JobParameters,
   csrfToken: string,
   accessToken: string,
+  aoiName: string
 ): Promise<Job> => {
   console.log(jobManagerUrl)
   console.log(job)
-  console.log(simpleTileByDate)
-  console.log('!!!')
   console.log(jobParams)
 
   const jobReqBody = {
@@ -570,6 +561,7 @@ const submitBatchDownloadJobToApi = async (
     job_type: job.type,
     parameters: jobParams,
     priority: '3',
+    aoi_name: aoiName
   }
 
   const headers = new Headers()

@@ -173,10 +173,16 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
   }
 
   render() {
-    const imageryListByTile = this.props.imageryListByTile.sentinel2
+    const imageryListByTile = this.props.imageryListByTile.sentinel2 || {}
+    console.warn(imageryListByTile)
+    console.warn(Object.keys(imageryListByTile)
+                    .sort())
+    
     let recentJob: Job = undefined
-    let previousJobs: Job[]
+    let previousJobs: Job[] = []
     let overallProgressPercent: number = 0
+
+    const allDates: string[] = []
 
     if (this.props.session.currentAoi) {
       const allJobsForAoi = this.props.jobs.byAoiId.hasOwnProperty(this.props.session.currentAoi)
@@ -233,14 +239,12 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
           if (a.submittedDate > b.submittedDate) return 0
           else return 1
         })
-    }
-
-    const allDates: string[] = []
-
-    for (let value of Object.values(this.props.imageryListByTile.sentinel2)) {
-      for (let v of Object.keys(value)) {
-        console.log(v)
-        allDates.push(v)
+        
+      for (let value of Object.values(this.props.imageryListByTile.sentinel2)) {
+        for (let v of Object.keys(value)) {
+          console.log(v)
+          allDates.push(v)
+        }
       }
     }
 

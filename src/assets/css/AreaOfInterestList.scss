@@ -37,7 +37,7 @@
   border-right: 1px solid lightgrey;
   /* margin: 2px; */
   min-width: 300px;
-  flex-grow: 1;
+  max-width: 300px;
 }
 
 .ui.button.addAoiButton {

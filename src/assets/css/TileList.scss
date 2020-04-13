@@ -1,6 +1,6 @@
 .tileList {
   border-left: 1px solid lightgrey;
-  min-width: 500px;
+  min-width: 550px;
   margin: 0px;
   height: 100%;
   display: flex;
@@ -72,7 +72,7 @@
 
   flex-shrink: 0;
   width: 100%;
-  z-index: 50;
+  z-index: 2;
 }
 
 .buttonSection {
@@ -125,15 +125,19 @@ button {
   top: 1px;
 }
 
-.dateSection {
-  padding: 1px 4px;
+.ui.header.dateSection {
+  padding: 2px 4px;
   font-weight: 700;
   font-size: 13px;
   position: sticky;
   top: 0;
   background: #fff;
-  border-bottom: 2px #eee solid;
-  z-index: 99999;
+  border-bottom: 1px rgba(36,36,38,.15) solid;
+  z-index: 2;
+  margin: 0px;
+  // margin: 1px 4px;
+  // margin-top: 4px;
+  cursor: pointer;
 }
 
 .tileActionIndicator {
@@ -247,12 +251,6 @@ h5.sectionLabel.title.is-5 {
 .ui.button {
   margin-left: 3px;
   margin-right: 0px;
-}
-
-.ui.header.dateSection {
-  margin: 1px 4px;
-  margin-top: 4px;
-  cursor: pointer;
 }
 
 body > div.ui.bottom.right.flowing.popup.transition.visible.optionsPopup {

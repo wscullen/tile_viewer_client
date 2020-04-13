@@ -253,10 +253,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
   cleanUpBeforeClose = () => {}
 
-  saveToLocalStorage = () => {}
-
-  loadFromLocalStorage = () => {}
-
   public handleTabChange = (event: React.MouseEvent<HTMLUListElement>): void => {
     const target = event.currentTarget as HTMLUListElement
     console.log(target.id)
@@ -554,13 +550,13 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
       const imageryListByDate: SimpleTileByDate = {}
 
+      const tileList: SimpleTile[] = []
+
       Object.keys(tiles).map(ele => {
         console.log(ele)
         console.log(tiles[ele])
 
         if (tiles[ele].length > 0) {
-          
-          imageryListByDate[ele] = []
 
           tiles[ele].map((tile: Tile) => {
             console.log(tile)
@@ -575,7 +571,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                   tileId: tile.id,
                   mgrs: tile.properties.mgrs
                 }
-                imageryListByDate[ele].push(simpleTile)
+                tileList.push(simpleTile)
               }
             } else {
               const simpleTile: SimpleTile = {
@@ -586,16 +582,16 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                 tileId: tile.id,
                 mgrs: tile.properties.mgrs
               }
-              imageryListByDate[ele].push(simpleTile)
+              tileList.push(simpleTile)
             }
           })
         }
       })
       console.log('Submitting jobs...')
-      newJob.tileDict = imageryListByDate
+      newJob.tileList = tileList
 
       newJob.params = {
-        tileList: imageryListByDate,
+        tileList: tileList,
         ac: currentAoiSession.settings.atmosphericCorrection,
         acRes: [10],
       }

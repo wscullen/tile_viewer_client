@@ -31,6 +31,8 @@ import { thunkSendMessage } from '../thunks'
 import { getAoiNames, getSelectedTiles, getHighlightedTiles } from '../store/aoi/reducers'
 import { MainSessionState, JobNavigationTabs } from '../store/session/types'
 import { TileState } from '../store/tile/types'
+import { updateTile } from '../store/tile/actions'
+
 
 import Sen2AgriJobManager from './Sen2AgriJobManager'
 
@@ -45,6 +47,7 @@ interface AppProps {
   tiles: TileState
   activeTab: JobNavigationTabs
   handleTabChange: Function
+  updateTile: Function
 }
 
 interface JobObject {
@@ -215,6 +218,17 @@ class JobViewer extends Component<AppProps, AppState & DefaultAppState> {
                             onClick={event => {
                               console.log('trying to remove job, inside tile list')
                               this.props.removeJob(job.id)
+                              if (job.type === 'S2BatchDownload') {
+                                job.tileList.forEach((simpleTile) => {
+                                  const tile = {...this.props.tiles.byId[simpleTile.tileId]}
+                                  tile.jobs.filter((jobId) => {
+                                    if (jobId !== job.id)
+                                      return true
+                                  })
+                                  this.props.updateTile(tile)
+                                })
+                              }
+
                               event.stopPropagation()
                             }}
                             icon="times circle"
@@ -292,5 +306,6 @@ export default connect(
     thunkSendMessage,
     thunkAddJob,
     thunkUpdateCsrfTokens,
+    updateTile,
   },
 )(JobViewer)

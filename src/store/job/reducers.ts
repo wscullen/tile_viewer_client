@@ -73,6 +73,7 @@ export function jobReducer(state = initialState, action: JobActionTypes): JobSta
       const jobs = { ...state }
 
       const jobToDelete = jobs.byId[action.payload]
+
       const aoiId = jobToDelete.aoiId
 
       delete jobs.byId[action.payload]

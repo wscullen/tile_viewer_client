@@ -1,12 +1,12 @@
 import './../assets/css/TileListItemCompact.scss'
 
 import React, { Component } from 'react'
-import { Icon, Button, SemanticCOLORS, SemanticICONS, Label, Progress, Segment } from 'semantic-ui-react'
-import { Job, JobStatus } from '../store/job/types'
+import { Icon, Button, SemanticCOLORS, SemanticICONS, Label, Progress, Segment, Dropdown, ButtonGroup, Popup } from 'semantic-ui-react'
+import { Job, JobStatus, TaskStatus, JobInfoObject } from '../store/job/types'
 import { Tile } from '../store/tile/types'
 
 interface AppProps {
-  job: Job
+  taskStatus: JobInfoObject
   tile: Tile
   removeTile: Function
   toggleVisibility: Function
@@ -22,28 +22,28 @@ export default function TileListItemCompact(props: AppProps) {
   let downloadButtonClass = 'tileActionButton '
   let retryButtonClass = 'tileActionButton '
 
-  console.log(props.job)
-  if (props.job) {
-    if (props.job.status === JobStatus.Submitted) {
+  console.log(props.taskStatus)
+  if (props.taskStatus) {
+    if (props.taskStatus.status === TaskStatus.Pending) {
       jobProgressColor = 'grey'
-    } else if (props.job.status === JobStatus.Assigned) {
+    } else if (props.taskStatus.status === TaskStatus.Started) {
       jobProgressIcon = 'hourglass half'
       jobProgressColor = 'black'
-    } else if (props.job.status === JobStatus.Completed) {
+    } else if (props.taskStatus.status === TaskStatus.Success || props.taskStatus.status === TaskStatus.Failure) {
       jobProgressIcon = 'hourglass end'
     }
 
-    if (props.job.success === true) {
+    if (props.taskStatus.status === TaskStatus.Success) {
       jobProgressColor = 'green'
-    } else if (props.job.success === false && props.job.status === JobStatus.Completed) {
+    } else if (props.taskStatus.status === TaskStatus.Failure) {
       jobProgressColor = 'red'
     }
 
-    if (props.job.status !== JobStatus.Completed && props.job.success !== true) {
+    if (props.taskStatus.status === TaskStatus.Failure) {
       downloadButtonClass += 'disabledIcon'
     }
 
-    if (props.job.success === false) {
+    if (props.taskStatus.status !== TaskStatus.Failure) {
       retryButtonClass += 'disabledIcon'
     }
   }
@@ -72,6 +72,29 @@ export default function TileListItemCompact(props: AppProps) {
     displayName = props.tile.properties.name
   }
 
+  const trigger = (
+      <Button 
+      basic
+      compact
+      size="mini"
+      icon='caret down'/>
+  )
+  
+  const options = [
+    {
+      key: 'overflow actions',
+      text: (
+        
+       '' 
+      ),
+    },
+  ]
+
+  const style = {
+    padding: '0em',
+    marginTop: '2px'
+  }
+
   return (
     <div className="tileListItemCompact">
       <div className="tileListItemLeft">
@@ -95,23 +118,28 @@ export default function TileListItemCompact(props: AppProps) {
         <span className="sectionLabel">{displayName}</span>
       </div>
       <div className="tileListItemActions">
-        {props.job ? <Icon name={jobProgressIcon} color={jobProgressColor} circular /> : ''}
+        {props.taskStatus ? <Icon name={jobProgressIcon} color={jobProgressColor} circular size="small" /> : ''}
 
         <Button.Group>
-          <Button
-            basic
-            size="mini"
-            compact
-            icon="redo alternate"
-            className={retryButtonClass}
-            onClick={event => {
-              console.log('re submit a job')
-              props.resubmitLastJob(props.tile)
-              // props.removeTile(props.tile)
-              event.stopPropagation()
-            }}
-          />
-          <Button
+        <Popup hoverable basic
+          position="bottom center"
+        
+              on="click"
+        content={<Button.Group vertical basic>
+<Button
+        basic
+        size="mini"
+        compact
+        icon="redo alternate"
+        className={retryButtonClass}
+        onClick={event => {
+          console.log('re submit a job')
+          props.resubmitLastJob(props.tile)
+          // props.removeTile(props.tile)
+          event.stopPropagation()
+        }}
+      />
+ <Button
             basic
             compact
             size="mini"
@@ -123,17 +151,27 @@ export default function TileListItemCompact(props: AppProps) {
               event.stopPropagation()
             }}
           />
-          <Button
-            basic
-            compact
-            size="mini"
-            icon="info"
-            onClick={event => {
-              console.log('display tile info')
-              // props.removeTile(props.tile)
-              event.stopPropagation()
-            }}
-          />
+ <Button
+      basic
+      compact
+      size="mini"
+      icon="info"
+      onClick={event => {
+        console.log('display tile info')
+        // props.removeTile(props.tile)
+        event.stopPropagation()
+      }}
+    />
+        </Button.Group>} trigger={ <Button 
+      basic
+      compact
+      size="mini"
+      icon='caret down'
+      onClick={event => event.stopPropagation()}/>} 
+      style={style}
+      mouseLeaveDelay={750}
+      />
+        {/* <Dropdown trigger={trigger} icon={null} options={options} compact/> */}
           <Button
             basic
             compact

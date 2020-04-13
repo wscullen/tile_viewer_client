@@ -11,7 +11,7 @@ import { connect } from 'react-redux'
 
 import { AppState } from '../store/'
 
-import { JobState, Job, JobStatus } from '../store/job/types'
+import { JobState, Job, JobStatus, TaskStatus, JobInfoObject } from '../store/job/types'
 import { Session } from '../store/aoi/types'
 
 import { AoiSettings, SingleDateTileList } from '../store/aoi/types'
@@ -97,19 +97,18 @@ class TileList extends Component<AppProps, DefaultAppState> {
     })
   }
 
-  progressBar = (job: Job) => {
-    if (job && job.status === JobStatus.Assigned) {
-      if (job.hasOwnProperty('progressInfo')) {
-        let task_progress = job.progressInfo['task_progress']
+  progressBar = (taskStatus: JobInfoObject) => {
+    if (taskStatus && taskStatus.status === TaskStatus.Started) {
+      let taskProgress = taskStatus.progress
 
-        if (task_progress.hasOwnProperty('upload_progress')) {
-          return <Progress percent={50 + task_progress['upload_progress'] / 2} color="green" attached="bottom" active />
-        } else if (task_progress.hasOwnProperty('download_progress')) {
-          return <Progress percent={task_progress['download_progress'] / 2} color="green" attached="bottom" active />
-        }
+      if (taskProgress.hasOwnProperty('upload')) {
+        return <Progress percent={50 + Math.round(taskProgress['upload'] / 2)} color="green" attached="bottom" active />
+      } else if (taskProgress.hasOwnProperty('download')) {
+        return <Progress percent={Math.round(taskProgress['download'] / 2)} color="green" attached="bottom" active />
       }
     }
   }
+  
 
   render() {
     let dateSectionHeaderClassname = 'dateSection'
@@ -221,18 +220,58 @@ class TileList extends Component<AppProps, DefaultAppState> {
 
                   counter++
 
-                  let job
+                  // Get the most recent L8BatchDownload or S2BatchDownload job for the AoI
+                  let taskStatus: JobInfoObject = undefined
+                  if (this.props.currentPlatform === 'sentinel2') {
+                    if (this.props.jobs.byAoiId[this.props.currentAoi] && this.props.jobs.byAoiId[this.props.currentAoi].length > 0) {
+                      const jobIds = this.props.jobs.byAoiId[this.props.currentAoi]
 
-                  if (tile.jobs.length > 0) {
-                    console.log('tile has jobs')
-                    const lastJobId = tile.jobs[tile.jobs.length - 1]
+                      let mostRecentJobIdForTile = undefined
 
-                    job = this.props.jobs.byId[lastJobId]
+                      const tileJobs = [...tile.jobs]
+                      console.log("tile jobs: ")
+                      console.log(tileJobs)
 
-                    console.log('most recent job for tile')
-                    console.log(job)
+                      if (tileJobs.length > 0) {
+                        
+                        while (tileJobs.length !== 0) {
+                          mostRecentJobIdForTile = tileJobs[tileJobs.length -1]
+                          console.log(mostRecentJobIdForTile)
+
+                          if (!!!jobIds.includes(mostRecentJobIdForTile)) {
+                            tileJobs.pop()
+                          } else {
+                            break
+                          }
+                        }
+                      }
+                      
+                      if (mostRecentJobIdForTile) {
+                        const mostRecentJob = this.props.jobs.byId[mostRecentJobIdForTile]
+                        console.log(mostRecentJob)
+                        if (mostRecentJob && mostRecentJob.hasOwnProperty('progressInfo')) {
+                          const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
+                          taskStatus = mostRecentJob.progressInfo.task_progress[taskId]
+                        } else if (mostRecentJob && !mostRecentJob.hasOwnProperty('progressInfo')) {
+                          // name: string
+                          // kwargs: any
+                          // args: any
+                          // status: TaskStatus
+                          // progress?: any
+                          // result?: any
+                          const tempTaskStatus: JobInfoObject = {
+                            name: null,
+                            kwargs: null,
+                            args: null,
+                            status: TaskStatus.Pending,
+                          }
+
+                          taskStatus = tempTaskStatus
+                        }
+                      }
+                    }
                   }
-
+                  
                   const tileEle = (
                     <Segment
                       vertical
@@ -240,10 +279,10 @@ class TileList extends Component<AppProps, DefaultAppState> {
                       key={tile.properties.name}
                       onClick={(event: any) => this.props.tileClicked(event, tile.id)}
                     >
-                      {this.progressBar(job)}
+                      {this.progressBar(taskStatus)}
                       <TileListItemCompact
                         tile={tile}
-                        job={job}
+                        taskStatus={taskStatus}
                         removeTile={this.props.removeTile}
                         toggleVisibility={this.props.toggleTileVisibility}
                         resubmitLastJob={this.props.resubmitLastJob}

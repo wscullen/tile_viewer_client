@@ -173,7 +173,8 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
   }
 
   render() {
-    const imageryListByTile = this.props.imageryListByTile.sentinel2
+    const imageryListByTile = this.props.imageryListByTile.sentinel2 || {}
+    
     console.log(`imagery list by tile structure`)
     console.log(imageryListByTile)
     // Need to create a obj with the dates as keys and a list of tiles for each date
@@ -185,7 +186,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
 
     const tiles = Object.keys(datesForEachTile)
     let recentJob: Job = undefined
-    let previousJobs: Job[]
+    let previousJobs: Job[] = []
     let overallProgressPercent: number = 0
 
     if (this.props.session.currentAoi) {
@@ -247,7 +248,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
 
     const allDates: string[] = []
 
-    for (let value of Object.values(this.props.imageryListByTile.sentinel2)) {
+    for (let value of Object.values(imageryListByTile)) {
       for (let v of Object.keys(value)) {
         console.log(v)
         allDates.push(v)
