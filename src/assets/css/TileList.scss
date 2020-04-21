@@ -46,6 +46,11 @@
   // box-shadow: 0 -1px 3px 0px rgba(100, 100, 100, 0.3);
 }
 
+.listWrapper .segments {
+  margin: 0px 0px;
+  border: unset;
+}
+
 .verified {
   color: green;
   font-size: 20px;
@@ -133,13 +138,29 @@ button {
   top: 0;
   background: #fff;
   border-bottom: 1px rgba(36,36,38,.15) solid;
+  border-top: 1px rgba(36, 36, 38, 0.15) solid;
   z-index: 2;
   margin: 0px;
+  margin-bottom: 0px;
   // margin: 1px 4px;
   // margin-top: 4px;
   cursor: pointer;
 }
 
+.ui.divider:not(.vertical):not(.horizontal) {
+  border-bottom: 0px;
+  border-top: 0px;
+}
+
+.tileList .ui.divider {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding: 0px;
+  border-bottom: 0px;
+  border-top: 0px;
+  height: 1px;
+  background-color: rgba(36, 36, 38, 0.15);
+}
 .tileActionIndicator {
   color: #000;
   padding: 0px 4px;
@@ -262,7 +283,7 @@ body > div.ui.bottom.right.flowing.popup.transition.visible.optionsPopup {
   margin-bottom: 0px;
 }
 
-.ui.vertical.segment.tileListItem {
-  padding: 4px 6px;
-  // margin-bottom: 4px;
-}
+// .ui.vertical.segment.tileListItem {
+//   padding: 4px 6px;
+//   // margin-bottom: 4px;
+// }

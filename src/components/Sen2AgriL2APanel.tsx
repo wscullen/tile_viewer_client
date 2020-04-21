@@ -503,9 +503,9 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                     <Table.HeaderCell>Status</Table.HeaderCell>
                     <Table.HeaderCell>Progress</Table.HeaderCell>
 
-                    {[...dates].sort().map(item => {
+                    {[...dates].sort().map((item, idx) => {
                       return (
-                        <Table.HeaderCell className="dateHeader">
+                        <Table.HeaderCell className="dateHeader" key={idx}>
                           <p>{`${item.substring(0, 4)}-${item.substring(4, 6)}-${item.substring(6, 8)}`}</p>
                         </Table.HeaderCell>
                       )
@@ -516,7 +516,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                 <Table.Body>
                   {Object.keys(imageryListByTile)
                     .sort()
-                    .map(tile => {
+                    .map((tile, idx) => {
                       console.log(imageryListByTile[tile])
                       const datesList: ImageryDates = imageryListByTile[tile]
                       console.log('dates list ')
@@ -550,7 +550,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                       }
 
                       return (
-                        <Table.Row textAlign="center">
+                        <Table.Row textAlign="center" key={idx}>
                           <Table.Cell>{tile}</Table.Cell>
                           <Table.Cell>
                             {taskIdForTile ? <abbr title={taskIdForTile}>{taskIdForTile.slice(0, 8)}</abbr> : ''}
@@ -574,7 +574,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                               }
                             ></Progress>
                           </Table.Cell>
-                          {[...dates].sort().map((d: string) => {
+                          {[...dates].sort().map((d: string, idx) => {
                             if (Object.keys(imageryListByTile[tile]).includes(d)) {
                               const tileId = datesList[d]
                               const tileInfo = this.props.tiles.byId[imageryListByTile[tile][d]]
@@ -594,7 +594,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                                 tileSen2AgriL2aS3Url = tileInfo.properties['sen2agriL2aS3Url']
 
                               return (
-                                <Table.Cell className="statusCell">
+                                <Table.Cell className="statusCell" key={idx}>
                                   <Label color={tileL1CS3Url ? 'green' : 'red'} size="mini">
                                     L1C
                                   </Label>

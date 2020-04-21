@@ -19,6 +19,7 @@ import {
   Formik,
   Form as FormikForm,
   Field as FormikField,
+  FieldArray,
   FormikHelpers,
   FormikProps,
   FieldProps,
@@ -71,10 +72,15 @@ const defaultState = {
   submitting: false,
 }
 
+interface ShapefileFileArray {
+  [index: string]: string[]
+}
+
 interface AddAoiFormValues {
   siteName: string
   dateRange: Date[]
   files: any
+  visualizationFiles: Array<File[]>
   platforms: string[]
   // password: string
   // url: string
@@ -250,11 +256,13 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
 
   fileValidation = (values: any) => {
     console.log('field validation')
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     console.log(values)
     let missingFileTypes = Array.from(SUPPORTED_FORMATS)
     console.log(missingFileTypes)
     for (let fileType of SUPPORTED_FORMATS) {
       for (let file of values) {
+        console.log(file)
         console.log(path.extname(file.name))
         console.log(fileType)
         if (path.extname(file.name) === fileType) {
@@ -269,6 +277,70 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
       error = `Missing the following files for a valid shapefile: ${missingFileTypes.map((value: any) => value)}`
     }
     return error
+  
+  }
+
+  filesValidation = (values: any): any => {
+    console.log('field array validation')
+    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    console.log(values)
+    // let error: string[] = []
+    let errorString: string = undefined
+    for (let fileType of SUPPORTED_FORMATS) {
+   
+     for (let file of values) {
+          let missingFileTypes = Array.from(SUPPORTED_FORMATS)
+          console.log(file)
+          
+          console.log(file)
+          console.log(path.extname(file.name))
+          console.log(fileType)
+         
+          
+          if (missingFileTypes.length !== 0) {
+            errorString = `Missing the following files for a valid shapefile: ${missingFileTypes.map((value: any) => value)}`
+          }
+          console.log(errorString)
+     
+        if (path.extname(file.name) === fileType) {
+          missingFileTypes.splice(missingFileTypes.indexOf(fileType), 1)
+          break
+        }
+      }
+    }
+
+    return errorString
+    
+    //   } else {
+    //     console.log('NOT AN ARRAY')
+    //     let missingFileTypes = Array.from(SUPPORTED_FORMATS)
+    //     console.log(missingFileTypes)
+    //     for (let fileType of SUPPORTED_FORMATS) {
+    //       for (let file of values) {
+    //         console.log(file)
+    //         console.log(path.extname(file.name))
+    //         console.log(fileType)
+    //         if (path.extname(file.name) === fileType) {
+    //           missingFileTypes.splice(missingFileTypes.indexOf(fileType), 1)
+    //           break
+    //         }
+    //       }
+    //     }
+    //     if (missingFileTypes.length !== 0) {
+    //       errorString = `Missing the following files for a valid shapefile: ${missingFileTypes.map((value: any) => value)}`
+        
+    //     }
+    //     console.log(errorString)
+    //     return errorString
+    //   }
+    // })
+
+    // if (error) {
+    //   return error
+    // } else {
+    //   return errorString
+    // }
+  
   }
 
   displayLoadingMessage = () => {
@@ -342,6 +414,7 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
     const initialValues: AddAoiFormValues = {
       siteName: '',
       dateRange: [],
+      visualizationFiles: [],
       files: [],
       platforms: [],
     }
@@ -369,22 +442,28 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
                 data.append('shapefiles', f, f.name)
               }
 
+              for (let [idx, files] of Object.entries(values.visualizationFiles)) {
+                for (let f of files) {
+                  data.append('visualizationShapefiles', f, idx + '+' + f.name)
+                }
+              }
+
               data.append('startDate', moment(values.dateRange[0]).format('YYYYMMDD'))
               data.append('endDate', moment(values.dateRange[1]).format('YYYYMMDD'))
               data.append('platforms', values.platforms.join(','))
               data.append('name', values.siteName)
+              console.log(data)
 
               this.props.thunkStartAddAoi(data, actions.resetForm)
             }}
             validationSchema={this.addAoiSchema}
           >
-            {({ values, handleSubmit, setFieldValue, setFieldTouched, errors, touched, validateField, resetForm }) => {
+            {({ values, handleSubmit, setFieldValue, setFieldTouched, errors, touched, validateField, validateForm, resetForm }) => {
               this.handleReset = resetForm
-
               return (
                 <div>
                   <Form loading={this.props.session.forms.addAoi.submitting} onSubmit={handleSubmit}>
-                    <FormikField name="siteName">
+                      <FormikField name="siteName">
                       {({ field, form, meta }: { field: any; form: any; meta: any }) => (
                         <Form.Input
                           {...field}
@@ -424,9 +503,50 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
                         name="files"
                         validate={this.fileValidation}
                         filesValidator={this.fileValidation}
+                        title="Shapefile for Site Extent"
                         required
                       />
                     </Form.Field>
+                    <FieldArray
+                          name="visualizationFiles"
+                          validateOnChange
+                          render={({ insert, remove, push }) => (
+                            <div>
+                              {values.visualizationFiles.length > 0 &&
+                                values.visualizationFiles.map((vizFile: any, index: number) => (
+                                      <div className="visualizationShapefileField" key={index}>
+                                      <Form.Field>
+                                        <FormikField
+                                          component={FileDropzoneWrapper}
+                                          validate={this.fileValidation}
+                                          title="Shapefile for Visualization"
+                                          filesValidator={this.fileValidation}
+                                          name={`visualizationFiles.${index}`}
+                                        />
+                                      </Form.Field>
+                                        <Button
+                                          basic
+                                          compact
+                                          color="red"
+                                          icon="times circle"
+                                          size="mini"
+
+                                        type="button"
+                                          onClick={() => {
+                                            remove(index)
+                                          }}
+                                        />
+                                        </div>
+                                ))}
+                              <Button
+                                type="button"
+                                onClick={() => push([])}
+                              >
+                                Add A Shapefile For Visualization
+                              </Button>
+                             </div>
+                          )}
+                        />
                     <Form.Field error={errors.hasOwnProperty('platforms') && touched.hasOwnProperty('platforms')}>
                       <label>Platforms</label>
                       <Checkbox name="platforms" value="landsat8" label="Landsat 8" /> <br />
@@ -437,12 +557,9 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
                         </Label>
                       ) : null}
                     </Form.Field>
-
-                    <div className="buttonAndStatus">
                       <Button type="submit" className="flexItem" primary>
                         Create Area of Interest
                       </Button>
-                    </div>
                   </Form>
                   <Message
                     hidden={this.props.session.forms.addAoi.msg === ''}
@@ -451,7 +568,7 @@ class AddAreaOfInterestModal extends Component<AppProps, AppState> {
                   >
                     <p>{this.props.session.forms.addAoi.msg}</p>
                   </Message>
-                </div>
+                  </div>
               )
             }}
           </Formik>

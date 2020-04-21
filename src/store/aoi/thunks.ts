@@ -191,11 +191,13 @@ export const thunkStartAddAoi = (
         endDate: addAoiFormData.get('endDate'),
         shapefile: Array(addAoiFormData.get('shapefiles')).filter(ele => path.extname(ele.toString()) === '.shp'),
         wkt_footprint: data['wkt_footprint'],
+        wkt_vis_list: data['wkt_vis_list'],
         mgrs_list: data['mgrs_list'],
         wrs_list: data['wrs_list'],
         raw_tile_list: data['tile_results'],
         wrs_overlay: data['wrs_geojson'],
         sensor_list: data['sensor_list'],
+        mgrs_overlay: data['mgrs_geojson']
       }
 
       console.log(aoi)
@@ -304,6 +306,7 @@ export const thunkStartAddAoi = (
         mgrsList: aoi.mgrs_list,
         wrsList: aoi.wrs_list,
         wrsOverlay: aoi.wrs_overlay,
+        mgrsOverlay: aoi.mgrs_overlay,
         dateCreated: new Date().toISOString(),
         session,
         name: aoi.name.toString().trim(),
@@ -312,6 +315,7 @@ export const thunkStartAddAoi = (
         allTiles: allTileId,
         selectedTiles: selectedTileId,
         sensorList: aoi.sensor_list,
+        wktOverlayList: aoi.wkt_vis_list
       }
 
       console.log(areaObject)

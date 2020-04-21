@@ -3,7 +3,7 @@ import './../assets/css/TileList.scss'
 import React, { Component } from 'react'
 import moment from 'moment'
 
-import { Icon, Button, Checkbox, Popup, Grid, Header, Progress, Segment } from 'semantic-ui-react'
+import { Icon, Button, Checkbox, Popup, Grid, Header, Progress, Segment, Divider } from 'semantic-ui-react'
 
 import TileListItemCompact from './TileListItemCompact'
 
@@ -160,7 +160,7 @@ class TileList extends Component<AppProps, DefaultAppState> {
                 <Grid.Column>
                   <Header as="h4">Tile Processing Options</Header>
                   <ul>
-                    <li>
+                    <li key={'atmosphericCorrection'}>
                       <Checkbox
                         label="Atmospheric Correction (Sen2Cor/LaSRC)"
                         onChange={this.updateAtmosphericCorrection}
@@ -169,10 +169,10 @@ class TileList extends Component<AppProps, DefaultAppState> {
                         }
                       />
                     </li>
-                    <li>
+                    <li key={'saveAsJson'}>
                       <Button onClick={e => this.props.saveTileJson()}>Save Tile List as JSON</Button>
                     </li>
-                    <li>
+                    <li key={'copyToClipboard'}>
                       <Button onClick={e => this.props.copyCurrentTilesToClipboard()}>
                         {this.props.selectedTilesInList.length === 0
                           ? `Copy ${platformAbbreviation} Names to Clipboard`
@@ -192,7 +192,7 @@ class TileList extends Component<AppProps, DefaultAppState> {
         <div className="listOfTiles">
           <div className="listWrapper">
             {Object.keys(this.props.selectedTiles).map((d: string) => {
-              const listElements = []
+              let listElements = []
 
               if (this.props.selectedTiles[d].length > 0) {
                 const headerEle = (
@@ -207,92 +207,90 @@ class TileList extends Component<AppProps, DefaultAppState> {
                 )
                 listElements.push(headerEle)
                 let counter = 0
-                for (const tile of this.props.selectedTiles[d]) {
-                  let clsName = 'tileListItem'
 
-                  if (this.props.selectedTilesInList.includes(tile.id)) {
-                    clsName = 'tileListItem activeSelection'
-                  }
+                const segmentGroup =(
+                  <Segment.Group key={"segmentGroup" + d}>
+                    {this.props.selectedTiles[d].map((tile, idx) => {
+                      let clsName = 'tileListItem'
 
-                  if (counter % 2 === 0) {
-                    clsName += ' altBackground'
-                  }
-
-                  counter++
-
-                  // Get the most recent L8BatchDownload or S2BatchDownload job for the AoI
-                  let taskStatus: JobInfoObject = undefined
-                  if (this.props.currentPlatform === 'sentinel2') {
-                    if (this.props.jobs.byAoiId[this.props.currentAoi] && this.props.jobs.byAoiId[this.props.currentAoi].length > 0) {
-                      const jobIds = this.props.jobs.byAoiId[this.props.currentAoi]
-
-                      let mostRecentJobIdForTile = undefined
-
-                      const tileJobs = [...tile.jobs]
-                      console.log("tile jobs: ")
-                      console.log(tileJobs)
-
-                      if (tileJobs.length > 0) {
-                        
-                        while (tileJobs.length !== 0) {
-                          mostRecentJobIdForTile = tileJobs[tileJobs.length -1]
-                          console.log(mostRecentJobIdForTile)
-
-                          if (!!!jobIds.includes(mostRecentJobIdForTile)) {
-                            tileJobs.pop()
-                          } else {
-                            break
+                      if (this.props.selectedTilesInList.includes(tile.id)) {
+                        clsName = 'tileListItem activeSelection'
+                      }
+    
+                      if (counter % 2 === 0) {
+                        clsName += ' altBackground'
+                      }
+    
+                      counter++
+    
+                      // Get the most recent L8BatchDownload or S2BatchDownload job for the AoI
+                      let taskStatus: JobInfoObject = undefined
+                      if (this.props.currentPlatform === 'sentinel2') {
+                        if (this.props.jobs.byAoiId[this.props.currentAoi] && this.props.jobs.byAoiId[this.props.currentAoi].length > 0) {
+                          const jobIds = this.props.jobs.byAoiId[this.props.currentAoi]
+    
+                          let mostRecentJobIdForTile = undefined
+    
+                          const tileJobs = [...tile.jobs]
+                          console.log("tile jobs: ")
+                          console.log(tileJobs)
+    
+                          if (tileJobs.length > 0) {
+                            
+                            while (tileJobs.length !== 0) {
+                              mostRecentJobIdForTile = tileJobs[tileJobs.length -1]
+                              console.log(mostRecentJobIdForTile)
+    
+                              if (!!!jobIds.includes(mostRecentJobIdForTile)) {
+                                tileJobs.pop()
+                              } else {
+                                break
+                              }
+                            }
+                          }
+                          
+                          if (mostRecentJobIdForTile) {
+                            const mostRecentJob = this.props.jobs.byId[mostRecentJobIdForTile]
+                            console.log(mostRecentJob)
+                            if (mostRecentJob && mostRecentJob.hasOwnProperty('progressInfo')) {
+                              const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
+                              taskStatus = mostRecentJob.progressInfo.task_progress[taskId]
+                            } else if (mostRecentJob && !mostRecentJob.hasOwnProperty('progressInfo')) {
+                              const tempTaskStatus: JobInfoObject = {
+                                name: null,
+                                kwargs: null,
+                                args: null,
+                                status: TaskStatus.Pending,
+                              }
+                              taskStatus = tempTaskStatus
+                            }
                           }
                         }
                       }
                       
-                      if (mostRecentJobIdForTile) {
-                        const mostRecentJob = this.props.jobs.byId[mostRecentJobIdForTile]
-                        console.log(mostRecentJob)
-                        if (mostRecentJob && mostRecentJob.hasOwnProperty('progressInfo')) {
-                          const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
-                          taskStatus = mostRecentJob.progressInfo.task_progress[taskId]
-                        } else if (mostRecentJob && !mostRecentJob.hasOwnProperty('progressInfo')) {
-                          // name: string
-                          // kwargs: any
-                          // args: any
-                          // status: TaskStatus
-                          // progress?: any
-                          // result?: any
-                          const tempTaskStatus: JobInfoObject = {
-                            name: null,
-                            kwargs: null,
-                            args: null,
-                            status: TaskStatus.Pending,
-                          }
-
-                          taskStatus = tempTaskStatus
-                        }
-                      }
-                    }
+                      return (
+                         <div key={d+ idx}
+                         >
+                          <TileListItemCompact
+                            cssClass={clsName}
+                            handleTileClicked={this.props.tileClicked}
+                            tile={tile}
+                            taskStatus={taskStatus}
+                            removeTile={this.props.removeTile}
+                            toggleVisibility={this.props.toggleTileVisibility}
+                            resubmitLastJob={this.props.resubmitLastJob}
+                          />
+                          
+                          {this.props.selectedTiles[d].length - 1 !== idx ? <Divider key={d}/> : null }
+                        </div>)
+                    })
                   }
-                  
-                  const tileEle = (
-                    <Segment
-                      vertical
-                      className={clsName}
-                      key={tile.properties.name}
-                      onClick={(event: any) => this.props.tileClicked(event, tile.id)}
-                    >
-                      {this.progressBar(taskStatus)}
-                      <TileListItemCompact
-                        tile={tile}
-                        taskStatus={taskStatus}
-                        removeTile={this.props.removeTile}
-                        toggleVisibility={this.props.toggleTileVisibility}
-                        resubmitLastJob={this.props.resubmitLastJob}
-                      />
-                    </Segment>
-                  )
-                  listElements.push(tileEle)
-                }
+                  </Segment.Group>
+                )
+
+                listElements.push(segmentGroup)
+                return listElements
               }
-              return listElements
             })}
           </div>
         </div>

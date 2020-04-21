@@ -11,12 +11,12 @@ import { AppState } from '../store/'
 
 import { History } from 'history'
 
-import { Button, Checkbox, Form as FormSemantic, Message } from 'semantic-ui-react'
+import { Button, Checkbox, Form, Message } from 'semantic-ui-react'
 
 import {
   Formik,
-  Form,
-  Field,
+  Form as FormikForm,
+  Field as FormikField,
   FormikHelpers,
   FormikProps,
   FieldProps,
@@ -252,43 +252,49 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
                   )
                 }}
                 validationSchema={LoginSchema}
-                render={formikBag => (
-                  <Form>
-                    <FormSemantic loading={this.props.session.forms.login.submitting}>
-                      <Field
-                        name="email"
-                        render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                          <FormSemantic.Field>
-                            <label>Email</label>
-                            <input type="text" {...field} name="email" id="email" />
-                            <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                          </FormSemantic.Field>
-                        )}
-                      />
-                      <Field
-                        name="password"
-                        render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                          <FormSemantic.Field>
-                            <label>Password</label>
-                            <input type="password" {...field} name="password" id="password" />
-                            <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                          </FormSemantic.Field>
-                        )}
-                      />
-                      <Field
-                        name="url"
-                        render={({ field, form, meta }: { field: any; form: any; meta: any }) => (
-                          <FormSemantic.Field>
-                            <label>API URL</label>
-                            <input type="text" {...field} name="url" id="url" />
-                            <span className="errorMsg">{meta.touched && meta.error && meta.error}</span>
-                          </FormSemantic.Field>
-                        )}
-                      />
+                >
+                  {({ values, handleSubmit, setFieldValue, setFieldTouched, errors, touched, validateField, validateForm, resetForm }) => {
+                  return (
+                  <div>
+                    <Form loading={this.props.session.forms.login.submitting} onSubmit={handleSubmit}>
+                      <FormikField name="email">
+                        {
+                          ({ field, form, meta }: { field: any; form: any; meta: any }) => (
+                            <Form.Input 
+                              {...field}
+                              label="Email"
+                              id="email"
+                              error={meta.touched && meta.error && meta.error}
+                              name="email" />)
+                        }
+                      </FormikField>
+                      <FormikField name="password">
+                        {
+                          ({ field, form, meta }: { field: any; form: any; meta: any }) => (
+                            <Form.Input 
+                              {...field}
+                              type="password"
+                              label="Password"
+                              id="password"
+                              error={meta.touched && meta.error && meta.error}
+                              name="password" />)
+                        }
+                      </FormikField>
+                      <FormikField name="url">
+                        {
+                          ({ field, form, meta }: { field: any; form: any; meta: any }) => (
+                            <Form.Input 
+                              {...field}
+                              label="API Url"
+                              id="url"
+                              error={meta.touched && meta.error && meta.error}
+                              name="url" />)
+                        }
+                      </FormikField>
                       <Button type="submit" className="flexItem" primary>
-                        Verify Connection to API
+                        Login
                       </Button>
-                    </FormSemantic>
+                    </Form>
                     <Message
                       hidden={this.props.session.forms.login.msg === ''}
                       positive={this.props.session.forms.login.finished && this.props.session.forms.login.success}
@@ -296,9 +302,10 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
                     >
                       <p>{this.props.session.forms.login.msg}</p>
                     </Message>
-                  </Form>
-                )}
-              />
+                  </div>)
+                  }
+                }
+              </Formik>
             </div>
           </div>
           <div className="about">

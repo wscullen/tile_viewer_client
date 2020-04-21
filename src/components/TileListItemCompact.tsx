@@ -1,9 +1,10 @@
 import './../assets/css/TileListItemCompact.scss'
 
 import React, { Component } from 'react'
-import { Icon, Button, SemanticCOLORS, SemanticICONS, Label, Progress, Segment, Dropdown, ButtonGroup, Popup } from 'semantic-ui-react'
+import { Icon, Button, SemanticCOLORS, SemanticICONS, Label, Progress, Segment, Dropdown, ButtonGroup, Popup, Divider } from 'semantic-ui-react'
 import { Job, JobStatus, TaskStatus, JobInfoObject } from '../store/job/types'
 import { Tile } from '../store/tile/types'
+import { tileReducer } from '../store/tile/reducers'
 
 interface AppProps {
   taskStatus: JobInfoObject
@@ -11,6 +12,8 @@ interface AppProps {
   removeTile: Function
   toggleVisibility: Function
   resubmitLastJob: Function
+  handleTileClicked: Function
+  cssClass: String
 }
 
 export default function TileListItemCompact(props: AppProps) {
@@ -21,6 +24,18 @@ export default function TileListItemCompact(props: AppProps) {
   let jobProgressColor: SemanticCOLORS = 'grey'
   let downloadButtonClass = 'tileActionButton '
   let retryButtonClass = 'tileActionButton '
+  
+  let progressBarNode = undefined
+
+  if (props.taskStatus && props.taskStatus.status === TaskStatus.Started) {
+    let taskProgress = props.taskStatus.progress
+
+    if (taskProgress.hasOwnProperty('upload')) {
+      progressBarNode = (<Progress percent={50 + Math.round(taskProgress['upload'] / 2)} color="green" attached="bottom" active />)
+    } else if (taskProgress.hasOwnProperty('download')) {
+      progressBarNode = (<Progress percent={Math.round(taskProgress['download'] / 2)} color="green" attached="bottom" active />)
+    }
+  }
 
   console.log(props.taskStatus)
   if (props.taskStatus) {
@@ -96,7 +111,12 @@ export default function TileListItemCompact(props: AppProps) {
   }
 
   return (
-    <div className="tileListItemCompact">
+    <Segment
+      vertical
+      className={`tileListItemCompact ${props.cssClass}`}
+      key={props.tile.properties.name}
+      onClick={(event: any) => props.handleTileClicked(event, props.tile.id)}>
+      {progressBarNode}
       <div className="tileListItemLeft">
         <Button.Group>
           <Button
@@ -118,14 +138,19 @@ export default function TileListItemCompact(props: AppProps) {
         <span className="sectionLabel">{displayName}</span>
       </div>
       <div className="tileListItemActions">
-        {props.taskStatus ? <Icon name={jobProgressIcon} color={jobProgressColor} circular size="small" /> : ''}
+        {props.taskStatus ? <Icon name={jobProgressIcon} color={jobProgressColor} size="small" bordered/> : ''}
 
         <Button.Group>
-        <Popup hoverable basic
+        <Popup hoverable basic flowing
           position="bottom center"
         
               on="click"
-        content={<Button.Group vertical basic>
+        content={<Segment onClick={(e:any) => e.stopPropagation()} className="tileInfo">
+
+          {props.tile.properties.entityId}
+
+      
+        <Button.Group vertical basic className="tileActions">
 <Button
         basic
         size="mini"
@@ -162,7 +187,8 @@ export default function TileListItemCompact(props: AppProps) {
         event.stopPropagation()
       }}
     />
-        </Button.Group>} trigger={ <Button 
+        </Button.Group>
+        </Segment>} trigger={ <Button 
       basic
       compact
       size="mini"
@@ -186,6 +212,6 @@ export default function TileListItemCompact(props: AppProps) {
           />
         </Button.Group>
       </div>
-    </div>
+    </Segment>
   )
 }

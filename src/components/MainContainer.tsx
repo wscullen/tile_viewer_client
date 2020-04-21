@@ -958,6 +958,8 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               tileSelected={this.handleTileSelect}
               currentAoiWkt={currentAoi ? currentAoi.wktFootprint : null}
               wrsOverlay={currentAoi ? currentAoi.wrsOverlay : null}
+              mgrsOverlay={currentAoi? currentAoi.mgrsOverlay : null}
+              wktOverlayList={currentAoi ? currentAoi.wktOverlayList : null}
               activeAoi={currentAoi ? currentAoi.name : null}
               currentDate={currentAoi ? currentAoi.session.datesList[currentPlatform].currentDate : null}
               currentPlatform={currentPlatform}

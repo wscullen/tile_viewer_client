@@ -12,3 +12,12 @@
     width: 100%;
 }
 
+.layer-switcher {
+    top: 4.5em;
+    left: 0.5em;
+    right: unset;
+}
+
+.layer-switcher .panel > ul {
+    padding-left: 0px;
+}

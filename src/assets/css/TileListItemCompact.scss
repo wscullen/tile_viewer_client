@@ -61,17 +61,18 @@
 //   width: 25px;
 // }
 
-.tileListItem {
-  padding: 6px 1px;
-  // border-bottom: 2px #eee solid;
-}
-
 .ui.vertical.segment.tileListItem.activeSelection.altBackground {
   background: $active-selection;
 }
 
 .ui.vertical.segment.tileListItem.activeSelection {
   background: $active-selection;
+}
+
+.tileList .ui.segment.tileListItemCompact.tileListItem.activeSelection {
+  background: $active-selection;
+  border-bottom: 2px solid $active-selection-noalpha;
+  border-top: 2px solid $active-selection-noalpha;
 }
 
 .tileListItemLeft .ui.blue.small.basic.circular.compact.icon.button,
@@ -85,3 +86,25 @@
   font-size: 12px;
 }
 
+.tileList .ui.segment.tileListItemCompact.tileListItem {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  padding-right: 4px;
+  padding-left: 0px;
+  // margin-top: 2px;
+  border-bottom: 2px solid #fff;
+  border-top: 2px solid #fff;
+}
+
+.ui.basic.vertical.buttons.tileActions {
+  margin: 3px;
+}
+
+.tileList i.bordered.icon {
+  margin-top: 1.5px;
+}
+
+.ui.segment.tileInfo {
+  padding: 2px;
+  padding-left: 4px;
+}

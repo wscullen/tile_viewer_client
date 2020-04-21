@@ -517,16 +517,16 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                     <Table.HeaderCell colSpan={tiles.length}>Tiles</Table.HeaderCell>
                   </Table.Row>
                   <Table.Row>
-                    {tiles.map(item => {
-                      return <Table.HeaderCell>{item}</Table.HeaderCell>
+                    {tiles.map((item, idx) => {
+                      return <Table.HeaderCell key={idx}>{item}</Table.HeaderCell>
                     })}
                   </Table.Row>
                 </Table.Header>
 
                 <Table.Body>
-                  {[...dates].sort().map(date => {
+                  {[...dates].sort().map((date, idx) => {
                     return (
-                      <Table.Row>
+                      <Table.Row key={idx}>
                         <Table.Cell>{date}</Table.Cell>
                         <Table.Cell>TASK ID HERE</Table.Cell>
                         <Table.Cell>
@@ -536,19 +536,19 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
                           <Progress size="small" percent={0} />
                         </Table.Cell>
 
-                        {tiles.map(tile => {
+                        {tiles.map((tile, idx) => {
                           const tileExistsForDate = Object.keys(imageryListByTile[tile]).includes(date)
 
                           if (tileExistsForDate) {
                             return (
-                              <Table.Cell>
+                              <Table.Cell key={idx}>
                                 <Label size="mini">Mono</Label>
                                 <Label size="mini">N-Days</Label>
                                 <Label size="mini">End of Season</Label>
                               </Table.Cell>
                             )
                           } else {
-                            return <Table.Cell className="noImageryCell" disabled></Table.Cell>
+                            return <Table.Cell key={idx} className="noImageryCell" disabled></Table.Cell>
                           }
                         })}
                       </Table.Row>

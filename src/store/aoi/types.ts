@@ -56,6 +56,11 @@ export interface ImageryListByTile {
   landsat8?: TileObject
 }
 
+export interface WktOverlay {
+  name: string
+  wkt: string
+}
+
 export interface AreaOfInterest {
   id: string
   endDate: string
@@ -68,9 +73,11 @@ export interface AreaOfInterest {
   wrsList: string[]
   dateCreated: string
   wrsOverlay: FeatureCollection
+  mgrsOverlay: FeatureCollection
   session: Session
   jobs: string[]
   sensorList: string[]
+  wktOverlayList: WktOverlay[]
 }
 
 export interface StateById {
