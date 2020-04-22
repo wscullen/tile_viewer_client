@@ -81,7 +81,7 @@
 }
 
 .tileList .sectionLabel {
-  margin-top: 4px;
+  margin-top: 5px;
   padding-left: 3px;
   font-size: 12px;
 }
@@ -101,10 +101,17 @@
 }
 
 .tileList i.bordered.icon {
-  margin-top: 1.5px;
+  // margin-top: 1.5px;
 }
 
 .ui.segment.tileInfo {
   padding: 2px;
   padding-left: 4px;
 }
+.ui.bottom.center.basic.flowing.popup.transition.visible {
+  padding: 0px;
+}
+
+// .ui.basic.compact.icon.button {
+//   padding: 3px;
+// }

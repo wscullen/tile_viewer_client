@@ -65,15 +65,14 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
             </Button>
           </div>
           <div className="bottomRow">
-            <Button.Group className="tabSelect">
+            <Button.Group basic compact className="tabSelect">
               <Button
                 id="0"
                 active={this.props.activeTab === 0}
                 onClick={e => {
                   this.props.handleTabChange(e)
                 }}
-                compact
-                basic
+               
               >
                 <Icon disabled name="map" />
                 Map
@@ -84,8 +83,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                 onClick={e => {
                   this.props.handleTabChange(e)
                 }}
-                compact
-                basic
+               
               >
                 <Icon disabled name="tasks" />
                 Jobs
@@ -96,8 +94,7 @@ export default class AreaOfInterestList extends React.Component<AppProps, Defaul
                 onClick={e => {
                   this.props.handleTabChange(e)
                 }}
-                compact
-                basic
+               
               >
                 <Icon disabled name="info circle" />
                 Details

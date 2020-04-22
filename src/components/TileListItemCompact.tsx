@@ -89,9 +89,7 @@ export default function TileListItemCompact(props: AppProps) {
 
   const trigger = (
       <Button 
-      basic
-      compact
-      size="mini"
+     
       icon='caret down'/>
   )
   
@@ -104,11 +102,6 @@ export default function TileListItemCompact(props: AppProps) {
       ),
     },
   ]
-
-  const style = {
-    padding: '0em',
-    marginTop: '2px'
-  }
 
   return (
     <Segment
@@ -140,7 +133,7 @@ export default function TileListItemCompact(props: AppProps) {
       <div className="tileListItemActions">
         {props.taskStatus ? <Icon name={jobProgressIcon} color={jobProgressColor} size="small" bordered/> : ''}
 
-        <Button.Group>
+        <Button.Group basic compact size="tiny">
         <Popup hoverable basic flowing
           position="bottom center"
         
@@ -150,7 +143,7 @@ export default function TileListItemCompact(props: AppProps) {
           {props.tile.properties.entityId}
 
       
-        <Button.Group vertical basic className="tileActions">
+        <Button.Group vertical basic size="tiny" className="tileActions">
 <Button
         basic
         size="mini"
@@ -188,21 +181,21 @@ export default function TileListItemCompact(props: AppProps) {
       }}
     />
         </Button.Group>
-        </Segment>} trigger={ <Button 
-      basic
-      compact
-      size="mini"
-      icon='caret down'
-      onClick={event => event.stopPropagation()}/>} 
-      style={style}
-      mouseLeaveDelay={750}
+        </Segment>} trigger={ <Button
+                basic 
+                compact
+                icon='caret down'
+                size="mini"
+                color="grey"
+                onClick={event => event.stopPropagation()}/>} 
+                mouseLeaveDelay={750}
       />
-        {/* <Dropdown trigger={trigger} icon={null} options={options} compact/> */}
           <Button
             basic
             compact
-            size="mini"
+            className="deselectTileButton"
             icon="times circle"
+            size="mini"
             color="red"
             onClick={event => {
               console.log('trying to remove tile, inside tile list')

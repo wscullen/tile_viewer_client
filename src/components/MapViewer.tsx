@@ -314,51 +314,13 @@ export default class MapViewer extends Component<AppProps, AppState> {
     console.log(this.props.activeAoi)
     console.log('updating AOI info')
     const map = this.state.map
-    if (this.props.currentPlatform === 'sentinel2') {
-      console.log(this.props.currentPlatform)
-      
-      map.getLayers().forEach((ele: VectorLayer) => {
-        if (
-          ele.get('name') === 'wrsOverlay'
-        ) {
-          console.log('wrsOverlay setting visibile to true')
-          ele.set('visible', true)
-        }
-
-        if (
-          ele.get('name') === 'mgrsOverlay'
-        ) {
-          console.log('mgrsOverlay setting visibile to false')
-          ele.set('visible', false)
-        }
-      })
-
-      this.state.layerSwitcher.renderPanel()
-
-    } else if (this.props.currentPlatform === 'landsat8') {
-      console.log(this.props.currentPlatform)
-      map.getLayers().forEach((ele: VectorLayer) => {
-        if (
-          ele.get('name') === 'wrsOverlay'
-        ) {
-          ele.set('visible', false)
-        }
-
-        if (
-          ele.get('name') === 'mgrsOverlay'
-        ) {
-          ele.set('visible', true)
-        }
-      })
-
-      this.state.layerSwitcher.renderPanel()
-    }
 
     if (this.props.activeAoi === null) {
       this.clearMap()
     }
 
     if (this.props.activeAoi !== null && prevProps.activeAoi !== this.props.activeAoi) {
+      this.clearMap()
       this.initMap()
     }
 
@@ -380,20 +342,50 @@ export default class MapViewer extends Component<AppProps, AppState> {
 
   clearMap = () => {
     const map = this.state.map
+    const layerSwitcher = this.state.layerSwitcher
+    console.log('CLEARING MAP')
 
-    map.getLayers().forEach((ele: VectorLayer) => {
-      if (ele.get('name')) {
-      if (
-        ele.get('name') === 'currentAoiFootprint' ||
-        ele.get('name') === 'tileFootprint' ||
-        ele.get('name') === 'wrsOverlay' ||
-        ele.get('name') === 'mgrsOverlay' ||
-        ele.get('name').search('wkt') !== -1
-      ) {
-        ele.getSource().clear()
+    const layerGroup = map.getLayerGroup()
+    console.log(layerGroup)
+
+    console.log(map.getLayers())
+    console.log(layerGroup.getLayers())
+    const layersToRemove: Layer[] = []
+    layerGroup.getLayers().forEach((layer: any, i: number) => {
+      console.log(layer)
+      console.log(layer.constructor.name)
+      if (layer.get('name')) {
+        if (['wktOverlayLayers', 'mgrsOverlay', 'wrsOverlay', 'currentAoiFootprint'].includes(layer.get('name'))) {
+          console.log('We want to remove this layer')
+          layersToRemove.push(layer)
+        }
       }
-    }
+      // if (layer) 
+      //   console.log(layer.getType())
+      // if (layer && layer.getType() === "VECTOR") {
+      //   let name = layer.get("name")
+      //   if (!!!["hoverLayer", "selectedLayer"].includes(name))
+      //     layersToRemove.push(layer)
+      // }
+      // map.removeLayer(ele)
+    //   if (ele.get('name')) {
+    //   if (
+    //     ele.get('name') === 'currentAoiFootprint' ||
+    //     ele.get('name') === 'tileFootprint' ||
+    //     ele.get('name') === 'wrsOverlay' ||
+    //     ele.get('name') === 'mgrsOverlay' ||
+    //     ele.get('name').search('wkt') !== -1
+    //   ) {
+    //     if (ele.getSource()) {
+    //       ele.getSource().clear()
+
+    //     }
+    //   }
+    // }
     })
+    
+    layersToRemove.map(layer => map.removeLayer(layer))
+    console.log('DONE CLEARING MAP')
   }
 
   initMap = () => {
@@ -638,19 +630,19 @@ export default class MapViewer extends Component<AppProps, AppState> {
           layersArray.push(vector)
         }
       }
-
-      const layerGroup = new LayerGroup({
-        layers: layersArray
-      })
-
-      layerGroup.set('title', 'Overlay Layers')
-      layerGroup.set('name', 'wktOverlayLayers')
-      layerGroup.set('combine', false)
-      layerGroup.set('visible', true)
-
-      map.addLayer(layerGroup)
-
-
+      if (layersArray.length > 0) {
+        const layerGroup = new LayerGroup({
+          layers: layersArray
+        })
+  
+        layerGroup.set('title', 'Overlay Layers')
+        layerGroup.set('name', 'wktOverlayLayers')
+        layerGroup.set('combine', false)
+        layerGroup.set('visible', true)
+        // map.setLayerGroup
+        map.addLayer(layerGroup)
+      }
+      
       const extent = feature.getGeometry().getExtent()
       console.log(extent)
       aoiFootprintLayer.setZIndex(9999)
@@ -959,6 +951,46 @@ export default class MapViewer extends Component<AppProps, AppState> {
         console.log(errors)
         console.log('handle errors in catch function')
       })
+
+      if (this.props.currentPlatform === 'sentinel2') {
+        console.log(this.props.currentPlatform)
+        const layerGroup = map.getLayerGroup()
+        layerGroup.getLayers().forEach((layer: Layer) => {
+          if (
+            layer.get('name') && layer.get('name') === 'wrsOverlay'
+          ) {
+            console.log('wrsOverlay setting visibile to true')
+            layer.set('visible', true)
+          }
+  
+          if (
+            layer.get('name') && layer.get('name') === 'mgrsOverlay'
+          ) {
+            console.log('mgrsOverlay setting visibile to false')
+            layer.set('visible', false)
+          }
+        })
+  
+        this.state.layerSwitcher.renderPanel()
+  
+      } else if (this.props.currentPlatform === 'landsat8') {
+        console.log(this.props.currentPlatform)
+        map.getLayers().forEach((ele: VectorLayer) => {
+          if (
+            ele.get('name') === 'wrsOverlay'
+          ) {
+            ele.set('visible', false)
+          }
+  
+          if (
+            ele.get('name') === 'mgrsOverlay'
+          ) {
+            ele.set('visible', true)
+          }
+        })
+        this.state.layerSwitcher.renderPanel()
+
+      }
   }
 
   updateStyle(features: string[]) {
