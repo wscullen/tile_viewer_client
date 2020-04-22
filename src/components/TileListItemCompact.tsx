@@ -133,7 +133,7 @@ export default function TileListItemCompact(props: AppProps) {
       <div className="tileListItemActions">
         {props.taskStatus ? <Icon name={jobProgressIcon} color={jobProgressColor} size="small" bordered/> : ''}
 
-        <Button.Group basic compact size="tiny">
+        <Button.Group>
         <Popup hoverable basic flowing
           position="bottom center"
         
@@ -186,7 +186,6 @@ export default function TileListItemCompact(props: AppProps) {
                 compact
                 icon='caret down'
                 size="mini"
-                color="grey"
                 onClick={event => event.stopPropagation()}/>} 
                 mouseLeaveDelay={750}
       />
