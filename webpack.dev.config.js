@@ -13,12 +13,16 @@ module.exports = {
       {
         test: /\.tsx?$/,
         use: ['babel-loader', 'ts-loader'],
-        exclude: /node_modules/,
       },
       {
         test: /\.css$/,
         use: [
-          { loader: 'style-loader' },
+          {
+            loader: MiniCssExtractPlugin.loader,
+              options: {
+                esModule: true
+              },
+            },
           {
             loader: 'css-loader',
             options: {
@@ -27,14 +31,14 @@ module.exports = {
           },
           { loader: 'postcss-loader' },
         ],
-        include: [defaultInclude, path.resolve(__dirname, '/../../node_modules/ol/ol.css')],
+        include: [defaultInclude, path.resolve(__dirname, '/../../node_modules/ol/ol.css'), path.resolve(__dirname, '/../../node_modules/fomantic-ui-css/semantic.min.css')],
       },
       {
         test: /\.scss$/,
         use: [
-          MiniCssExtractPlugin.loader,
+          {loader: 'style-loader'},
           {
-            loader: 'css-loader',
+            loader: 'css-loader'
           },
           {
             loader: 'sass-loader',
@@ -43,7 +47,7 @@ module.exports = {
             },
           },
         ],
-        exclude: /node_modules/,
+        // include: [defaultInclude, path.resolve(__dirname, '/../../node_modules/ol/ol.css'), path.resolve(__dirname, '/../../node_modules/fomantic-ui-css/semantic.min.css')],
       },
       {
         test: /\.jsx?$/,
@@ -63,7 +67,7 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js', '.css', '.scss'],
   },
   output: {
     filename: 'bundle.js',

@@ -2,8 +2,6 @@ import './../assets/css/FilteringTools.scss'
 
 import React, { Component } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
 import { Slider, Rail, Handles, Tracks, Ticks, SliderItem, GetHandleProps, GetTrackProps } from 'react-compound-slider'
 
 import { Button, Icon, Label } from 'semantic-ui-react'

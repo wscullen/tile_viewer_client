@@ -1,7 +1,6 @@
 import './../assets/css/AreaOfInterestList.scss'
 
 import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { Header, Button, Popup, Grid, Icon, Item } from 'semantic-ui-react'
 

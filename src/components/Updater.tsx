@@ -1,7 +1,6 @@
 import './../assets/css/Updater.scss'
 
 import React, { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { MainSessionState, Token, SessionSettings } from '../store/session/types'
 import { getCSRFToken } from '../store/session/thunks'

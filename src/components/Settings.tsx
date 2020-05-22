@@ -1,7 +1,6 @@
 import './../assets/css/Settings.scss'
 
 import React, { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { MainSessionState, Token, SessionSettings, UPDATE_LOGIN_FORM } from '../store/session/types'
 import { getCSRFToken, getApiVersion, thunkAuthenticate, thunkAttemptLogin } from '../store/session/thunks'
@@ -177,24 +176,6 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
   }
 
   render() {
-    const s2d2VerifiedIcon = () => {
-      if (this.state.s2d2Verified !== null) {
-        if (this.state.s2d2Verified) {
-          return (
-            <div className="verified flexItem2">
-              <FontAwesomeIcon icon={'check'} />
-              <span>{'   API version:' + this.state.s2d2Version}</span>
-            </div>
-          )
-        } else {
-          return (
-            <div className="notVerified flexItem2">
-              <FontAwesomeIcon icon={'times'} />
-            </div>
-          )
-        }
-      }
-    }
 
     const initialValues: JobManagerFormValues = {
       email: this.props.session.settings.auth.userEmail ? this.props.session.settings.auth.userEmail : '',

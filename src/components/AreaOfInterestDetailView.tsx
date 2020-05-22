@@ -26,8 +26,6 @@ import { thunkUpdateCsrfTokens } from '../store/session/thunks'
 
 import { thunkSendMessage } from '../thunks'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
 // @ts-ignore
 import base64 from 'base-64'
 import { ipcRenderer } from 'electron'

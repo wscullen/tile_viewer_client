@@ -33,7 +33,6 @@ import imgNotFound from '../assets/img/notfound_v2.png'
 import { FeatureCollection } from 'geojson'
 import { MapBrowserEvent } from 'ol'
 import { Pixel } from 'ol/pixel'
-import { layer } from '@fortawesome/fontawesome-svg-core'
 
 const middleCanada = [-97.02, 55.72]
 const middleCanadaWebMercatorProj = fromLonLat(middleCanada)
