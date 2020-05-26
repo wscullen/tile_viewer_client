@@ -448,6 +448,50 @@ export const thunkSubmitJob = (
       dispatch(updateAoi(aoi))
       dispatch(updateTiles(tilesToUpdate))
     }
+  } else if (newJob.type === 'L8BatchDownload') {
+    console.log('L8BatchDownload job being dispatched')
+    console.log(newJob)
+    const accessToken: string = state.session.settings.auth.accessToken
+
+    const jobResult = await submitBatchDownloadJobToApi(
+      jobManagerUrl,
+      newJob,
+      newJob.params,
+      csrfToken,
+      accessToken,
+      aoiName
+    )
+
+    if (jobResult.errorResult) {
+      console.log('something went terribly wrong while submitting job')
+      // let newL2AFormState = {
+      //   submitting: false,
+      //   finished: true,
+      //   success: false,
+      //   msg: `Something went wrong while trying to submit the job (${jobResult.errorResult})`,
+      // }
+
+      // let mainSession = state.session
+
+      // mainSession.forms.createL2AJob = newL2AFormState
+
+      // dispatch(updateMainSession(mainSession))
+    } else if (jobResult) {
+
+      aoi.jobs.push(jobResult.id)
+
+      const simpleTileArray = newJob.params.tileList as Array<SimpleTile>
+
+      simpleTileArray.map((tile: SimpleTile) => {
+        const tileToUpdate = { ...state.tile.byId[tile.tileId] }
+        tileToUpdate.jobs.push(jobResult.id)
+        tilesToUpdate.push(tileToUpdate)
+      })
+     
+      dispatch(addJob(newJob))
+      dispatch(updateAoi(aoi))
+      dispatch(updateTiles(tilesToUpdate))
+    }
   }
 }
 
