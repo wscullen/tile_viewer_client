@@ -93,6 +93,32 @@ export function getAllSelectedTiles(state: AppState): string[] {
   return selectedTiles
 }
 
+export function getAllSelectedTilesForPlatform(state: AppState, platform: string): string[] {
+  let currentAoi: AreaOfInterest
+  console.log(state.session)
+  if (state.session.currentAoi !== '') {
+    currentAoi = state.aoi.byId[state.session.currentAoi]
+  }
+
+  const selectedTiles: string[] = []
+
+  if (currentAoi) {
+    const session = { ...currentAoi.session }
+    const currentPlatform = platform
+    if (currentAoi.allTiles[currentPlatform]) {
+      for (const [key, value] of Object.entries(currentAoi.allTiles[currentPlatform])) {
+        const tileArray: Tile[] = []
+        value.map((id: string): void => {
+          if (state.tile.byId[id].selected) {
+            selectedTiles.push(id)
+          }
+        })
+      }
+    }
+  }
+  return selectedTiles
+}
+
 export function getSelectedTiles(state: AppState): TileListByDate {
   let currentAoi: AreaOfInterest
   console.log(state.session)

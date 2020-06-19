@@ -42,6 +42,7 @@ import {
   getSelectedTiles,
   getHighlightedTiles,
   getAllSelectedTiles,
+  getAllSelectedTilesForPlatform,
   getImageryListForSen2Agri,
   getImageryListByTile,
 } from '../store/aoi/reducers'
@@ -72,6 +73,7 @@ interface AppProps {
   thunkAddJob: Function
   updateMainSession: Function
   allSelectedTiles: string[]
+  selectedTilesSentinel2: string[]
   aois: AreaOfInterestState
   imageryList: TileList
   imageryListByTile: ImageryListByTile
@@ -149,7 +151,7 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
       this.props.updateImageryStatusForm(newUpdateTileStatus)
 
       this.props.thunkCheckImageryStatus(
-        this.props.allSelectedTiles,
+        this.props.selectedTilesSentinel2,
         imageryName,
         this.props.aois.byId[this.props.session.currentAoi].name,
       )
@@ -174,9 +176,9 @@ class Sen2AgriL2APanel extends Component<AppProps, AppState & DefaultAppState> {
 
   render() {
     const imageryListByTile = this.props.imageryListByTile.sentinel2 || {}
-    console.warn(imageryListByTile)
-    console.warn(Object.keys(imageryListByTile)
-                    .sort())
+    // console.warn(imageryListByTile)
+    // console.warn(Object.keys(imageryListByTile)
+    //                 .sort())
     
     let recentJob: Job = undefined
     let previousJobs: Job[] = []
@@ -667,6 +669,7 @@ const mapStateToProps = (state: AppState) => ({
   selectedTiles: getSelectedTiles(state),
   highlightedTiles: getHighlightedTiles(state),
   allSelectedTiles: getAllSelectedTiles(state),
+  selectedTilesSentinel2: getAllSelectedTilesForPlatform(state, 'sentinel2'),
   imageryList: getImageryListForSen2Agri(state),
   imageryListByTile: getImageryListByTile(state),
 })

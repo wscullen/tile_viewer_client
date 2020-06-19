@@ -27,7 +27,9 @@ export default function TileListItemCompact(props: AppProps) {
   
   let progressBarNode = undefined
 
-  if (props.taskStatus && props.taskStatus.status === TaskStatus.Started) {
+  // console.error(props.taskStatus)
+
+  if (props.taskStatus && props.taskStatus.status === TaskStatus.Started && props.taskStatus.hasOwnProperty("progress")) {
     let taskProgress = props.taskStatus.progress
 
     if (taskProgress.hasOwnProperty('upload')) {

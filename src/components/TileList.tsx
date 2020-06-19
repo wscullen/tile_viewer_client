@@ -225,7 +225,8 @@ class TileList extends Component<AppProps, DefaultAppState> {
     
                       // Get the most recent L8BatchDownload or S2BatchDownload job for the AoI
                       let taskStatus: JobInfoObject = undefined
-                      if (this.props.currentPlatform === 'sentinel2') {
+
+                      if (['sentinel2', 'landsat8'].includes(this.props.currentPlatform)) {
                         if (this.props.jobs.byAoiId[this.props.currentAoi] && this.props.jobs.byAoiId[this.props.currentAoi].length > 0) {
                           const jobIds = this.props.jobs.byAoiId[this.props.currentAoi]
     
@@ -252,17 +253,45 @@ class TileList extends Component<AppProps, DefaultAppState> {
                           if (mostRecentJobIdForTile) {
                             const mostRecentJob = this.props.jobs.byId[mostRecentJobIdForTile]
                             console.log(mostRecentJob)
-                            if (mostRecentJob && mostRecentJob.hasOwnProperty('progressInfo')) {
-                              const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
-                              taskStatus = mostRecentJob.progressInfo.task_progress[taskId]
-                            } else if (mostRecentJob && !mostRecentJob.hasOwnProperty('progressInfo')) {
-                              const tempTaskStatus: JobInfoObject = {
-                                name: null,
-                                kwargs: null,
-                                args: null,
-                                status: TaskStatus.Pending,
+                            if (mostRecentJob && mostRecentJob.type === "L8BatchDownload" && mostRecentJob.params.ac) {
+                              if (mostRecentJob && mostRecentJob.hasOwnProperty('progressInfo')) {
+                                taskStatus = {
+                                  result: "",
+                                  status: TaskStatus.Pending,
+                                  name: "",
+                                  kwargs: "",
+                                  args: ""                        
+                                }
+                                const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
+                                let taskStatusOverall = mostRecentJob.progressInfo.task_progress[taskId].progress
+                                taskStatus["progress"] = taskStatusOverall[tile.properties.name]
+                                taskStatus["status"] = taskStatus["progress"].status
+                                // console.warn(tile.properties)
+                                // console.warn(taskId)
+                                // console.warn(taskStatusOverall)
+                                // console.warn(taskStatus)
+                              } else if (mostRecentJob && !mostRecentJob.hasOwnProperty('progressInfo')) {
+                                const tempTaskStatus: JobInfoObject = {
+                                  name: null,
+                                  kwargs: null,
+                                  args: null,
+                                  status: TaskStatus.Pending,
+                                }
+                                taskStatus = tempTaskStatus
                               }
-                              taskStatus = tempTaskStatus
+                            } else {
+                              if (mostRecentJob && mostRecentJob.hasOwnProperty('progressInfo')) {
+                                const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
+                                taskStatus = mostRecentJob.progressInfo.task_progress[taskId]
+                              } else if (mostRecentJob && !mostRecentJob.hasOwnProperty('progressInfo')) {
+                                const tempTaskStatus: JobInfoObject = {
+                                  name: null,
+                                  kwargs: null,
+                                  args: null,
+                                  status: TaskStatus.Pending,
+                                }
+                                taskStatus = tempTaskStatus
+                              }
                             }
                           }
                         }
