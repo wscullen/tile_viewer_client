@@ -265,7 +265,14 @@ class TileList extends Component<AppProps, DefaultAppState> {
                                 const taskId = mostRecentJob.progressInfo.tile_ids[tile.id]
                                 let taskStatusOverall = mostRecentJob.progressInfo.task_progress[taskId].progress
                                 taskStatus["progress"] = taskStatusOverall[tile.properties.name]
-                                taskStatus["status"] = taskStatus["progress"].status
+
+                                console.warn(taskStatus)
+                                if (taskStatus["progress"] && taskStatus["progress"].hasOwnProperty('status')) {
+                                  taskStatus["status"] = taskStatus["progress"].status
+                                }
+                                if (!mostRecentJob.success && mostRecentJob.status === JobStatus.Completed) {
+                                  taskStatus["status"] = TaskStatus.Failure
+                                }
                                 // console.warn(tile.properties)
                                 // console.warn(taskId)
                                 // console.warn(taskStatusOverall)
