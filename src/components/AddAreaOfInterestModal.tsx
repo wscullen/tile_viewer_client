@@ -62,7 +62,7 @@ export const END_DATE = 'endDate'
 
 type START_OR_END_DATE = 'startDate' | 'endDate'
 
-const SUPPORTED_FORMATS = ['.shp', '.shx', '.cpg', '.prj', '.dbf']
+const SUPPORTED_FORMATS = ['.shp', '.shx', '.prj', '.dbf']
 
 declare var VERSION: string
 

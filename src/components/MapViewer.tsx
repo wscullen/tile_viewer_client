@@ -18,7 +18,7 @@ import { platformModifierKeyOnly } from 'ol/events/condition'
 //@ts-ignore
 import LayerSwitcher from 'ol-layerswitcher'
 
-import { Fill, Stroke, Style, Text } from 'ol/style'
+import { Fill, Stroke, Style, Text, Circle } from 'ol/style'
 
 import moment from 'moment'
 
@@ -422,13 +422,24 @@ export default class MapViewer extends Component<AppProps, AppState> {
       return wrsOverlayStyle
     }
 
-    function getOverlayStyleForVisualization(feature: Feature) {
+    function getOverlayStyleForVisualization(feature: Feature, resolution: Number) {
+      console.log(resolution)
       console.log('SETTING STYLE FOR VISUALIZATION')
       console.log(feature.getProperties())
       const wrsOverlayStyle = new Style({
+        image: new Circle({
+          fill: new Fill({
+            color: 'rgba(215, 3, 250, 0.8)',
+          }),
+          stroke:  new Stroke({
+            color: 'rgba(215, 3, 250, 0.8)',
+            width: 1,
+          }),
+          radius: resolution < 80.0 ? 6 : 3
+        }),
         stroke: new Stroke({
-          color: 'rgba(235, 240, 25, 0.8)',
-          width: 3,
+          color: 'rgba(215, 3, 250, 0.8)',
+          width: 2,
         }),
         fill: new Fill({
           color: 'rgba(0,0,0,0)',
@@ -442,7 +453,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
             color: '#fff',
             width: 2,
           }),
-          text: feature.get('name'),
+          text: resolution < 80.0 ? feature.get('name') : null,
         }),
       })
       return wrsOverlayStyle
