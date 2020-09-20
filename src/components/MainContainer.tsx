@@ -336,8 +336,28 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
           break
         }
         case 'a': {
-          console.log('Spacebar pressed, selecting all visible for current date')
+          console.log('a pressed, selecting all visible for current date')
           this.selectAllVisibleTiles()
+          break
+        }
+        case 'd': {
+          console.log('d pressed, selecting all visible for current date')
+          this.deselectAllForCurrentDate()
+          break
+        }
+        case 'ArrowUp': {
+          console.log('Up Arrow pressed, increasing cloud threshold')
+          let currentCloudPercent = this.props.aois.byId[this.props.session.currentAoi].session.cloudPercentFilter
+          let newCloudPercent = currentCloudPercent + 10.0 <= 100.0 ? currentCloudPercent + 10.0 : 100.0
+          this.handleUpdateCloudFilter(newCloudPercent.toString())
+          break
+        }
+        case 'ArrowDown': {
+          console.log('Down Arrow pressed, decreasing cloud threshold')
+          let currentCloudPercent = this.props.aois.byId[this.props.session.currentAoi].session.cloudPercentFilter
+          console.log(currentCloudPercent)
+          let newCloudPercent = currentCloudPercent - 10.0 >= 0.0 ? currentCloudPercent - 10.0 : 0.0
+          this.handleUpdateCloudFilter(newCloudPercent.toString())
           break
         }
       }
