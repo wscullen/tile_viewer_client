@@ -14,6 +14,8 @@
 
 Query, visualize, curate, and download L8 and S2 products for your region of interest.
 
+![Tile Viewer Interface Screenshot](https://raw.githubusercontent.com/sscullen/tile_viewer/master/tile_viewer_screenshot.png)
+
 ### Table of contents
 * [About](#about)
 * [Install](#install)

@@ -297,7 +297,8 @@ class Settings extends Component<AppProps, AppState & DefaultState> {
             <br />
             <div>Design, Development: Shaun Cullen</div>
 
-            <div>Main Application Icon: Fabric by Freepik from www.flaticon.com </div>
+            <div>Main Application Icon: Fabric by Freepik</div>
+            <div>Icons made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a></div>
             <div>Other Application Icons: Font Awesome</div>
           </div>
         </div>
