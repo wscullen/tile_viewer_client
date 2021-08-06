@@ -6,7 +6,7 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import WKT from 'ol/format/WKT'
 import GeoJSON from 'ol/format/GeoJSON'
-import { Tile as TileLayer, Vector as VectorLayer, Layer, } from 'ol/layer'
+import { Tile as TileLayer, Vector as VectorLayer, Layer } from 'ol/layer'
 import LayerGroup from 'ol/layer/Group'
 import ImageLayer from 'ol/layer/Image'
 import { OSM, Vector as VectorSource, Vector } from 'ol/source'
@@ -81,7 +81,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
       featuresHovered: [],
       imageLayers: {},
       map: undefined,
-      layerSwitcher: undefined
+      layerSwitcher: undefined,
     }
   }
 
@@ -184,8 +184,8 @@ export default class MapViewer extends Component<AppProps, AppState> {
 
     var layerSwitcher = new LayerSwitcher({
       tipLabel: 'Overlay Layers', // Optional label for button
-      groupSelectStyle: 'children' // Can be 'children' [default], 'group' or 'none'
-  })
+      groupSelectStyle: 'children', // Can be 'children' [default], 'group' or 'none'
+    })
 
     map.addControl(layerSwitcher)
 
@@ -196,7 +196,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
     this.setState(
       {
         map: map,
-        layerSwitcher: layerSwitcher
+        layerSwitcher: layerSwitcher,
       },
       () => {
         if (this.props.activeAoi) {
@@ -253,7 +253,11 @@ export default class MapViewer extends Component<AppProps, AppState> {
     const featureOverlay = this.clearOverlay()
     map.forEachFeatureAtPixel(pixel, (feature: Feature, layer) => {
       console.log(layer)
-      if (layer.get('name') === 'tileLayer' || layer.get('name') === 'wrsOverlay' || layer.get('name') === 'mgrsOverlay') {
+      if (
+        layer.get('name') === 'tileLayer' ||
+        layer.get('name') === 'wrsOverlay' ||
+        layer.get('name') === 'mgrsOverlay'
+      ) {
         layer.setZIndex(100)
         const featureClone = feature.clone()
         if (layer.get('name') === 'tileLayer') {
@@ -359,7 +363,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
           layersToRemove.push(layer)
         }
       }
-      // if (layer) 
+      // if (layer)
       //   console.log(layer.getType())
       // if (layer && layer.getType() === "VECTOR") {
       //   let name = layer.get("name")
@@ -367,22 +371,22 @@ export default class MapViewer extends Component<AppProps, AppState> {
       //     layersToRemove.push(layer)
       // }
       // map.removeLayer(ele)
-    //   if (ele.get('name')) {
-    //   if (
-    //     ele.get('name') === 'currentAoiFootprint' ||
-    //     ele.get('name') === 'tileFootprint' ||
-    //     ele.get('name') === 'wrsOverlay' ||
-    //     ele.get('name') === 'mgrsOverlay' ||
-    //     ele.get('name').search('wkt') !== -1
-    //   ) {
-    //     if (ele.getSource()) {
-    //       ele.getSource().clear()
+      //   if (ele.get('name')) {
+      //   if (
+      //     ele.get('name') === 'currentAoiFootprint' ||
+      //     ele.get('name') === 'tileFootprint' ||
+      //     ele.get('name') === 'wrsOverlay' ||
+      //     ele.get('name') === 'mgrsOverlay' ||
+      //     ele.get('name').search('wkt') !== -1
+      //   ) {
+      //     if (ele.getSource()) {
+      //       ele.getSource().clear()
 
-    //     }
-    //   }
-    // }
+      //     }
+      //   }
+      // }
     })
-    
+
     layersToRemove.map(layer => map.removeLayer(layer))
     console.log('DONE CLEARING MAP')
   }
@@ -431,11 +435,11 @@ export default class MapViewer extends Component<AppProps, AppState> {
           fill: new Fill({
             color: 'rgba(215, 3, 250, 0.8)',
           }),
-          stroke:  new Stroke({
+          stroke: new Stroke({
             color: 'rgba(215, 3, 250, 0.8)',
             width: 1,
           }),
-          radius: resolution < 80.0 ? 6 : 3
+          radius: resolution < 80.0 ? 6 : 3,
         }),
         stroke: new Stroke({
           color: 'rgba(215, 3, 250, 0.8)',
@@ -546,7 +550,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
         wrsOverlayLayer.setProperties({
           name: 'wrsOverlay',
           title: 'WRS2 Grid Overlay',
-          visible: this.props.currentPlatform === 'sentinel2' ? true : false
+          visible: this.props.currentPlatform === 'sentinel2' ? true : false,
         })
 
         // wrsOverlayLayer.setZIndex(9999)
@@ -557,7 +561,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
       if (this.props.mgrsOverlay) {
         console.log('Trying to add MGRS overlay')
         const featureList = []
-  
+
         for (const feature of this.props.mgrsOverlay.features) {
           const geojsonFormat = new GeoJSON()
           const geojsonFeature = geojsonFormat.readFeature(feature, {
@@ -566,7 +570,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
           })
           featureList.push(geojsonFeature)
         }
-  
+
         // TODO: In the future, try to update the existing layer source, instead of removing it
         if (mgrsOverlayLayer) {
           console.log('mgrs overlay layer exists, updating')
@@ -576,60 +580,58 @@ export default class MapViewer extends Component<AppProps, AppState> {
           }
         } else {
           console.log('mgrs overlay does not exist, create')
-  
+
           mgrsOverlayLayer = new VectorLayer({
             source: new VectorSource({
               features: featureList,
             }),
             style: getOverlayStyle,
           })
-  
+
           mgrsOverlayLayer.setProperties({
             name: 'mgrsOverlay',
             title: 'MGRS Grid Overlay',
-            visible: this.props.currentPlatform === 'landsat8' ? true : false
+            visible: this.props.currentPlatform === 'landsat8' ? true : false,
           })
-  
+
           // wrsOverlayLayer.setZIndex(9999)
-  
+
           map.addLayer(mgrsOverlayLayer)
         }
       }
-  
+
       const layersArray = []
 
       // Draw Vector overlays
       for (const wkt of this.props.wktOverlayList) {
-        
         const layerNames: string[] = []
         map.getLayers().forEach(layer => {
           console.log(layer)
           const name = layer.get('name')
           layerNames.push(name)
         })
-        
+
         if (!!!layerNames.includes(wkt.name)) {
           console.log(wkt)
-          const format = new WKT();
-          
+          const format = new WKT()
 
           const feature = format.readFeature(wkt.wkt, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-          });
+            featureProjection: 'EPSG:3857',
+          })
 
           feature.set('name', wkt.name)
 
           const vector = new VectorLayer({
             source: new VectorSource({
-              features: [feature]
+              features: [feature],
             }),
-            style: getOverlayStyleForVisualization
-          });
+            style: getOverlayStyleForVisualization,
+          })
 
           vector.setProperties({
-            name: wkt.name + "_wkt",
-            title: wkt.name
+            name: wkt.name + '_wkt',
+            title: wkt.name,
           })
 
           // vector.setStyle(getOverlayStyleForVisualization)
@@ -642,9 +644,9 @@ export default class MapViewer extends Component<AppProps, AppState> {
       }
       if (layersArray.length > 0) {
         const layerGroup = new LayerGroup({
-          layers: layersArray
+          layers: layersArray,
         })
-  
+
         layerGroup.set('title', 'Overlay Layers')
         layerGroup.set('name', 'wktOverlayLayers')
         layerGroup.set('combine', false)
@@ -652,7 +654,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
         // map.setLayerGroup
         map.addLayer(layerGroup)
       }
-      
+
       const extent = feature.getGeometry().getExtent()
       console.log(extent)
       aoiFootprintLayer.setZIndex(9999)
@@ -674,21 +676,24 @@ export default class MapViewer extends Component<AppProps, AppState> {
       // Iterate over current tiles
       // if current tile is in selectedTilesInList,
       // create a new feature and add it to the layer
-      for (const tile of this.props.tiles) {
-        const tileDate = moment(tile.date).format('YYYYMMDD')
-        console.log('000--------------------------------000')
-        console.log(tile)
-        if (this.props.tilesSelectedInList.includes(tile.id) && this.props.currentDate === tileDate) {
-          const format = new GeoJSON()
+      console.log(this.props.tiles)
+      if (this.props.tiles) {
+        for (const tile of this.props.tiles) {
+          const tileDate = moment(tile.date).format('YYYYMMDD')
+          console.log('000--------------------------------000')
+          console.log(tile)
+          if (this.props.tilesSelectedInList.includes(tile.id) && this.props.currentDate === tileDate) {
+            const format = new GeoJSON()
 
-          const feature = format.readFeature(tile, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
-          })
+            const feature = format.readFeature(tile, {
+              dataProjection: 'EPSG:4326',
+              featureProjection: 'EPSG:3857',
+            })
 
-          feature.setStyle(this.getStyle(feature, 'selected-in-list'))
-          console.log('adding overlay feature to layer')
-          selectedLayer.getSource().addFeature(feature)
+            feature.setStyle(this.getStyle(feature, 'selected-in-list'))
+            console.log('adding overlay feature to layer')
+            selectedLayer.getSource().addFeature(feature)
+          }
         }
       }
     }
@@ -697,8 +702,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
   getStyle(feature: Feature, feature_type: string) {
     let style
     console.log('getting STYLE')
-    if (feature)
-      console.log(feature.getProperties())
+    if (feature) console.log(feature.getProperties())
     if (feature_type === 'tile') {
       let tileIndex = feature.get('name').startsWith('LC08') ? 2 : 5
       style = new Style({
@@ -783,7 +787,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
             color: '#fff',
             width: 2,
           }),
-          text: null
+          text: null,
         }),
       })
     } else if (feature_type === 'wrsOverlay') {
@@ -804,7 +808,7 @@ export default class MapViewer extends Component<AppProps, AppState> {
             color: '#fff',
             width: 3,
           }),
-          text: feature.get('name')
+          text: feature.get('name'),
         }),
       })
     }
@@ -962,45 +966,35 @@ export default class MapViewer extends Component<AppProps, AppState> {
         console.log('handle errors in catch function')
       })
 
-      if (this.props.currentPlatform === 'sentinel2') {
-        console.log(this.props.currentPlatform)
-        const layerGroup = map.getLayerGroup()
-        layerGroup.getLayers().forEach((layer: Layer) => {
-          if (
-            layer.get('name') && layer.get('name') === 'wrsOverlay'
-          ) {
-            console.log('wrsOverlay setting visibile to true')
-            layer.set('visible', true)
-          }
-  
-          if (
-            layer.get('name') && layer.get('name') === 'mgrsOverlay'
-          ) {
-            console.log('mgrsOverlay setting visibile to false')
-            layer.set('visible', false)
-          }
-        })
-  
-        this.state.layerSwitcher.renderPanel()
-  
-      } else if (this.props.currentPlatform === 'landsat8') {
-        console.log(this.props.currentPlatform)
-        map.getLayers().forEach((ele: VectorLayer) => {
-          if (
-            ele.get('name') === 'wrsOverlay'
-          ) {
-            ele.set('visible', false)
-          }
-  
-          if (
-            ele.get('name') === 'mgrsOverlay'
-          ) {
-            ele.set('visible', true)
-          }
-        })
-        this.state.layerSwitcher.renderPanel()
+    if (this.props.currentPlatform === 'sentinel2') {
+      console.log(this.props.currentPlatform)
+      const layerGroup = map.getLayerGroup()
+      layerGroup.getLayers().forEach((layer: Layer) => {
+        if (layer.get('name') && layer.get('name') === 'wrsOverlay') {
+          console.log('wrsOverlay setting visibile to true')
+          layer.set('visible', true)
+        }
 
-      }
+        if (layer.get('name') && layer.get('name') === 'mgrsOverlay') {
+          console.log('mgrsOverlay setting visibile to false')
+          layer.set('visible', false)
+        }
+      })
+
+      this.state.layerSwitcher.renderPanel()
+    } else if (this.props.currentPlatform === 'landsat8') {
+      console.log(this.props.currentPlatform)
+      map.getLayers().forEach((ele: VectorLayer) => {
+        if (ele.get('name') === 'wrsOverlay') {
+          ele.set('visible', false)
+        }
+
+        if (ele.get('name') === 'mgrsOverlay') {
+          ele.set('visible', true)
+        }
+      })
+      this.state.layerSwitcher.renderPanel()
+    }
   }
 
   updateStyle(features: string[]) {
@@ -1046,40 +1040,41 @@ export default class MapViewer extends Component<AppProps, AppState> {
     console.log('fetching image layers')
     let imageLayers = this.getImageLayers()
 
-    this.props.tiles.forEach(tile => {
-      console.log('updating tile styles')
-      console.log(tile)
-      let feature
-
-      if (tileLayer) {
-        console.log('getting feature')
+    this.props.tiles &&
+      this.props.tiles.forEach(tile => {
+        console.log('updating tile styles')
         console.log(tile)
-        console.log(tile.id)
-        console.log(tileLayer.getSource().getFeatures())
-        feature = tileLayer.getSource().getFeatureById(tile.id)
-      }
-      console.log(this.state)
+        let feature
 
-      if (imageLayers.hasOwnProperty(tile.id)) {
-        if (!tile.visible) {
-          imageLayers[tile.id].setOpacity(0.0)
-        } else {
-          imageLayers[tile.id].setOpacity(0.9)
+        if (tileLayer) {
+          console.log('getting feature')
+          console.log(tile)
+          console.log(tile.id)
+          console.log(tileLayer.getSource().getFeatures())
+          feature = tileLayer.getSource().getFeatureById(tile.id)
         }
-      }
+        console.log(this.state)
 
-      console.log('FEATURE:')
-      console.log(feature)
-      if (feature) {
-        console.log('setting style')
-
-        if (tile.selected) {
-          feature.setStyle(this.getStyle(feature, 'selected'))
-        } else {
-          feature.setStyle(this.getStyle(feature, 'tile'))
+        if (imageLayers.hasOwnProperty(tile.id)) {
+          if (!tile.visible) {
+            imageLayers[tile.id].setOpacity(0.0)
+          } else {
+            imageLayers[tile.id].setOpacity(0.9)
+          }
         }
-      }
-    })
+
+        console.log('FEATURE:')
+        console.log(feature)
+        if (feature) {
+          console.log('setting style')
+
+          if (tile.selected) {
+            feature.setStyle(this.getStyle(feature, 'selected'))
+          } else {
+            feature.setStyle(this.getStyle(feature, 'tile'))
+          }
+        }
+      })
   }
 
   handleMapClick(event: MapBrowserEvent) {

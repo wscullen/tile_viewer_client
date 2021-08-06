@@ -538,7 +538,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
   }
 
   public handleSubmitAllJobs = (): void => {
-   
     if (this.props.session.currentAoi !== '') {
       console.log('submitting all jobs for selected tiles')
 
@@ -547,15 +546,15 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       const tiles = this.props.selectedTiles
       const highlightedTiles = this.props.highlightedTiles
       const currentPlatform = currentAoiSession.currentPlatform
-      let jobType = ""
+      let jobType = ''
 
       if (currentPlatform === 'sentinel2') {
-        jobType = "S2BatchDownload"
+        jobType = 'S2BatchDownload'
       } else if (currentPlatform === 'landsat8') {
-        jobType = "L8BatchDownload"
+        jobType = 'L8BatchDownload'
       }
-    
-      const newJob: Job = {  
+
+      const newJob: Job = {
         aoiId: this.props.session.currentAoi,
         assignedDate: '',
         completedDate: '',
@@ -577,7 +576,6 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
         console.log(tiles[ele])
 
         if (tiles[ele].length > 0) {
-
           tiles[ele].map((tile: Tile) => {
             console.log(tile)
 
@@ -589,7 +587,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                   api: tile.properties.apiSource,
                   acquisitionDate: tile.date,
                   tileId: tile.id,
-                  mgrs: tile.properties.mgrs
+                  mgrs: tile.properties.mgrs,
                 }
                 tileList.push(simpleTile)
               }
@@ -600,7 +598,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
                 api: tile.properties.apiSource,
                 acquisitionDate: tile.date,
                 tileId: tile.id,
-                mgrs: tile.properties.mgrs
+                mgrs: tile.properties.mgrs,
               }
               tileList.push(simpleTile)
             }
@@ -865,22 +863,18 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
 
   public resubmitLastJob = (tile: Tile): void => {
     // console.log('Trying to submit most recent job for this tile again.')
-
     // // steps, from the tile, get the last entry in the jobId list
     // // look up job info, recreate job,
     // // submit again.
-
     // console.log(tile)
     // const jobId = tile.jobs[tile.jobs.length - 1]
     // const job = this.props.jobs.byId[jobId]
-
     // job.assignedDate = ''
     // job.completedDate = ''
     // job.submittedDate = ''
     // job.success = false
     // job.workerId = ''
     // job.resultMessage = ''
-
     // this.props.thunkAddJob(job)
   }
 
@@ -978,7 +972,7 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
               tileSelected={this.handleTileSelect}
               currentAoiWkt={currentAoi ? currentAoi.wktFootprint : null}
               wrsOverlay={currentAoi ? currentAoi.wrsOverlay : null}
-              mgrsOverlay={currentAoi? currentAoi.mgrsOverlay : null}
+              mgrsOverlay={currentAoi ? currentAoi.mgrsOverlay : null}
               wktOverlayList={currentAoi ? currentAoi.wktOverlayList : null}
               activeAoi={currentAoi ? currentAoi.name : null}
               currentDate={currentAoi ? currentAoi.session.datesList[currentPlatform].currentDate : null}
@@ -1053,8 +1047,9 @@ class MainContainer extends Component<AppProps, AppState & DefaultAppState & Sel
       const session = { ...currentAoi.session }
       currentPlatform = session.currentPlatform
       currentDate = currentAoi.session.datesList[currentPlatform].currentDate
-
-      currentTiles = currentAoi.allTiles[currentPlatform][currentDate].map(id => {
+      console.log(currentPlatform)
+      console.log(currentAoi)
+      currentTiles = currentAoi.allTiles?.[currentPlatform]?.[currentDate]?.map(id => {
         return this.props.tiles.byId[id]
       })
 
@@ -1106,24 +1101,21 @@ const mapStateToProps = (state: AppState) => ({
   highlightedTiles: getHighlightedTiles(state),
 })
 
-export default connect(
-  mapStateToProps,
-  {
-    addTile,
-    updateTile,
-    addAoi,
-    removeAoi,
-    updateSession,
-    addJob,
-    updateJob,
-    removeJob,
-    updateMainSession,
-    resetSessionState,
-    updateAddAoiForm,
-    thunkSendMessage,
-    thunkSubmitJob,
-    thunkCheckJobsForAoi,
-    thunkUpdateCsrfTokens,
-    thunkAddJobs,
-  },
-)(MainContainer)
+export default connect(mapStateToProps, {
+  addTile,
+  updateTile,
+  addAoi,
+  removeAoi,
+  updateSession,
+  addJob,
+  updateJob,
+  removeJob,
+  updateMainSession,
+  resetSessionState,
+  updateAddAoiForm,
+  thunkSendMessage,
+  thunkSubmitJob,
+  thunkCheckJobsForAoi,
+  thunkUpdateCsrfTokens,
+  thunkAddJobs,
+})(MainContainer)
